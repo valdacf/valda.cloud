@@ -70,9 +70,11 @@
     <h1>Bobby Bearing</h1><span class="edge">THE EDGE · 1986</span>
     <h2>izometrická pocta klasice</h2>
     <p>Jsi kulička z ložiska. Tvých <b style="color:#ffe14a">5 mladších bráchů</b>
-       (Boogle, Osborne, Bert, Bungo, Barnaby) se ztratilo v plošinovém světě.
-       Najdi je všechny a doveď se do <b style="color:#7ef0c4">cíle</b>.</p>
+       (Boogle, Osborne, Bert, Bungo, Barnaby) se ztratilo v <b>rozlehlém</b> plošinovém
+       světě o desítkách propojených obrazovek. Najdi je všechny a doveď se do
+       <b style="color:#7ef0c4">cíle</b> v srdci bludiště.</p>
     <p>Plošiny plují v prázdnotě — spadneš = zpátky na začátek obrazovky.
+       Pozor na <b style="color:#ff6a5a">mačkací lisy</b> a <b style="color:#ff6a5a">zlé černé kuličky</b>.
        Obrazovky se překlápějí, když dojedeš na okraj.</p>
     <p>PC: <span class="key">↑</span><span class="key">↓</span><span class="key">←</span><span class="key">→</span>
        / <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span>
@@ -109,43 +111,95 @@
   // ---------- projekce ----------
   function iso(wx,wy,h){ return {x:ORX+(wx-wy)*TW, y:ORY+(wx+wy)*TH-(h||0)*HZ}; }
 
-  // ---------- svět (propojené obrazovky dle původní mapy) ----------
-  const ROOMS={
-   "0,0":{name:"START", ink:"#19c3c3", nbr:{E:"1,0",S:"0,1"}, map:[
-      "             ","             ","   .......   ","   ..S....   ",
-      "   ..........","   ..........","   .......   ","   .......   ",
-      "      ..     ","      ..     "]},
-   "1,0":{name:"PERON", ink:"#cf45cf", nbr:{W:"0,0",E:"2,0",S:"1,1"}, bearing:"BOOGLE", map:[
-      "             ","             ","   .......   ","   ...o...   ",
-      ".............",".............","   ..111..   ","   .......   ",
-      "      ..     ","      ..     "]},
-   "2,0":{name:"PROPASTI", ink:"#d6c637", nbr:{W:"1,0",S:"2,1"}, bearing:"OSBORNE", map:[
-      "             ","             ","   .......   ","   ..o....   ",
-      "..........   ","..........   ","   .OAAO..   ","   .......   ",
-      "      ..     ","      ..     "]},
-   "1,1":{name:"VALY", ink:"#3cc24e", nbr:{N:"1,0",W:"0,1",E:"2,1"}, bearing:"BERT", map:[
-      "      ..     ","      ..     ","   ..o....   ","   .......   ",
-      "......P......","......P......","   ..###..   ","   .......   ",
-      "             ","             "]},
-   "0,1":{name:"ZÁPAD", ink:"#c9ccd8", nbr:{N:"0,0",E:"1,1"}, bearing:"BARNABY", map:[
-      "      ..     ","      ..     ","   .......   ","   ....o..   ",
-      "   ..........","   ..........","   .......   ","   .......   ",
-      "             ","             "]},
-   "2,1":{name:"KŘIŽOVATKA", ink:"#e0524a", nbr:{N:"2,0",W:"1,1",E:"3,1"}, bearing:"BUNGO", map:[
-      "      ..     ","      ..     ","   .......   ","   ...o...   ",
-      ".............",".............","   ..O.O..   ","   .......   ",
-      "             ","             "]},
-   "3,1":{name:"CÍL", ink:"#19c3c3", nbr:{W:"2,1"}, goal:true, map:[
-      "             ","             ","   .......   ","   .ggggg.   ",
-      "..........   ","..........   ","   .ggggg.   ","   .......   ",
-      "             ","             "]},
-  };
+  // ---------- svět: velký propojený diamant (flip-screen jako originál) ----------
+  const COLS=13, ROWS=11, CC=(COLS-1)>>1, CR=(ROWS-1)>>1;   // střed 6,5
+  // půdorys: 9 sloupců (gx) × 7 řad (gy); '1' = obrazovka. Dutá smyčka + vnitřní komora.
+  const FOOTPRINT=[
+    "111111111",
+    "100010001",
+    "101111101",
+    "101010101",
+    "101111101",
+    "100010001",
+    "111111111",
+  ];
+  const GW=FOOTPRINT[0].length, GH=FOOTPRINT.length;
+  const has=(gx,gy)=> gy>=0&&gy<GH&&gx>=0&&gx<GW&&FOOTPRINT[gy][gx]==='1';
+  const PAL=["#19c3c3","#cf45cf","#d6c637","#3cc24e","#c9ccd8","#e0524a"];
+  const START=[0,3], GOAL=[4,3], STARTKEY=START[0]+","+START[1];
+  const BEARINGS={ "4,0":"BOOGLE", "8,3":"OSBORNE", "2,2":"BERT", "6,4":"BUNGO", "4,6":"BARNABY" };
+  const TPSET={ "7,0":[3,3], "1,6":[9,7] };               // dva propojené teleporty „T"
+  const TPLINK={ "7,0":{key:"1,6",c:9,r:7}, "1,6":{key:"7,0",c:3,r:3} };
+  function h32(a,b){ let h=2166136261>>>0; const s=a+","+b;   // FNV-1a + mix (dobré rozptýlení)
+    for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); }
+    h^=h>>>15; h=Math.imul(h,2246822519); h^=h>>>13; return h>>>0; }
+
+  function genMap(conns,kind,hazard){
+    const g=[]; for(let r=0;r<ROWS;r++) g.push(new Array(COLS).fill(' '));
+    const x0=2,x1=COLS-3,y0=2,y1=ROWS-3;
+    const put=(c,r,ch)=>{ if(r>=0&&r<ROWS&&c>=0&&c<COLS) g[r][c]=ch; };
+    // střed 3×3 — stabilní stání + zarovnání přechodů
+    for(let r=CR-1;r<=CR+1;r++)for(let c=CC-1;c<=CC+1;c++) put(c,r,'.');
+    // ramena (3 dlaždice široká) jen k existujícím sousedům
+    if(conns.W) for(let c=0;c<CC;c++)for(let r=CR-1;r<=CR+1;r++) put(c,r,'.');
+    if(conns.E) for(let c=CC+1;c<COLS;c++)for(let r=CR-1;r<=CR+1;r++) put(c,r,'.');
+    if(conns.N) for(let r=0;r<CR;r++)for(let c=CC-1;c<=CC+1;c++) put(c,r,'.');
+    if(conns.S) for(let r=CR+1;r<ROWS;r++)for(let c=CC-1;c<=CC+1;c++) put(c,r,'.');
+    if(kind!=='plus'&&kind!=='crush'){                   // plná deska
+      for(let r=y0;r<=y1;r++)for(let c=x0;c<=x1;c++) put(c,r,'.');
+      if(kind==='haz'&&hazard){                          // překážky v rozích (mimo kříž)
+        for(const [bc,br] of [[x0,y0],[x1-1,y0],[x0,y1-1],[x1-1,y1-1]])
+          for(let r=br;r<=br+1;r++)for(let c=bc;c<=bc+1;c++)
+            if(Math.abs(r-CR)>1||Math.abs(c-CC)>1) put(c,r,hazard);
+      }
+    }
+    if(kind==='crush'){                                  // mačkací pasti v křižovatce (plus z 5 lisů)
+      for(const [dc,dr] of [[0,0],[0,-1],[0,1],[-1,0],[1,0]]) put(CC+dc,CR+dr,'C');
+    }
+    if(kind==='ramp'){                                   // vyvýšená plošina v rohu + svah dolů (mimo kříž)
+      put(x1-1,y0,'='); put(x1,y0,'='); put(x1-1,y0+1,'='); put(x1,y0+1,'=');
+      put(x1-2,y0,'2'); put(x1-2,y0+1,'2');              // svah stoupá k východu (na plošinu)
+    }
+    return g;
+  }
+
+  const ROOMS={};
+  for(let gy=0;gy<GH;gy++)for(let gx=0;gx<GW;gx++){
+    if(!has(gx,gy)) continue;
+    const key=gx+","+gy, conns={};
+    if(has(gx,gy-1)) conns.N=gx+","+(gy-1);
+    if(has(gx,gy+1)) conns.S=gx+","+(gy+1);
+    if(has(gx-1,gy)) conns.W=(gx-1)+","+gy;
+    if(has(gx+1,gy)) conns.E=(gx+1)+","+gy;
+    const hv=h32(gx,gy);
+    const isStart=(gx===START[0]&&gy===START[1]);
+    const isGoal =(gx===GOAL[0] &&gy===GOAL[1]);
+    const bearing=BEARINGS[key]||null;
+    let kind, hazard=null, name;
+    if(isStart) kind='ramp';                              // start s vyvýšeným blokem (jako originál)
+    else if(isGoal||bearing||TPSET[key]) kind='open';
+    else { const k=hv%14; kind=(k<5?'plus':k<8?'open':k<10?'haz':k<12?'ramp':'crush'); hazard=['P','O','A','#'][(hv>>3)%4]; }
+    const g=genMap(conns,kind,hazard);
+    if(isStart){ g[CR][CC]='S'; name="START"; }
+    else if(TPSET[key]){ const t=TPSET[key]; g[t[1]][t[0]]='T'; name="TELEPORT"; }
+    else if(isGoal){ for(let r=CR-1;r<=CR+1;r++)for(let c=CC-1;c<=CC+1;c++) g[r][c]='g'; name="CÍL"; }
+    else if(bearing){ g[CR][CC]='o'; name=bearing; }
+    else name="SEKTOR "+gx+"·"+gy;
+    // nepřátelská černá kulička: patroluje rovným ramenem (mimo start)
+    let enemy=null;
+    if(!isStart && (kind==='plus'||kind==='open')){
+      if(conns.W&&conns.E&&hv%3===0) enemy={axis:'x'};
+      else if(conns.N&&conns.S&&hv%3===1) enemy={axis:'y'};
+    }
+    ROOMS[key]={ name, ink:PAL[hv%PAL.length], nbr:conns, bearing, goal:isGoal, enemy, map:g.map(row=>row.join('')) };
+  }
 
   const S={
-    key:"0,0", grid:[], cols:0, rows:0,
+    key:STARTKEY, grid:[], cols:0, rows:0,
     ball:{x:0,y:0,vx:0,vy:0,z:0,vz:0,r:0.34,falling:false,fallT:0},
     entry:{x:3.5,y:3.5}, input:{ix:0,iy:0}, keys:{},
     collected:{}, names:[], falls:0, running:false, win:false, mode:null, simT:0,
+    enemy:null, enterT:0, teleCD:0,
   };
 
   function charAt(c,r){ if(r<0||r>=S.rows||c<0||c>=S.cols) return ' '; return S.grid[r][c]; }
@@ -179,28 +233,60 @@
     computeProjection();
     const b=S.ball;
     if(appearSide){
-      if(appearSide==='W'){ b.x=1.3; b.y=keepPerp; }
-      else if(appearSide==='E'){ b.x=S.cols-1.3; b.y=keepPerp; }
-      else if(appearSide==='N'){ b.y=1.3; b.x=keepPerp; }
-      else if(appearSide==='S'){ b.y=S.rows-1.3; b.x=keepPerp; }
+      // nájezd vždy na střed 3-dlaždicového kříže (zachová podélnou rychlost, příčnou vynuluje)
+      if(appearSide==='W'){ b.x=1.3; b.y=CR+0.5; b.vy=0; }
+      else if(appearSide==='E'){ b.x=S.cols-1.3; b.y=CR+0.5; b.vy=0; }
+      else if(appearSide==='N'){ b.y=1.3; b.x=CC+0.5; b.vx=0; }
+      else if(appearSide==='S'){ b.y=S.rows-1.3; b.x=CC+0.5; b.vx=0; }
     }else{
       for(let r=0;r<S.rows;r++)for(let c=0;c<S.cols;c++) if(S.grid[r][c]==='S'){ b.x=c+0.5; b.y=r+0.5; }
       b.vx=b.vy=0;
     }
     S.entry={x:b.x,y:b.y};
     b.z=0; b.vz=0; b.falling=false; b.fallT=0;
+    S.enterT=0;
+    // nepřátelská kulička — startuje ve středu a patroluje
+    if(rm.enemy){ const ax=rm.enemy.axis; S.enemy={axis:ax, x:CC+0.5, y:CR+0.5, vx:ax==='x'?ESPEED:0, vy:ax==='y'?ESPEED:0, r:0.3}; }
+    else S.enemy=null;
     hudL.textContent=rm.name;
   }
   function respawn(){ const b=S.ball; b.x=S.entry.x;b.y=S.entry.y;b.vx=0;b.vy=0;b.z=0;b.vz=0;b.falling=false;b.fallT=0; }
+  function teleport(){
+    const d=TPLINK[S.key]; if(!d||S.teleCD>0) return;
+    const b=S.ball, vx=b.vx, vy=b.vy;
+    loadRoom(d.key,null); b.x=d.c+0.5; b.y=d.r+0.5; b.vx=vx; b.vy=vy;
+    S.entry={x:b.x,y:b.y}; S.teleCD=0.8; flash("Teleport!");
+  }
 
   // ---------- fyzika ----------
   const ACCEL=9.0, RAMP=7.5, FRIC=2.3, REST=0.42, MAXV=7.5;
   const GRAV=15, HOP=4.2, PSPEED=2.0;   // vertikála + písty
+  const ESPEED=2.6, CTOP=2.1;           // rychlost nepřítele + horní poloha lisu
   function pistonH(c,r){ return 0.5+0.5*Math.sin(S.simT*PSPEED + (c*1.6+r*2.3)); } // 0..1, plynule nahoru/dolů
   function rampAccel(ch){ if(ch==='1')return{x:RAMP,y:0};if(ch==='2')return{x:-RAMP,y:0};if(ch==='3')return{x:0,y:RAMP};if(ch==='4')return{x:0,y:-RAMP};return{x:0,y:0}; }
+  // ---------- nakloněné plochy / plošiny (výškové pole) ----------
+  const PH=1.0;                          // výška plošiny / převýšení svahu
+  function cornerH(ch,fx,fy){            // výška rohu dlaždice (fx,fy v 0..1)
+    if(ch==='1') return PH*(1-fx);       // svah dolů na +x (vysoko na západě)
+    if(ch==='2') return PH*fx;           // dolů na -x (vysoko na východě)
+    if(ch==='3') return PH*(1-fy);       // dolů na +y (vysoko na severu)
+    if(ch==='4') return PH*fy;           // dolů na -y (vysoko na jihu)
+    if(ch==='=') return PH;              // rovná vyvýšená plošina
+    return 0;
+  }
+  function floorH(x,y){ const c=Math.floor(x),r=Math.floor(y); return cornerH(charAt(c,r), x-c, y-r); }
+  // mačkací past: drží nahoře, prudce sjede, chvíli drtí, vyjede zpět (0..CTOP)
+  function crushH(c,r){
+    const t=((S.simT*0.85 + (c*0.37+r*0.61))%1+1)%1;
+    if(t<0.55) return CTOP;                       // nahoře
+    if(t<0.66) return CTOP*(1-(t-0.55)/0.11);     // sjezd
+    if(t<0.80) return 0;                          // drtí
+    return CTOP*(t-0.80)/0.20;                    // výjezd
+  }
+  function die(msg){ S.falls++; hudR.textContent="PÁDY "+S.falls; flash(msg); respawn(); }
 
   function step(dt){
-    const b=S.ball; S.simT+=dt; if(S.win) return;
+    const b=S.ball; S.simT+=dt; S.enterT+=dt; if(S.teleCD>0)S.teleCD-=dt; if(S.win) return;
     if(b.falling){
       b.fallT+=dt; b.vz-=24*dt; b.z+=b.vz*dt; b.x+=b.vx*dt*0.25; b.y+=b.vy*dt*0.25;
       if(b.fallT>0.85){ S.falls++; hudR.textContent="PÁDY "+S.falls; respawn(); }
@@ -214,17 +300,28 @@
     const ra=rampAccel(charAt(Math.floor(b.x),Math.floor(b.y))); b.vx+=ra.x*dt; b.vy+=ra.y*dt;
     const sp=Math.hypot(b.vx,b.vy); if(sp>0){const ns=Math.max(0,sp-FRIC*dt);b.vx*=ns/sp;b.vy*=ns/sp;}
     const sp2=Math.hypot(b.vx,b.vy); if(sp2>MAXV){b.vx*=MAXV/sp2;b.vy*=MAXV/sp2;}
+    const px=b.x,py=b.y;
     moveAxis('x',b.vx*dt); moveAxis('y',b.vy*dt);
-    // vertikála: vzduchová tryska nadhazuje, jinak gravitace
-    const here=charAt(Math.floor(b.x),Math.floor(b.y));
-    if(here==='A' && b.z<0.03) b.vz=HOP;
-    b.vz-=GRAV*dt; b.z+=b.vz*dt; if(b.z<0){b.z=0;b.vz=0;}
+    // schod / sráz vyšší než kulička = nelze vyjet (svahy jsou pozvolné, projdou)
+    if(floorH(b.x,b.y) > b.z+0.45){ b.x=px; b.y=py; b.vx=-b.vx*REST; b.vy=-b.vy*REST; }
+    // vertikála: kulička sedí na povrchu (rovina, svah i plošina), tryska nadhazuje
+    const fh=floorH(b.x,b.y), here=charAt(Math.floor(b.x),Math.floor(b.y));
+    if(here==='A' && b.z<fh+0.03) b.vz=HOP;
+    b.vz-=GRAV*dt; b.z+=b.vz*dt; if(b.z<fh){b.z=fh;b.vz=0;}
     const nb=room().nbr||{};
     if(b.x<0&&nb.W){loadRoom(nb.W,'E',clampY(b.y));return;}
     if(b.x>=S.cols&&nb.E){loadRoom(nb.E,'W',clampY(b.y));return;}
     if(b.y<0&&nb.N){loadRoom(nb.N,'S',clampX(b.x));return;}
     if(b.y>=S.rows&&nb.S){loadRoom(nb.S,'N',clampX(b.x));return;}
+    updateEnemy(dt);
     checkTile();
+  }
+  function updateEnemy(dt){
+    const e=S.enemy; if(!e) return;
+    if(e.axis==='x'){ e.x+=e.vx*dt; if(charAt(Math.floor(e.x+(e.vx>0?0.55:-0.55)),Math.floor(e.y))===' ') e.vx=-e.vx; }
+    else { e.y+=e.vy*dt; if(charAt(Math.floor(e.x),Math.floor(e.y+(e.vy>0?0.55:-0.55)))===' ') e.vy=-e.vy; }
+    const b=S.ball;
+    if(S.enterT>0.4 && b.z<0.6 && Math.hypot(b.x-e.x,b.y-e.y) < b.r+e.r+0.12) die("Sežrala tě zlá kulička!");
   }
   function clampY(y){return Math.max(1.3,Math.min(S.rows-1.3,y));}
   function clampX(x){return Math.max(1.3,Math.min(S.cols-1.3,x));}
@@ -238,8 +335,10 @@
   }
   function checkTile(){
     const b=S.ball,c=Math.floor(b.x),r=Math.floor(b.y),ch=charAt(c,r);
-    const grounded=b.z<0.06;   // ve vzduchu (po trysce) díry nepropadnou
+    const grounded=b.z<=floorH(b.x,b.y)+0.06;   // ve vzduchu (po trysce) díry nepropadnou
     if(ch===' '){ if(grounded)startFall(); return; }
+    if(ch==='T' && grounded){ teleport(); return; }
+    if(ch==='C' && grounded && crushH(c,r)<0.5){ die("Rozmáčknut lisem!"); return; }
     if(ch==='O'){const dx=b.x-(c+0.5),dy=b.y-(r+0.5);if(grounded && Math.hypot(dx,dy)<0.5-b.r*0.35){startFall();return;}}
     if(ch==='o'){const rm=room();S.collected[S.key]=true;setChar(c,r,'.');S.names.push(rm.bearing);
       hudM.textContent="KULIČKY "+S.names.length+"/5";flash(rm.bearing+" zachráněn!  ("+S.names.length+"/5)");}
@@ -273,8 +372,35 @@
     return {tA,tB,tC,tD};
   }
 
+  // nakloněná/vyvýšená deska se 4 výškami rohů (skirt dolů na 0)
+  function drawTilt(c,r,base,hA,hB,hC,hD,alt){
+    const tA=iso(c,r,hA),tB=iso(c+1,r,hB),tC=iso(c+1,r+1,hC),tD=iso(c,r+1,hD);
+    const bD=iso(c,r+1,0),bC=iso(c+1,r+1,0),bB=iso(c+1,r,0);
+    const baseTop=alt?dark(base,0.84):base;
+    let lg=ctx.createLinearGradient(tD.x,tD.y,bD.x,bD.y);
+    lg.addColorStop(0,dark(base,0.46));lg.addColorStop(1,dark(base,0.30));
+    ctx.fillStyle=lg;ctx.beginPath();ctx.moveTo(tD.x,tD.y);ctx.lineTo(tC.x,tC.y);ctx.lineTo(bC.x,bC.y);ctx.lineTo(bD.x,bD.y);ctx.closePath();ctx.fill();
+    let rg=ctx.createLinearGradient(tB.x,tB.y,bB.x,bB.y);
+    rg.addColorStop(0,dark(base,0.62));rg.addColorStop(1,dark(base,0.44));
+    ctx.fillStyle=rg;ctx.beginPath();ctx.moveTo(tB.x,tB.y);ctx.lineTo(tC.x,tC.y);ctx.lineTo(bC.x,bC.y);ctx.lineTo(bB.x,bB.y);ctx.closePath();ctx.fill();
+    let tg=ctx.createLinearGradient(tA.x,tA.y,tC.x,tC.y);
+    tg.addColorStop(0,lite(baseTop,0.20));tg.addColorStop(1,dark(baseTop,0.90));
+    ctx.fillStyle=tg;ctx.beginPath();ctx.moveTo(tA.x,tA.y);ctx.lineTo(tB.x,tB.y);ctx.lineTo(tC.x,tC.y);ctx.lineTo(tD.x,tD.y);ctx.closePath();ctx.fill();
+    ctx.strokeStyle=lite(baseTop,0.42);ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(tD.x,tD.y);ctx.lineTo(tA.x,tA.y);ctx.lineTo(tB.x,tB.y);ctx.stroke();
+  }
   function drawTall(c,r,ch){
     if(ch==='#'){ slab(c,r,'#b9c0d4',1.0,1.0,(c+r)&1); return; }
+    if(ch==='='||ch==='1'||ch==='2'||ch==='3'||ch==='4'){    // plošina / svah
+      const ink=room().ink, base=ch==='='?lite(ink,0.06):lite(ink,0.16);
+      drawTilt(c,r,base,cornerH(ch,0,0),cornerH(ch,1,0),cornerH(ch,1,1),cornerH(ch,0,1),(c+r)&1);
+      return;
+    }
+    if(ch==='C'){                                        // mačkací lis
+      slab(c,r, dark(room().ink,0.55),0,0.4,(c+r)&1);    // podstavec
+      const h=crushH(c,r); slab(c,r, h<0.12?'#ff5a4a':'#d23b2e', h+0.72, 0.72,(c+r)&1); // padající blok
+      return;
+    }
     const ink=room().ink;                               // píst
     slab(c,r, dark(ink,0.7),0,0.4,(c+r)&1);             // šachta
     const h=pistonH(c,r); slab(c,r,'#9fb3d2', h*1.1+0.16, h*1.1+0.55,(c+r)&1);
@@ -320,6 +446,21 @@
     let dx=b.vx-b.vy,dy=b.vx+b.vy;const m=Math.hypot(dx,dy)||1;
     metalBall(p,TW*0.46,{x:dx/m,y:dy/m});
   }
+  function drawEnemy(){
+    const e=S.enemy; if(!e) return;
+    const sh=iso(e.x,e.y,0), p=iso(e.x,e.y,0.4), R=TW*0.34;
+    softShadow(sh,TW*0.42,TH*0.42);
+    const g=ctx.createRadialGradient(p.x-R*0.4,p.y-R*0.45,R*0.08,p.x,p.y,R*1.05);
+    g.addColorStop(0,'#787d88');g.addColorStop(.4,'#2a2d36');g.addColorStop(1,'#070809');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,R,0,7);ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,.6)';ctx.lineWidth=Math.max(1,R*0.06);ctx.stroke();
+    let dx=e.vx-e.vy,dy=e.vx+e.vy;const m=Math.hypot(dx,dy)||1;
+    const ex=R*0.32, ey=-R*0.12, er=R*0.2, ox=dx/m*R*0.1, oy=dy/m*R*0.1;
+    ctx.fillStyle='#ff2a2a';                              // zlé červené oči
+    ctx.beginPath();ctx.arc(p.x-ex+ox,p.y+ey+oy,er,0,7);ctx.arc(p.x+ex+ox,p.y+ey+oy,er,0,7);ctx.fill();
+    ctx.strokeStyle='#000';ctx.lineWidth=Math.max(1,R*0.1);ctx.lineCap='round';
+    ctx.beginPath();ctx.arc(p.x,p.y+R*0.55,R*0.34,1.15*Math.PI,1.85*Math.PI);ctx.stroke();
+  }
 
   function render(t){
     ctx.clearRect(0,0,W,H);
@@ -330,7 +471,15 @@
         const c=s-r; if(c<0||c>=S.cols) continue;
         const ch=S.grid[r][c];
         if(ch===' '){}
-        else if(ch==='#'||ch==='P'){ drawTall(c,r,ch); tall.push([c,r,ch]); }
+        else if(ch==='#'||ch==='P'||ch==='C'||ch==='='||'1234'.includes(ch)){ drawTall(c,r,ch); tall.push([c,r,ch]); }
+        else if(ch==='T'){                                    // teleport
+          slab(c,r,ink,0,0.4,(c+r)&1);
+          const cn=iso(c+0.5,r+0.5,0.02);
+          const pg=ctx.createRadialGradient(cn.x,cn.y,0,cn.x,cn.y,TW*0.44);
+          pg.addColorStop(0,'#eafbff');pg.addColorStop(.4,'#39c9ff');pg.addColorStop(.75,'#9b5cff');pg.addColorStop(1,'rgba(80,40,160,0)');
+          ctx.globalAlpha=0.55+0.4*glow;ctx.fillStyle=pg;
+          ctx.beginPath();ctx.ellipse(cn.x,cn.y,TW*0.42,TH*0.42,0,0,7);ctx.fill();ctx.globalAlpha=1;
+        }
         else if(ch==='O'){
           slab(c,r,ink,0,0.4,(c+r)&1);
           const cn=iso(c+0.5,r+0.5,0.01);
@@ -338,7 +487,6 @@
           hg.addColorStop(0,'#000');hg.addColorStop(.7,'#0a0d14');hg.addColorStop(1,'rgba(10,13,20,0)');
           ctx.fillStyle=hg;ctx.beginPath();ctx.ellipse(cn.x,cn.y,TW*0.46,TH*0.46,0,0,7);ctx.fill();
         }
-        else if('1234'.includes(ch)){ slab(c,r,lite(ink,0.12),0,0.4,(c+r)&1); drawArrow(c,r,ch); }
         else if(ch==='g'){ slab(c,r, lite(ink,0.15+0.45*glow),0,0.4,(c+r)&1); }
         else if(ch==='A'){
           slab(c,r,'#2f7191',0,0.4,(c+r)&1);                    // tryska
@@ -353,6 +501,7 @@
     }
     // entity nad rovinou (ploché dlaždice je nesmí překrýt)
     for(let r=0;r<S.rows;r++)for(let c=0;c<S.cols;c++) if(S.grid[r][c]==='o') drawBearing(c,r,t);
+    drawEnemy();
     drawBobby();
     // vysoké bloky PŘED kuličkou překreslíme přes ni (správné překrytí zdí/pístů)
     const bd=S.ball.x+S.ball.y;
@@ -387,7 +536,7 @@
     document.getElementById('againBtn').onclick=()=>{
       S.collected={};S.names=[];S.falls=0;S.win=false;
       hudM.textContent="KULIČKY 0/5";hudR.textContent="PÁDY 0";
-      overlay.classList.add('hide');loadRoom("0,0",null);startLoop();
+      overlay.classList.add('hide');loadRoom(STARTKEY,null);startLoop();
     };
   }
 
@@ -409,7 +558,7 @@
       p.addEventListener('touchcancel',off,{passive:false});p.addEventListener('mousedown',on);p.addEventListener('mouseup',off);p.addEventListener('mouseleave',off);
     });
   }
-  function begin(){overlay.classList.add('hide');loadRoom("0,0",null);startLoop();}
+  function begin(){overlay.classList.add('hide');loadRoom(STARTKEY,null);startLoop();}
   document.getElementById('startBtn').onclick=()=>{S.mode='keys';begin();};
   document.getElementById('touchBtn').onclick=()=>{document.body.classList.add('touch');bindTouch();S.mode='touch';begin();};
   document.getElementById('gyroBtn').onclick=()=>{ enableGyro(ok=>{ if(!ok){document.getElementById('gyroNote').textContent='Gyroskop se nepodařilo zapnout (potřeba HTTPS + povolení). Zkus klávesnici nebo dotyk.';return;} S.mode='gyro';begin(); }); };
@@ -428,7 +577,7 @@
   addEventListener('resize',resize);
 
   // start
-  resize(); loadRoom("0,0",null); resize(); render(0);
+  resize(); loadRoom(STARTKEY,null); resize(); render(0);
 })();
 </script>
 </body>
