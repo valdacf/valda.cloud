@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>BOBBY BEARING</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;color:#fff;
+    font-family:"Segoe UI",system-ui,ui-sans-serif,sans-serif;
+    background:radial-gradient(circle at 50% 35%,#1b2740 0%,#0a0e18 70%,#05070d 100%);
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:6px;}
+  #stage{position:relative;width:100%;height:100%;
+    border-radius:12px;overflow:hidden;
+    background:radial-gradient(circle at 50% 38%,#121a2c 0%,#070a12 75%);
+    box-shadow:0 18px 60px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.06);}
+  canvas{display:block;width:100%;height:100%;}
+  #hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;
+    gap:8px;padding:12px 16px;font-size:14px;font-weight:600;letter-spacing:.4px;
+    text-shadow:0 1px 3px rgba(0,0,0,.8);pointer-events:none;}
+  #hud .left{color:#ffd54a}#hud .mid{color:#7ef0c4}#hud .right{color:#e6ecff}
+  #msg{position:absolute;left:0;right:0;bottom:14px;text-align:center;
+    font-size:14px;font-weight:600;color:#9bf6cf;text-shadow:0 1px 4px rgba(0,0,0,.9);
+    pointer-events:none;min-height:18px;}
+  #overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;padding:22px;
+    background:radial-gradient(circle at 50% 40%,rgba(20,30,52,.92),rgba(5,8,16,.96));
+    backdrop-filter:blur(2px);}
+  #overlay h1{font-size:clamp(26px,6.5vw,44px);margin:0;font-weight:800;letter-spacing:1px;
+    background:linear-gradient(180deg,#fff,#aab6d8);-webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;text-shadow:0 4px 18px rgba(80,120,255,.25);}
+  #overlay .edge{display:inline-block;margin:8px 0 16px;font-size:11px;font-weight:700;letter-spacing:2px;
+    color:#0a0e18;background:linear-gradient(180deg,#ffe14a,#ffb02a);padding:3px 12px;border-radius:20px;}
+  #overlay h2{font-size:13px;margin:0 0 16px;color:#8fd6ff;font-weight:500;letter-spacing:.5px;}
+  #overlay p{font-size:13.5px;line-height:1.65;color:#cfd8ee;max-width:480px;margin:5px 0;}
+  .key{display:inline-block;background:#eef2ff;color:#1a2236;border-radius:5px;
+    padding:1px 7px;margin:0 2px;font-weight:700;font-size:12px;
+    box-shadow:0 2px 0 #5566aa,0 3px 6px rgba(0,0,0,.4);}
+  button{font-family:inherit;font-weight:700;letter-spacing:.4px;cursor:pointer;color:#0a0e18;
+    border:none;padding:12px 22px;font-size:14px;border-radius:10px;margin:7px;
+    background:linear-gradient(180deg,#7ef0c4,#33c98e);box-shadow:0 5px 16px rgba(40,200,140,.35);
+    transition:transform .08s;}
+  button.alt{background:linear-gradient(180deg,#ffe14a,#ffb02a);box-shadow:0 5px 16px rgba(255,180,40,.3);}
+  button:active{transform:translateY(2px);}
+  #gyroNote{font-size:11.5px;color:#d9a6ff;margin-top:12px;max-width:440px}
+  .hide{display:none!important;}
+  #touch{position:absolute;inset:0;display:none;}
+  .pad{position:absolute;width:68px;height:68px;border-radius:50%;
+    border:1.5px solid rgba(255,255,255,.35);background:rgba(120,240,200,.14);
+    color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;
+    backdrop-filter:blur(3px);}
+  body.touch #touch{display:block;}
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <canvas id="game"></canvas>
+  <div id="hud"><span class="left">START</span><span class="mid">KULIČKY 0/5</span><span class="right">PÁDY 0</span></div>
+  <div id="msg">&nbsp;</div>
+
+  <div id="touch">
+    <div class="pad" data-dir="up"    style="left:50%;top:58%;transform:translateX(-50%)">▲</div>
+    <div class="pad" data-dir="down"  style="left:50%;top:84%;transform:translateX(-50%)">▼</div>
+    <div class="pad" data-dir="left"  style="left:5%;top:71%">◀</div>
+    <div class="pad" data-dir="right" style="right:5%;top:71%">▶</div>
+  </div>
+
+  <div id="overlay">
+    <h1>Bobby Bearing</h1><span class="edge">THE EDGE · 1986</span>
+    <h2>izometrická pocta klasice</h2>
+    <p>Jsi kulička z ložiska. Tvých <b style="color:#ffe14a">5 mladších bráchů</b>
+       (Boogle, Osborne, Bert, Bungo, Barnaby) se ztratilo v plošinovém světě.
+       Najdi je všechny a doveď se do <b style="color:#7ef0c4">cíle</b>.</p>
+    <p>Plošiny plují v prázdnotě — spadneš = zpátky na začátek obrazovky.
+       Obrazovky se překlápějí, když dojedeš na okraj.</p>
+    <p>PC: <span class="key">↑</span><span class="key">↓</span><span class="key">←</span><span class="key">→</span>
+       / <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span>
+       &nbsp;•&nbsp; <span class="key">R</span> = respawn</p>
+    <button id="startBtn">Hrát (klávesnice)</button>
+    <button id="gyroBtn" class="alt">Gyroskop</button>
+    <button id="touchBtn" class="alt">Dotyk</button>
+    <div id="gyroNote">Gyroskop na iPhonu potřebuje povolení + HTTPS. Telefon nakláněj jako tác s kuličkou.</div>
+  </div>
+</div></div>
+
+<script>
+"use strict";
+(function(){
+  const cv=document.getElementById('game'), ctx=cv.getContext('2d');
+  const hudL=document.querySelector('#hud .left');
+  const hudM=document.querySelector('#hud .mid');
+  const hudR=document.querySelector('#hud .right');
+  const msgEl=document.getElementById('msg');
+  const overlay=document.getElementById('overlay');
+
+  let W=860, H=538;             // logické rozměry (CSS px)
+  let TW=30, TH=15, HZ=22;      // velikost dlaždice (přepočítává se)
+  let ORX=0, ORY=0;
+
+  // ---------- barevné utility (hladké přechody) ----------
+  function rgb(h){
+    if(h[0]==='#'){h=h.slice(1);return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+    const m=String(h).match(/-?\d+/g)||[0,0,0]; return [+m[0],+m[1],+m[2]];
+  }
+  function dark(h,f){const[r,g,b]=rgb(h);const c=v=>Math.round(v*f);return `rgb(${c(r)},${c(g)},${c(b)})`;}
+  function lite(h,t){const[r,g,b]=rgb(h);const c=v=>Math.round(v+(255-v)*t);return `rgb(${c(r)},${c(g)},${c(b)})`;}
+
+  // ---------- projekce ----------
+  function iso(wx,wy,h){ return {x:ORX+(wx-wy)*TW, y:ORY+(wx+wy)*TH-(h||0)*HZ}; }
+
+  // ---------- svět (propojené obrazovky dle původní mapy) ----------
+  const ROOMS={
+   "0,0":{name:"START", ink:"#19c3c3", nbr:{E:"1,0",S:"0,1"}, map:[
+      "             ","             ","   .......   ","   ..S....   ",
+      "   ..........","   ..........","   .......   ","   .......   ",
+      "      ..     ","      ..     "]},
+   "1,0":{name:"PERON", ink:"#cf45cf", nbr:{W:"0,0",E:"2,0",S:"1,1"}, bearing:"BOOGLE", map:[
+      "             ","             ","   .......   ","   ...o...   ",
+      ".............",".............","   ..111..   ","   .......   ",
+      "      ..     ","      ..     "]},
+   "2,0":{name:"PROPASTI", ink:"#d6c637", nbr:{W:"1,0",S:"2,1"}, bearing:"OSBORNE", map:[
+      "             ","             ","   .......   ","   ..o....   ",
+      "..........   ","..........   ","   .OAAO..   ","   .......   ",
+      "      ..     ","      ..     "]},
+   "1,1":{name:"VALY", ink:"#3cc24e", nbr:{N:"1,0",W:"0,1",E:"2,1"}, bearing:"BERT", map:[
+      "      ..     ","      ..     ","   ..o....   ","   .......   ",
+      "......P......","......P......","   ..###..   ","   .......   ",
+      "             ","             "]},
+   "0,1":{name:"ZÁPAD", ink:"#c9ccd8", nbr:{N:"0,0",E:"1,1"}, bearing:"BARNABY", map:[
+      "      ..     ","      ..     ","   .......   ","   ....o..   ",
+      "   ..........","   ..........","   .......   ","   .......   ",
+      "             ","             "]},
+   "2,1":{name:"KŘIŽOVATKA", ink:"#e0524a", nbr:{N:"2,0",W:"1,1",E:"3,1"}, bearing:"BUNGO", map:[
+      "      ..     ","      ..     ","   .......   ","   ...o...   ",
+      ".............",".............","   ..O.O..   ","   .......   ",
+      "             ","             "]},
+   "3,1":{name:"CÍL", ink:"#19c3c3", nbr:{W:"2,1"}, goal:true, map:[
+      "             ","             ","   .......   ","   .ggggg.   ",
+      "..........   ","..........   ","   .ggggg.   ","   .......   ",
+      "             ","             "]},
+  };
+
+  const S={
+    key:"0,0", grid:[], cols:0, rows:0,
+    ball:{x:0,y:0,vx:0,vy:0,z:0,vz:0,r:0.34,falling:false,fallT:0},
+    entry:{x:3.5,y:3.5}, input:{ix:0,iy:0}, keys:{},
+    collected:{}, names:[], falls:0, running:false, win:false, mode:null, simT:0,
+  };
+
+  function charAt(c,r){ if(r<0||r>=S.rows||c<0||c>=S.cols) return ' '; return S.grid[r][c]; }
+  function setChar(c,r,ch){ const row=S.grid[r].slice(); row[c]=ch; S.grid[r]=row; }
+  function isWall(c,r){ const ch=charAt(c,r); if(ch==='#')return true; if(ch==='P')return pistonH(c,r)>0.5; return false; }
+  function room(){ return ROOMS[S.key]; }
+
+  function computeProjection(){
+    // napasuj na bounding box skutečných plošin (ne prázdný okraj)
+    const bb=S.bbox||{c0:0,c1:(S.cols||13)-1,r0:0,r1:(S.rows||10)-1};
+    const wc=(bb.c1-bb.c0+1), wr=(bb.r1-bb.r0+1), span=wc+wr;
+    TW=Math.min(W*0.97/span, H*0.95/(span*0.5+1.4));
+    TH=TW*0.5; HZ=TW*0.8;
+    const cellX=(bb.c0+bb.c1+1)/2, cellY=(bb.r0+bb.r1+1)/2;
+    const cx=(cellX-cellY)*TW, cy=(cellX+cellY)*TH;
+    ORX=W/2-cx; ORY=H/2-cy-HZ*0.55;
+  }
+
+  function loadRoom(key, appearSide, keepPerp){
+    S.key=key; const rm=ROOMS[key];
+    S.grid=rm.map.map(s=>s.split(''));
+    S.rows=S.grid.length; S.cols=S.grid[0].length;
+    if(rm.bearing && S.collected[key]){
+      for(let r=0;r<S.rows;r++)for(let c=0;c<S.cols;c++) if(S.grid[r][c]==='o') S.grid[r][c]='.';
+    }
+    // bounding box neprázdných dlaždic
+    let c0=S.cols,c1=-1,r0=S.rows,r1=-1;
+    for(let r=0;r<S.rows;r++)for(let c=0;c<S.cols;c++){ if(S.grid[r][c]!==' '){ if(c<c0)c0=c; if(c>c1)c1=c; if(r<r0)r0=r; if(r>r1)r1=r; } }
+    if(c1<0){c0=0;c1=S.cols-1;r0=0;r1=S.rows-1;}
+    S.bbox={c0,c1,r0,r1};
+    computeProjection();
+    const b=S.ball;
+    if(appearSide){
+      if(appearSide==='W'){ b.x=1.3; b.y=keepPerp; }
+      else if(appearSide==='E'){ b.x=S.cols-1.3; b.y=keepPerp; }
+      else if(appearSide==='N'){ b.y=1.3; b.x=keepPerp; }
+      else if(appearSide==='S'){ b.y=S.rows-1.3; b.x=keepPerp; }
+    }else{
+      for(let r=0;r<S.rows;r++)for(let c=0;c<S.cols;c++) if(S.grid[r][c]==='S'){ b.x=c+0.5; b.y=r+0.5; }
+      b.vx=b.vy=0;
+    }
+    S.entry={x:b.x,y:b.y};
+    b.z=0; b.vz=0; b.falling=false; b.fallT=0;
+    hudL.textContent=rm.name;
+  }
+  function respawn(){ const b=S.ball; b.x=S.entry.x;b.y=S.entry.y;b.vx=0;b.vy=0;b.z=0;b.vz=0;b.falling=false;b.fallT=0; }
+
+  // ---------- fyzika ----------
+  const ACCEL=9.0, RAMP=7.5, FRIC=2.3, REST=0.42, MAXV=7.5;
+  const GRAV=15, HOP=4.2, PSPEED=2.0;   // vertikála + písty
+  function pistonH(c,r){ return 0.5+0.5*Math.sin(S.simT*PSPEED + (c*1.6+r*2.3)); } // 0..1, plynule nahoru/dolů
+  function rampAccel(ch){ if(ch==='1')return{x:RAMP,y:0};if(ch==='2')return{x:-RAMP,y:0};if(ch==='3')return{x:0,y:RAMP};if(ch==='4')return{x:0,y:-RAMP};return{x:0,y:0}; }
+
+  function step(dt){
+    const b=S.ball; S.simT+=dt; if(S.win) return;
+    if(b.falling){
+      b.fallT+=dt; b.vz-=24*dt; b.z+=b.vz*dt; b.x+=b.vx*dt*0.25; b.y+=b.vy*dt*0.25;
+      if(b.fallT>0.85){ S.falls++; hudR.textContent="PÁDY "+S.falls; respawn(); }
+      return;
+    }
+    let ix=S.input.ix, iy=S.input.iy;
+    if(S.keys['up']||S.keys['w'])iy-=1; if(S.keys['down']||S.keys['s'])iy+=1;
+    if(S.keys['left']||S.keys['a'])ix-=1; if(S.keys['right']||S.keys['d'])ix+=1;
+    ix=Math.max(-1,Math.min(1,ix)); iy=Math.max(-1,Math.min(1,iy));
+    b.vx+=(ix+iy)*0.5*ACCEL*dt; b.vy+=(iy-ix)*0.5*ACCEL*dt;
+    const ra=rampAccel(charAt(Math.floor(b.x),Math.floor(b.y))); b.vx+=ra.x*dt; b.vy+=ra.y*dt;
+    const sp=Math.hypot(b.vx,b.vy); if(sp>0){const ns=Math.max(0,sp-FRIC*dt);b.vx*=ns/sp;b.vy*=ns/sp;}
+    const sp2=Math.hypot(b.vx,b.vy); if(sp2>MAXV){b.vx*=MAXV/sp2;b.vy*=MAXV/sp2;}
+    moveAxis('x',b.vx*dt); moveAxis('y',b.vy*dt);
+    // vertikála: vzduchová tryska nadhazuje, jinak gravitace
+    const here=charAt(Math.floor(b.x),Math.floor(b.y));
+    if(here==='A' && b.z<0.03) b.vz=HOP;
+    b.vz-=GRAV*dt; b.z+=b.vz*dt; if(b.z<0){b.z=0;b.vz=0;}
+    const nb=room().nbr||{};
+    if(b.x<0&&nb.W){loadRoom(nb.W,'E',clampY(b.y));return;}
+    if(b.x>=S.cols&&nb.E){loadRoom(nb.E,'W',clampY(b.y));return;}
+    if(b.y<0&&nb.N){loadRoom(nb.N,'S',clampX(b.x));return;}
+    if(b.y>=S.rows&&nb.S){loadRoom(nb.S,'N',clampX(b.x));return;}
+    checkTile();
+  }
+  function clampY(y){return Math.max(1.3,Math.min(S.rows-1.3,y));}
+  function clampX(x){return Math.max(1.3,Math.min(S.cols-1.3,x));}
+  function moveAxis(axis,d){
+    const b=S.ball,r=b.r;
+    if(axis==='x'){ b.x+=d; const c=Math.floor(b.x+(d>0?r:-r));
+      for(let rr=Math.floor(b.y-r);rr<=Math.floor(b.y+r);rr++) if(isWall(c,rr)){b.x=d>0?c-r-1e-4:c+1+r+1e-4;b.vx=-b.vx*REST;}
+    }else{ b.y+=d; const rr=Math.floor(b.y+(d>0?r:-r));
+      for(let cc=Math.floor(b.x-r);cc<=Math.floor(b.x+r);cc++) if(isWall(cc,rr)){b.y=d>0?rr-r-1e-4:rr+1+r+1e-4;b.vy=-b.vy*REST;}
+    }
+  }
+  function checkTile(){
+    const b=S.ball,c=Math.floor(b.x),r=Math.floor(b.y),ch=charAt(c,r);
+    const grounded=b.z<0.06;   // ve vzduchu (po trysce) díry nepropadnou
+    if(ch===' '){ if(grounded)startFall(); return; }
+    if(ch==='O'){const dx=b.x-(c+0.5),dy=b.y-(r+0.5);if(grounded && Math.hypot(dx,dy)<0.5-b.r*0.35){startFall();return;}}
+    if(ch==='o'){const rm=room();S.collected[S.key]=true;setChar(c,r,'.');S.names.push(rm.bearing);
+      hudM.textContent="KULIČKY "+S.names.length+"/5";flash(rm.bearing+" zachráněn!  ("+S.names.length+"/5)");}
+    if(ch==='g'){ if(S.names.length>=5){S.win=true;winScreen();} else flash("Najdi všech 5 kuliček! ("+S.names.length+"/5)"); }
+  }
+  function startFall(){const b=S.ball;b.falling=true;b.vz=0.5;b.fallT=0;}
+  let flashT=0,flashMsg="";
+  function flash(m){flashMsg=m;flashT=1.6;msgEl.textContent=m;}
+
+  // ---------- vykreslení (hladké) ----------
+  function slab(c,r,base,topH,thick,alt){
+    const tA=iso(c,r,topH),tB=iso(c+1,r,topH),tC=iso(c+1,r+1,topH),tD=iso(c,r+1,topH);
+    const bB=iso(c+1,r,topH-thick),bC=iso(c+1,r+1,topH-thick),bD=iso(c,r+1,topH-thick);
+    const baseTop=alt?dark(base,0.84):base;
+    // levý bok (gradient dolů, tmavší)
+    let lg=ctx.createLinearGradient(tD.x,tD.y,bD.x,bD.y);
+    lg.addColorStop(0,dark(base,0.46));lg.addColorStop(1,dark(base,0.30));
+    ctx.fillStyle=lg;ctx.beginPath();ctx.moveTo(tD.x,tD.y);ctx.lineTo(tC.x,tC.y);ctx.lineTo(bC.x,bC.y);ctx.lineTo(bD.x,bD.y);ctx.closePath();ctx.fill();ctx.strokeStyle=lg;ctx.lineWidth=1;ctx.stroke();
+    // pravý bok
+    let rg=ctx.createLinearGradient(tB.x,tB.y,bB.x,bB.y);
+    rg.addColorStop(0,dark(base,0.62));rg.addColorStop(1,dark(base,0.44));
+    ctx.fillStyle=rg;ctx.beginPath();ctx.moveTo(tB.x,tB.y);ctx.lineTo(tC.x,tC.y);ctx.lineTo(bC.x,bC.y);ctx.lineTo(bB.x,bB.y);ctx.closePath();ctx.fill();ctx.strokeStyle=rg;ctx.lineWidth=1;ctx.stroke();
+    // horní deska (jemný gradient)
+    let tg=ctx.createLinearGradient(tA.x,tA.y,tC.x,tC.y);
+    tg.addColorStop(0,lite(baseTop,0.18));tg.addColorStop(1,dark(baseTop,0.92));
+    ctx.fillStyle=tg;ctx.beginPath();ctx.moveTo(tA.x,tA.y);ctx.lineTo(tB.x,tB.y);ctx.lineTo(tC.x,tC.y);ctx.lineTo(tD.x,tD.y);ctx.closePath();ctx.fill();
+    ctx.strokeStyle=tg;ctx.lineWidth=1;ctx.stroke();
+    // horní hrany — jemné světlo
+    ctx.strokeStyle=lite(baseTop,0.42);ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(tD.x,tD.y);ctx.lineTo(tA.x,tA.y);ctx.lineTo(tB.x,tB.y);ctx.stroke();
+    return {tA,tB,tC,tD};
+  }
+
+  function drawTall(c,r,ch){
+    if(ch==='#'){ slab(c,r,'#b9c0d4',1.0,1.0,(c+r)&1); return; }
+    const ink=room().ink;                               // píst
+    slab(c,r, dark(ink,0.7),0,0.4,(c+r)&1);             // šachta
+    const h=pistonH(c,r); slab(c,r,'#9fb3d2', h*1.1+0.16, h*1.1+0.55,(c+r)&1);
+  }
+  function drawArrow(c,r,ch){
+    const cen=iso(c+0.5,r+0.5,0);
+    ctx.fillStyle='rgba(20,20,20,.8)';ctx.font='bold '+(TW*0.5)+'px sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText({'1':'▶','2':'◀','3':'▼','4':'▲'}[ch]||'',cen.x,cen.y);
+  }
+
+  function softShadow(p,rx,ry){
+    const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,rx);
+    g.addColorStop(0,'rgba(0,0,0,.45)');g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(p.x,p.y,rx,ry,0,0,7);ctx.fill();
+  }
+  function metalBall(p,R,faceDir){
+    const g=ctx.createRadialGradient(p.x-R*0.4,p.y-R*0.45,R*0.08,p.x,p.y,R*1.05);
+    g.addColorStop(0,'#ffffff');g.addColorStop(.35,'#e2e6ee');g.addColorStop(.7,'#9aa2b4');g.addColorStop(1,'#4a5060');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,R,0,7);ctx.fill();
+    // jemný okraj
+    ctx.strokeStyle='rgba(20,24,34,.5)';ctx.lineWidth=Math.max(1,R*0.05);ctx.stroke();
+    // oči
+    const ex=R*0.34, ey=-R*0.16, er=R*0.26;
+    ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.arc(p.x-ex,p.y+ey,er,0,7);ctx.arc(p.x+ex*0.92,p.y+ey,er,0,7);ctx.fill();
+    const ox=faceDir.x*R*0.12, oy=faceDir.y*R*0.12;
+    ctx.fillStyle='#1a1d28';
+    ctx.beginPath();ctx.arc(p.x-ex+ox,p.y+ey+oy,er*0.5,0,7);ctx.arc(p.x+ex*0.92+ox,p.y+ey+oy,er*0.5,0,7);ctx.fill();
+    // úsměv
+    ctx.strokeStyle='#1a1d28';ctx.lineWidth=Math.max(1,R*0.08);ctx.lineCap='round';
+    ctx.beginPath();ctx.arc(p.x,p.y+R*0.16,R*0.34,0.18*Math.PI,0.82*Math.PI);ctx.stroke();
+  }
+  function drawBearing(c,r,t){
+    const bob=Math.sin(t*4+(c+r))*0.1;
+    const p=iso(c+0.5,r+0.5,0.5+bob), sh=iso(c+0.5,r+0.5,0);
+    softShadow(sh,TW*0.42,TH*0.42);
+    metalBall(p,TW*0.32,{x:0,y:0});
+  }
+  function drawBobby(){
+    const b=S.ball, sh=iso(b.x,b.y,0), p=iso(b.x,b.y,b.z+0.45);
+    softShadow(sh,TW*0.52,TH*0.52);
+    let dx=b.vx-b.vy,dy=b.vx+b.vy;const m=Math.hypot(dx,dy)||1;
+    metalBall(p,TW*0.46,{x:dx/m,y:dy/m});
+  }
+
+  function render(t){
+    ctx.clearRect(0,0,W,H);
+    const ink=room().ink, glow=0.5+0.5*Math.sin(t*5);
+    const tall=[];
+    for(let s=0;s<=S.rows+S.cols;s++){
+      for(let r=0;r<S.rows;r++){
+        const c=s-r; if(c<0||c>=S.cols) continue;
+        const ch=S.grid[r][c];
+        if(ch===' '){}
+        else if(ch==='#'||ch==='P'){ drawTall(c,r,ch); tall.push([c,r,ch]); }
+        else if(ch==='O'){
+          slab(c,r,ink,0,0.4,(c+r)&1);
+          const cn=iso(c+0.5,r+0.5,0.01);
+          const hg=ctx.createRadialGradient(cn.x,cn.y,0,cn.x,cn.y,TW*0.46);
+          hg.addColorStop(0,'#000');hg.addColorStop(.7,'#0a0d14');hg.addColorStop(1,'rgba(10,13,20,0)');
+          ctx.fillStyle=hg;ctx.beginPath();ctx.ellipse(cn.x,cn.y,TW*0.46,TH*0.46,0,0,7);ctx.fill();
+        }
+        else if('1234'.includes(ch)){ slab(c,r,lite(ink,0.12),0,0.4,(c+r)&1); drawArrow(c,r,ch); }
+        else if(ch==='g'){ slab(c,r, lite(ink,0.15+0.45*glow),0,0.4,(c+r)&1); }
+        else if(ch==='A'){
+          slab(c,r,'#2f7191',0,0.4,(c+r)&1);                    // tryska
+          const cen=iso(c+0.5,r+0.5,0);
+          for(let k=0;k<3;k++){ const ph=((S.simT*1.6)+k/3)%1, yy=cen.y-ph*HZ*1.5;
+            ctx.globalAlpha=0.65*(1-ph); ctx.fillStyle='#cfeeff';
+            ctx.beginPath();ctx.arc(cen.x,yy,TW*0.13*(1-ph*0.5),0,7);ctx.fill(); }
+          ctx.globalAlpha=1;
+        }
+        else { slab(c,r,ink,0,0.4,(c+r)&1); }
+      }
+    }
+    // entity nad rovinou (ploché dlaždice je nesmí překrýt)
+    for(let r=0;r<S.rows;r++)for(let c=0;c<S.cols;c++) if(S.grid[r][c]==='o') drawBearing(c,r,t);
+    drawBobby();
+    // vysoké bloky PŘED kuličkou překreslíme přes ni (správné překrytí zdí/pístů)
+    const bd=S.ball.x+S.ball.y;
+    for(const [c,r,ch] of tall) if(c+r+1>bd) drawTall(c,r,ch);
+    if(flashT>0){
+      ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(0,H/2-20,W,40);
+      ctx.fillStyle='#ffe14a';ctx.font='600 '+Math.round(H*0.035)+'px Segoe UI,sans-serif';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(flashMsg,W/2,H/2);
+    }
+  }
+
+  // ---------- smyčka ----------
+  let last=0,acc=0;const FIXED=1/120;
+  function loop(ts){
+    if(!S.running) return;
+    if(!last)last=ts;let dt=(ts-last)/1000;last=ts;if(dt>0.1)dt=0.1;
+    if(flashT>0){flashT-=dt;if(flashT<=0)msgEl.innerHTML="&nbsp;";}
+    acc+=dt;while(acc>=FIXED){step(FIXED);acc-=FIXED;}
+    render(ts/1000);requestAnimationFrame(loop);
+  }
+  function startLoop(){S.running=true;last=0;acc=0;requestAnimationFrame(loop);}
+
+  function winScreen(){
+    S.running=false;overlay.classList.remove('hide');
+    overlay.innerHTML=
+      '<h1 style="-webkit-text-fill-color:#7ef0c4;color:#7ef0c4">Výhra!</h1>'+
+      '<p style="color:#ffb02a;font-weight:700;letter-spacing:1px;margin-top:10px">AND THEY ALL LIVED HAPPILY EVER HERE</p>'+
+      '<p>Zachránil jsi všech 5: <b style="color:#ffe14a">'+S.names.join(' · ')+'</b></p>'+
+      '<p>Pádů do prázdnoty: <b style="color:#7ef0c4">'+S.falls+'</b></p>'+
+      '<button id="againBtn">Hrát znovu</button>';
+    document.getElementById('againBtn').onclick=()=>{
+      S.collected={};S.names=[];S.falls=0;S.win=false;
+      hudM.textContent="KULIČKY 0/5";hudR.textContent="PÁDY 0";
+      overlay.classList.add('hide');loadRoom("0,0",null);startLoop();
+    };
+  }
+
+  // ---------- ovládání ----------
+  const km={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'w',a:'a',s:'s',d:'d',W:'w',A:'a',S:'s',D:'d'};
+  addEventListener('keydown',e=>{ if(e.key==='r'||e.key==='R'){respawn();return;} const k=km[e.key]; if(k){S.keys[k]=true;e.preventDefault();} });
+  addEventListener('keyup',e=>{ const k=km[e.key]; if(k){S.keys[k]=false;e.preventDefault();} });
+  function gyroHandler(ev){ const g=ev.gamma||0,b=ev.beta||0; S.input.ix=Math.max(-1,Math.min(1,g/28)); S.input.iy=Math.max(-1,Math.min(1,(b-32)/28)); }
+  function enableGyro(then){
+    const DOE=window.DeviceOrientationEvent;
+    if(DOE&&typeof DOE.requestPermission==='function'){
+      DOE.requestPermission().then(res=>{if(res==='granted'){addEventListener('deviceorientation',gyroHandler);then(true);}else then(false);}).catch(()=>then(false));
+    } else if(DOE){addEventListener('deviceorientation',gyroHandler);then(true);} else then(false);
+  }
+  function bindTouch(){
+    document.querySelectorAll('#touch .pad').forEach(p=>{
+      const dir=p.dataset.dir,on=e=>{e.preventDefault();S.keys[dir]=true;},off=e=>{e.preventDefault();S.keys[dir]=false;};
+      p.addEventListener('touchstart',on,{passive:false});p.addEventListener('touchend',off,{passive:false});
+      p.addEventListener('touchcancel',off,{passive:false});p.addEventListener('mousedown',on);p.addEventListener('mouseup',off);p.addEventListener('mouseleave',off);
+    });
+  }
+  function begin(){overlay.classList.add('hide');loadRoom("0,0",null);startLoop();}
+  document.getElementById('startBtn').onclick=()=>{S.mode='keys';begin();};
+  document.getElementById('touchBtn').onclick=()=>{document.body.classList.add('touch');bindTouch();S.mode='touch';begin();};
+  document.getElementById('gyroBtn').onclick=()=>{ enableGyro(ok=>{ if(!ok){document.getElementById('gyroNote').textContent='Gyroskop se nepodařilo zapnout (potřeba HTTPS + povolení). Zkus klávesnici nebo dotyk.';return;} S.mode='gyro';begin(); }); };
+
+  // ---------- rozměry / DPI ----------
+  function resize(){
+    const r=cv.getBoundingClientRect();
+    W=Math.max(320,Math.round(r.width)); H=Math.max(200,Math.round(r.height));
+    const dpr=window.devicePixelRatio||1;
+    cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.imageSmoothingEnabled=true;
+    computeProjection();
+    if(!S.running) render(0);
+  }
+  addEventListener('resize',resize);
+
+  // start
+  resize(); loadRoom("0,0",null); resize(); render(0);
+})();
+</script>
+</body>
+</html>
