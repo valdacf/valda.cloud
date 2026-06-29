@@ -12,7 +12,7 @@
   #hud{top:14px;left:0;right:0;text-align:center;font-size:18px;letter-spacing:1px;}
   #hud b{color:#ffd86b;}
   #cross{left:50%;top:54%;transform:translate(-50%,-50%);width:60px;height:60px;}
-  #cross svg{width:100%;height:100%;}
+  #cross svg{width:100%;height:100%;filter:drop-shadow(0 0 1.5px #000) drop-shadow(0 0 2.5px rgba(0,0,0,.8));}
   #radarBox{right:18px;bottom:18px;width:150px;height:150px;
     border-radius:50%;border:2px solid #6fe3a0;background:rgba(6,24,16,.6);
     box-shadow:0 0 16px rgba(0,0,0,.5),inset 0 0 24px rgba(0,40,20,.6);}
@@ -97,18 +97,18 @@ function compose(){ let m=arguments[0]; for(let i=1;i<arguments.length;i++) m=M.
 /* ---------------- shader ---------------- */
 const VS=`attribute vec3 aPos;attribute vec3 aNor;attribute vec2 aUV;
 uniform mat4 uProj,uView,uModel;uniform vec2 uUV;
-varying vec2 vUV;varying vec3 vN;varying float vFog;
+varying vec2 vUV;varying vec3 vN;varying vec3 vVP;
 void main(){vec4 wp=uModel*vec4(aPos,1.0);vec4 vp=uView*wp;gl_Position=uProj*vp;
-vN=mat3(uModel)*aNor;vUV=aUV*uUV;vFog=length(vp.xyz);}`;
+vN=mat3(uModel)*aNor;vUV=aUV*uUV;vVP=vp.xyz;}`;
 const FS=`precision mediump float;
 uniform sampler2D uTex;uniform float uUseTex,uLit,uFogOn,uNear,uFar;
 uniform vec3 uColor,uLightDir,uFogColor;
-varying vec2 vUV;varying vec3 vN;varying float vFog;
+varying vec2 vUV;varying vec3 vN;varying vec3 vVP;
 void main(){vec3 base=uUseTex>0.5?texture2D(uTex,vUV).rgb:uColor;
 float l=1.0;
 if(uLit>0.5){float d=max(dot(normalize(vN),normalize(uLightDir)),0.0);l=0.48+0.62*d;}
 vec3 c=base*l;
-if(uFogOn>0.5){float f=clamp((vFog-uNear)/(uFar-uNear),0.0,1.0);c=mix(c,uFogColor,f);}
+if(uFogOn>0.5){float f=clamp((length(vVP)-uNear)/(uFar-uNear),0.0,1.0);c=mix(c,uFogColor,f);}
 gl_FragColor=vec4(c,1.0);}`;
 function compile(t,src){const s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);
   if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(s); return s;}
@@ -212,9 +212,20 @@ function glTex(canvas){
 }
 let TEX={};
 function makeTextures(){
-  TEX.ground=glTex(texCanvas((g,w,h)=>{ softNoise(g,w,h,'#56743a',22);
-    for(let i=0;i<400;i++){g.strokeStyle='rgba('+(50+Math.random()*40|0)+','+(95+Math.random()*60|0)+',45,.45)';
-      const x=Math.random()*w,y=Math.random()*h;g.beginPath();g.moveTo(x,y);g.lineTo(x+(Math.random()*4-2),y-3-Math.random()*5);g.stroke();}}));
+  TEX.ground=glTex(texCanvas((g,w,h)=>{ softNoise(g,w,h,'#4e6e32',16);
+    // velké světlé/tmavé fleky = reliéf travnaté plochy
+    for(let i=0;i<24;i++){ const x=Math.random()*w,y=Math.random()*h,rr=28+Math.random()*72;
+      const lite=Math.random()<0.5;
+      const grd=g.createRadialGradient(x,y,2,x,y,rr);
+      grd.addColorStop(0, lite?'rgba(126,156,74,.40)':'rgba(38,56,26,.42)');
+      grd.addColorStop(1,'rgba(0,0,0,0)');
+      g.fillStyle=grd; g.beginPath(); g.arc(x,y,rr,0,7); g.fill(); }
+    // jemné sekané pruhy (dojem reliéfu posekané louky)
+    for(let y=0;y<h;y+=32){ g.fillStyle=(Math.floor(y/32)%2)?'rgba(255,255,255,.045)':'rgba(0,0,0,.06)'; g.fillRect(0,y,w,32); }
+    // stébla trávy
+    for(let i=0;i<700;i++){ g.lineWidth=1;
+      g.strokeStyle='rgba('+(44+Math.random()*46|0)+','+(92+Math.random()*68|0)+','+(38+Math.random()*26|0)+',.5)';
+      const x=Math.random()*w,y=Math.random()*h;g.beginPath();g.moveTo(x,y);g.lineTo(x+(Math.random()*4-2),y-3-Math.random()*6);g.stroke();}}));
   const facade=(base,glass)=>glTex(texCanvas((g,w,h)=>{ softNoise(g,w,h,base,10);
     const cols=4,rows=6,mx=20,my=16,gw=(w-mx*(cols+1))/cols,gh=(h-my*(rows+1))/rows;
     for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const lit=Math.random()<0.35;
@@ -373,8 +384,14 @@ function spawnWave(){
 }
 function spawnEnemy(){
   const D=DIFFS[difficulty];
-  const ang=Math.random()*Math.PI*2, dist=42+Math.random()*22;
-  enemies.push({ x:player.x+Math.sin(ang)*dist, z:player.z+Math.cos(ang)*dist,
+  const EDGE=ARENA-8;              // bezpečný okraj — tank musí zůstat uvnitř hřiště
+  let x,z,t=0;
+  do{ const ang=Math.random()*Math.PI*2, dist=42+Math.random()*22;
+    x=player.x+Math.sin(ang)*dist; z=player.z+Math.cos(ang)*dist; t++;
+  }while((Math.hypot(x,z)>EDGE || blocked(x,z,3)) && t<40);
+  // když se nepovedlo najít volné místo, stáhni tank dovnitř arény ke středu
+  const d=Math.hypot(x,z); if(d>EDGE){ const k=EDGE/d; x*=k; z*=k; }
+  enemies.push({ x, z,
     a:Math.random()*Math.PI*2, cool:D.fireMin+Math.random()*D.fireRnd, alive:true, boom:0, parts:null,
     steer:Math.random()<0.5?-1:1, stuck:0 });
 }
@@ -548,8 +565,8 @@ function render(){
   gl.uniformMatrix4fv(U.uProj,false,proj);
   gl.uniformMatrix4fv(U.uView,false,view);
   gl.uniform3fv(U.uLightDir,LIGHT);
-  gl.uniform3fv(U.uFogColor,[0.81,0.88,0.92]);
-  gl.uniform1f(U.uNear,70); gl.uniform1f(U.uFar,320);
+  gl.uniform3fv(U.uFogColor,[0.76,0.83,0.82]);
+  gl.uniform1f(U.uNear,140); gl.uniform1f(U.uFar,560);
 
   // obloha (bez mlhy/světla, bez zápisu hloubky)
   gl.depthMask(false);
@@ -557,7 +574,7 @@ function render(){
   gl.depthMask(true);
 
   // země
-  draw(GEO.plane,M.S(1400,1,1400),{tex:TEX.ground,uv:[70,70]});
+  draw(GEO.plane,M.S(1400,1,1400),{tex:TEX.ground,uv:[42,42]});
   // kopce
   for(const h of hills) draw(GEO.cone7,compose(M.T(h.x,0,h.z),M.S(h.r,h.h,h.r)),{color:[0.33,0.40,0.25]});
   // domy
