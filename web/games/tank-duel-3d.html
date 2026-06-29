@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tank Duel 3D</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#1a2b33;
+    font-family:"Segoe UI",Arial,sans-serif;color:#eaf6ff;user-select:none;}
+  #gl{position:fixed;inset:0;display:block;}
+  .overlay{position:fixed;pointer-events:none;text-shadow:0 1px 3px #000;}
+  #hud{top:14px;left:0;right:0;text-align:center;font-size:18px;letter-spacing:1px;}
+  #hud b{color:#ffd86b;}
+  #cross{left:50%;top:54%;transform:translate(-50%,-50%);width:60px;height:60px;}
+  #cross svg{width:100%;height:100%;}
+  #radarBox{right:18px;bottom:18px;width:150px;height:150px;
+    border-radius:50%;border:2px solid #6fe3a0;background:rgba(6,24,16,.6);
+    box-shadow:0 0 16px rgba(0,0,0,.5),inset 0 0 24px rgba(0,40,20,.6);}
+  #radar{width:150px;height:150px;border-radius:50%;}
+  #lockTxt{left:50%;top:46%;transform:translateX(-50%);color:#ff5b5b;
+    font-weight:700;letter-spacing:3px;font-size:15px;display:none;}
+  #msg{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;background:radial-gradient(circle at 50% 40%,rgba(20,40,55,.55),rgba(8,16,22,.92));}
+  #msg h1{font-size:46px;margin:0 0 6px;letter-spacing:3px;
+    background:linear-gradient(#ffe08a,#e89b3b);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  #msg p{margin:5px;font-size:16px;color:#cfe2ee;max-width:560px;line-height:1.5;}
+  .key{background:#22404f;border:1px solid #4d7388;border-radius:5px;padding:1px 7px;color:#bfe6ff;font-size:14px;}
+  #diff{display:flex;gap:12px;margin:18px 0 4px;}
+  #diff button{background:#16303c;color:#cfe;border:2px solid #3c6478;border-radius:8px;
+    padding:10px 18px;font-size:15px;cursor:pointer;pointer-events:auto;opacity:.6;transition:.15s;}
+  #diff button.sel{opacity:1;background:#1f6b46;border-color:#5fe39c;box-shadow:0 0 14px rgba(80,230,150,.5);}
+  #startBtn{margin-top:14px;background:#c8852a;color:#1a120a;border:none;border-radius:9px;
+    padding:13px 34px;font-size:20px;font-weight:700;letter-spacing:2px;cursor:pointer;pointer-events:auto;}
+  #startBtn:hover{background:#e0992f;}
+  #sound{margin-top:10px;font-size:13px;color:#9fb8c6;pointer-events:auto;cursor:pointer;}
+  #msg.hidden{display:none;}
+  #hint{bottom:14px;left:16px;font-size:13px;color:#9fb8c6;}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<div id="hud" class="overlay"></div>
+<div id="cross" class="overlay"><svg viewBox="0 0 60 60"></svg></div>
+<div id="lockTxt" class="overlay">ZAMĚŘENO</div>
+<div id="radarBox" class="overlay"><canvas id="radar" width="150" height="150"></canvas></div>
+<div id="hint" class="overlay">WASD / šipky • SHIFT přesné míření • MEZERNÍK palba</div>
+
+<div id="msg">
+  <h1>TANK DUEL 3D</h1>
+  <p>Texturovaný tankový souboj v 3D městě. Lov nepřátelské tanky mezi domy, sleduj radar a nenech se trefit.</p>
+  <p><span class="key">W A S D</span> / šipky pohyb &nbsp; <span class="key">SHIFT</span> přesné míření &nbsp; <span class="key">MEZERNÍK</span> palba</p>
+  <p>Když zaměřovač zčervená, máš jistý zásah.</p>
+  <div id="diff">
+    <button data-d="0">REKRUT</button>
+    <button data-d="1" class="sel">VOJÁK</button>
+    <button data-d="2">VETERÁN</button>
+  </div>
+  <div id="missileToggle" style="margin-top:8px;font-size:14px;color:#9fb8c6;cursor:pointer;pointer-events:auto">☐ Naváděné střely: VYPNUTO (klikni pro zapnutí)</div>
+  <button id="startBtn">START</button>
+  <div id="sound">🔊 zvuk zapnut (klikni pro vypnutí)</div>
+</div>
+
+<script>
+"use strict";
+/* ====================================================================
+   Tank Duel 3D — vlastní WebGL engine (bez externích knihoven), WebAudio
+   ==================================================================== */
+const cv = document.getElementById('gl');
+const gl = cv.getContext('webgl') || cv.getContext('experimental-webgl');
+const W = ()=>innerWidth, H = ()=>innerHeight;
+
+/* ---------------- matice 4x4 (column-major) ---------------- */
+const M = {
+  ident:()=>new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]),
+  mul(a,b){ const o=new Float32Array(16);
+    for(let c=0;c<4;c++)for(let r=0;r<4;r++){ let s=0;
+      for(let k=0;k<4;k++) s+=a[k*4+r]*b[c*4+k]; o[c*4+r]=s; } return o; },
+  T(x,y,z){ const m=M.ident(); m[12]=x;m[13]=y;m[14]=z; return m; },
+  S(x,y,z){ const m=M.ident(); m[0]=x;m[5]=y;m[10]=z; return m; },
+  Rx(a){ const c=Math.cos(a),s=Math.sin(a),m=M.ident(); m[5]=c;m[6]=s;m[9]=-s;m[10]=c; return m; },
+  Ry(a){ const c=Math.cos(a),s=Math.sin(a),m=M.ident(); m[0]=c;m[2]=-s;m[8]=s;m[10]=c; return m; },
+  persp(fovy,asp,n,f){ const t=1/Math.tan(fovy/2),m=new Float32Array(16);
+    m[0]=t/asp; m[5]=t; m[10]=(f+n)/(n-f); m[11]=-1; m[14]=2*f*n/(n-f); return m; },
+  lookAt(e,c,u){
+    const z=norm([e[0]-c[0],e[1]-c[1],e[2]-c[2]]);
+    const x=norm(cross(u,z)); const y=cross(z,x);
+    return new Float32Array([ x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0,
+      -dot(x,e),-dot(y,e),-dot(z,e),1 ]); }
+};
+function cross(a,b){return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];}
+function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+function norm(v){const l=Math.hypot(v[0],v[1],v[2])||1;return [v[0]/l,v[1]/l,v[2]/l];}
+// composici více matic: compose(A,B,C) = A*B*C
+function compose(){ let m=arguments[0]; for(let i=1;i<arguments.length;i++) m=M.mul(m,arguments[i]); return m; }
+
+/* ---------------- shader ---------------- */
+const VS=`attribute vec3 aPos;attribute vec3 aNor;attribute vec2 aUV;
+uniform mat4 uProj,uView,uModel;uniform vec2 uUV;
+varying vec2 vUV;varying vec3 vN;varying float vFog;
+void main(){vec4 wp=uModel*vec4(aPos,1.0);vec4 vp=uView*wp;gl_Position=uProj*vp;
+vN=mat3(uModel)*aNor;vUV=aUV*uUV;vFog=length(vp.xyz);}`;
+const FS=`precision mediump float;
+uniform sampler2D uTex;uniform float uUseTex,uLit,uFogOn,uNear,uFar;
+uniform vec3 uColor,uLightDir,uFogColor;
+varying vec2 vUV;varying vec3 vN;varying float vFog;
+void main(){vec3 base=uUseTex>0.5?texture2D(uTex,vUV).rgb:uColor;
+float l=1.0;
+if(uLit>0.5){float d=max(dot(normalize(vN),normalize(uLightDir)),0.0);l=0.48+0.62*d;}
+vec3 c=base*l;
+if(uFogOn>0.5){float f=clamp((vFog-uNear)/(uFar-uNear),0.0,1.0);c=mix(c,uFogColor,f);}
+gl_FragColor=vec4(c,1.0);}`;
+function compile(t,src){const s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(s); return s;}
+let prog, A={}, U={};
+function initProgram(){
+  prog=gl.createProgram();
+  gl.attachShader(prog,compile(gl.VERTEX_SHADER,VS));
+  gl.attachShader(prog,compile(gl.FRAGMENT_SHADER,FS));
+  gl.linkProgram(prog); gl.useProgram(prog);
+  ['aPos','aNor','aUV'].forEach(n=>A[n]=gl.getAttribLocation(prog,n));
+  ['uProj','uView','uModel','uUV','uTex','uUseTex','uLit','uFogOn','uNear','uFar','uColor','uLightDir','uFogColor']
+    .forEach(n=>U[n]=gl.getUniformLocation(prog,n));
+}
+
+/* ---------------- geometrie ---------------- */
+function mkGeom(pos,nor,uv){
+  const g={count:pos.length/3};
+  g.p=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,g.p); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(pos),gl.STATIC_DRAW);
+  g.n=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,g.n); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(nor),gl.STATIC_DRAW);
+  g.u=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,g.u); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(uv),gl.STATIC_DRAW);
+  return g;
+}
+function boxGeom(){
+  const p=[],n=[],u=[];
+  const F=[ // normal, 4 rohy (CCW)
+    [[0,0,1],[[-.5,-.5,.5],[.5,-.5,.5],[.5,.5,.5],[-.5,.5,.5]]],
+    [[0,0,-1],[[.5,-.5,-.5],[-.5,-.5,-.5],[-.5,.5,-.5],[.5,.5,-.5]]],
+    [[1,0,0],[[.5,-.5,.5],[.5,-.5,-.5],[.5,.5,-.5],[.5,.5,.5]]],
+    [[-1,0,0],[[-.5,-.5,-.5],[-.5,-.5,.5],[-.5,.5,.5],[-.5,.5,-.5]]],
+    [[0,1,0],[[-.5,.5,.5],[.5,.5,.5],[.5,.5,-.5],[-.5,.5,-.5]]],
+    [[0,-1,0],[[-.5,-.5,-.5],[.5,-.5,-.5],[.5,-.5,.5],[-.5,-.5,.5]]],
+  ];
+  for(const [nm,q] of F){
+    const idx=[0,1,2,0,2,3], uvc=[[0,0],[1,0],[1,1],[0,1]];
+    for(const i of idx){ p.push(...q[i]); n.push(...nm); u.push(...uvc[i]); }
+  }
+  return mkGeom(p,n,u);
+}
+function planeGeom(){
+  return mkGeom(
+    [-.5,0,-.5, .5,0,-.5, .5,0,.5, -.5,0,-.5, .5,0,.5, -.5,0,.5],
+    [0,1,0, 0,1,0, 0,1,0, 0,1,0, 0,1,0, 0,1,0],
+    [0,0, 1,0, 1,1, 0,0, 1,1, 0,1]);
+}
+function cylGeom(seg){
+  const p=[],n=[],u=[];
+  for(let i=0;i<seg;i++){
+    const a0=i/seg*2*Math.PI, a1=(i+1)/seg*2*Math.PI;
+    const x0=Math.cos(a0),z0=Math.sin(a0),x1=Math.cos(a1),z1=Math.sin(a1);
+    // bok
+    const v=[[x0,-.5,z0,[x0,0,z0],i/seg,0],[x1,-.5,z1,[x1,0,z1],(i+1)/seg,0],
+             [x1,.5,z1,[x1,0,z1],(i+1)/seg,1],[x0,.5,z0,[x0,0,z0],i/seg,1]];
+    for(const k of [0,1,2,0,2,3]){const d=v[k];p.push(d[0],d[1],d[2]);n.push(...d[3]);u.push(d[4],d[5]);}
+    // víka
+    p.push(0,.5,0, x0,.5,z0, x1,.5,z1); n.push(0,1,0,0,1,0,0,1,0); u.push(.5,.5,.5+x0/2,.5+z0/2,.5+x1/2,.5+z1/2);
+    p.push(0,-.5,0, x1,-.5,z1, x0,-.5,z0); n.push(0,-1,0,0,-1,0,0,-1,0); u.push(.5,.5,.5+x1/2,.5+z1/2,.5+x0/2,.5+z0/2);
+  }
+  return mkGeom(p,n,u);
+}
+function coneGeom(seg){
+  const p=[],n=[],u=[],s=0.707;
+  for(let i=0;i<seg;i++){
+    const a0=i/seg*2*Math.PI,a1=(i+1)/seg*2*Math.PI;
+    const x0=Math.cos(a0),z0=Math.sin(a0),x1=Math.cos(a1),z1=Math.sin(a1);
+    p.push(0,1,0, x0,0,z0, x1,0,z1);
+    n.push(x0*s,s,z0*s, x0*s,s,z0*s, x1*s,s,z1*s);
+    u.push(.5,1, 0,0, 1,0);
+    p.push(0,0,0, x1,0,z1, x0,0,z0); n.push(0,-1,0,0,-1,0,0,-1,0);
+    u.push(.5,.5,.5+x1/2,.5+z1/2,.5+x0/2,.5+z0/2);
+  }
+  return mkGeom(p,n,u);
+}
+function sphereGeom(la,lo){
+  const p=[],n=[],u=[];
+  for(let i=0;i<la;i++)for(let j=0;j<lo;j++){
+    const verts=[[i,j],[i+1,j],[i+1,j+1],[i,j],[i+1,j+1],[i,j+1]];
+    for(const [vi,vj] of verts){
+      const th=vi/la*Math.PI, ph=vj/lo*2*Math.PI;
+      const x=Math.sin(th)*Math.cos(ph), y=Math.cos(th), z=Math.sin(th)*Math.sin(ph);
+      p.push(x,y,z); n.push(x,y,z); u.push(vj/lo, vi/la);
+    }
+  }
+  return mkGeom(p,n,u);
+}
+let GEO={};
+
+/* ---------------- textury ---------------- */
+function texCanvas(draw,w=256,h=256){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);return c;}
+function softNoise(g,w,h,base,amt){g.fillStyle=base;g.fillRect(0,0,w,h);
+  const im=g.getImageData(0,0,w,h),d=im.data;
+  for(let i=0;i<d.length;i+=4){const v=(Math.random()*2-1)*amt;d[i]+=v;d[i+1]+=v;d[i+2]+=v;}g.putImageData(im,0,0);}
+function glTex(canvas){
+  const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,canvas);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  return t;
+}
+let TEX={};
+function makeTextures(){
+  TEX.ground=glTex(texCanvas((g,w,h)=>{ softNoise(g,w,h,'#56743a',22);
+    for(let i=0;i<400;i++){g.strokeStyle='rgba('+(50+Math.random()*40|0)+','+(95+Math.random()*60|0)+',45,.45)';
+      const x=Math.random()*w,y=Math.random()*h;g.beginPath();g.moveTo(x,y);g.lineTo(x+(Math.random()*4-2),y-3-Math.random()*5);g.stroke();}}));
+  const facade=(base,glass)=>glTex(texCanvas((g,w,h)=>{ softNoise(g,w,h,base,10);
+    const cols=4,rows=6,mx=20,my=16,gw=(w-mx*(cols+1))/cols,gh=(h-my*(rows+1))/rows;
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const lit=Math.random()<0.35;
+      const x=mx+c*(gw+mx),y=my+r*(gh+my);
+      g.fillStyle=lit?'#ffe7a0':glass;g.fillRect(x,y,gw,gh);
+      g.strokeStyle='rgba(0,0,0,.45)';g.lineWidth=2;g.strokeRect(x,y,gw,gh);
+      g.fillStyle='rgba(255,255,255,.10)';g.fillRect(x,y,gw,gh/2);}}));
+  TEX.fac=[facade('#8a8f99','#33414f'),facade('#9c6b4f','#2e3b46'),facade('#7d8a7a','#2b3a44')];
+  TEX.roof=glTex(texCanvas((g,w,h)=>{softNoise(g,w,h,'#6a3a2a',16);
+    g.strokeStyle='rgba(0,0,0,.28)';for(let y=0;y<h;y+=14){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}}));
+  const camo=(cols)=>glTex(texCanvas((g,w,h)=>{
+    g.fillStyle=cols[0];g.fillRect(0,0,w,h);
+    for(let i=0;i<26;i++){ const x=Math.random()*w,y=Math.random()*h,rr=20+Math.random()*46;
+      const col=cols[1+(i%(cols.length-1))];
+      const grd=g.createRadialGradient(x,y,rr*0.2,x,y,rr);
+      grd.addColorStop(0,col);grd.addColorStop(0.7,col);grd.addColorStop(1,'rgba(0,0,0,0)');
+      g.fillStyle=grd;g.beginPath();g.ellipse(x,y,rr,rr*(0.6+Math.random()*0.5),Math.random()*6,0,7);g.fill();}
+    // jemný šum + nýty
+    const im=g.getImageData(0,0,w,h),d=im.data;for(let i=0;i<d.length;i+=4){const v=(Math.random()*2-1)*8;d[i]+=v;d[i+1]+=v;d[i+2]+=v;}g.putImageData(im,0,0);
+    g.fillStyle='rgba(0,0,0,.25)';for(let i=0;i<40;i++){g.beginPath();g.arc(Math.random()*w,Math.random()*h,1.2,0,7);g.fill();}
+  }));
+  TEX.tankP=camo(['#5d6b3c','#43502b','#717f4c','#3a4626']);
+  TEX.tankE=camo(['#7c3d33','#5c2c26','#925248','#46201c']);
+  TEX.track=glTex(texCanvas((g,w,h)=>{g.fillStyle='#1d1f1c';g.fillRect(0,0,w,h);
+    g.fillStyle='#2c2f29';for(let y=0;y<h;y+=18){g.fillRect(0,y,w,9);} },64,256));
+  TEX.sky=glTex(texCanvas((g,w,h)=>{const grd=g.createLinearGradient(0,0,0,h);
+    grd.addColorStop(0,'#2f6fb0');grd.addColorStop(.5,'#7db4dd');grd.addColorStop(.72,'#cfe4ef');grd.addColorStop(1,'#e7eef2');
+    g.fillStyle=grd;g.fillRect(0,0,w,h);
+    g.fillStyle='rgba(255,255,255,.85)';
+    for(let i=0;i<16;i++){const x=Math.random()*w,y=Math.random()*h*0.5;
+      for(let j=0;j<6;j++){g.beginPath();g.ellipse(x+j*24-55,y+Math.sin(j)*8,32,16,0,0,7);g.fill();}}},1024,512));
+}
+
+/* ---------------- vykreslení objektu ---------------- */
+const LIGHT=norm([60,120,55]);
+function draw(geo,model,o){
+  o=o||{};
+  gl.uniformMatrix4fv(U.uModel,false,model);
+  gl.uniform2f(U.uUV, o.uv?o.uv[0]:1, o.uv?o.uv[1]:1);
+  gl.uniform1f(U.uLit, o.lit===0?0:1);
+  gl.uniform1f(U.uFogOn, o.fog===0?0:1);
+  if(o.tex){ gl.uniform1f(U.uUseTex,1); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,o.tex); gl.uniform1i(U.uTex,0); }
+  else { gl.uniform1f(U.uUseTex,0); gl.uniform3fv(U.uColor,o.color||[1,1,1]); }
+  gl.bindBuffer(gl.ARRAY_BUFFER,geo.p); gl.enableVertexAttribArray(A.aPos); gl.vertexAttribPointer(A.aPos,3,gl.FLOAT,false,0,0);
+  gl.bindBuffer(gl.ARRAY_BUFFER,geo.n); gl.enableVertexAttribArray(A.aNor); gl.vertexAttribPointer(A.aNor,3,gl.FLOAT,false,0,0);
+  gl.bindBuffer(gl.ARRAY_BUFFER,geo.u); gl.enableVertexAttribArray(A.aUV); gl.vertexAttribPointer(A.aUV,2,gl.FLOAT,false,0,0);
+  gl.drawArrays(gl.TRIANGLES,0,geo.count);
+}
+
+/* ====================================================================
+   ZVUK (WebAudio, generované — žádné soubory)
+   ==================================================================== */
+const Audio={ctx:null,on:true,master:null,noise:null,engOsc:null,engGain:null};
+function audioInit(){
+  if(Audio.ctx) return;
+  try{ Audio.ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return; }
+  Audio.master=Audio.ctx.createGain(); Audio.master.gain.value=0.5; Audio.master.connect(Audio.ctx.destination);
+  // šumový buffer
+  const len=Audio.ctx.sampleRate*1.0, buf=Audio.ctx.createBuffer(1,len,Audio.ctx.sampleRate),dd=buf.getChannelData(0);
+  for(let i=0;i<len;i++) dd[i]=Math.random()*2-1; Audio.noise=buf;
+}
+function aNoise(dur,vol,lp){ if(!ready())return null;
+  const s=Audio.ctx.createBufferSource(); s.buffer=Audio.noise; s.loop=true;
+  const f=Audio.ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=lp||1200;
+  const g=Audio.ctx.createGain(); const t=Audio.ctx.currentTime;
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0008,t+dur);
+  s.connect(f); f.connect(g); g.connect(Audio.master); s.start(); s.stop(t+dur); return f;
+}
+function aTone(type,f0,f1,dur,vol){ if(!ready())return;
+  const o=Audio.ctx.createOscillator(); o.type=type; const g=Audio.ctx.createGain(); const t=Audio.ctx.currentTime;
+  o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(Math.max(1,f1),t+dur);
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0008,t+dur);
+  o.connect(g); g.connect(Audio.master); o.start(); o.stop(t+dur);
+}
+function ready(){ return Audio.ctx && Audio.on; }
+function sfxShot(){ aNoise(0.12,0.35,2600); aTone('square',300,90,0.14,0.18); }
+function sfxEnemyShot(){ aNoise(0.12,0.18,1400); aTone('square',180,70,0.14,0.10); }
+function sfxBoom(){ const f=aNoise(0.55,0.55,900); if(f) f.frequency.exponentialRampToValueAtTime(200,Audio.ctx.currentTime+0.5);
+  aTone('sine',120,40,0.5,0.4); }
+function sfxHit(){ aNoise(0.4,0.5,700); aTone('sawtooth',160,50,0.4,0.25); }
+function sfxWave(){ aTone('square',660,660,0.12,0.16); setTimeout(()=>aTone('square',990,990,0.16,0.16),140); }
+function engineStart(){ if(!ready()||Audio.engOsc) return;
+  Audio.engOsc=Audio.ctx.createOscillator(); Audio.engOsc.type='sawtooth'; Audio.engOsc.frequency.value=42;
+  const f=Audio.ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=220;
+  Audio.engGain=Audio.ctx.createGain(); Audio.engGain.gain.value=0.05;
+  Audio.engOsc.connect(f); f.connect(Audio.engGain); Audio.engGain.connect(Audio.master); Audio.engOsc.start();
+}
+function engineStop(){ if(Audio.engOsc){ try{Audio.engOsc.stop();}catch(e){} Audio.engOsc=null; Audio.engGain=null; } }
+function engineSet(moving){ if(Audio.engGain&&Audio.ctx){ const t=Audio.ctx.currentTime;
+  Audio.engGain.gain.setTargetAtTime(moving?0.10:0.045,t,0.1);
+  Audio.engOsc.frequency.setTargetAtTime(moving?70:42,t,0.15); } }
+function sfxMissileLaunch(){ aTone('square',300,1100,0.28,0.2); }
+function missileSoundStart(){ if(!ready()||Audio.msnOsc) return;
+  Audio.msnOsc=Audio.ctx.createOscillator(); Audio.msnOsc.type='square';
+  const f=Audio.ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=900;
+  Audio.msnGain=Audio.ctx.createGain(); Audio.msnGain.gain.value=0.07;
+  Audio.msnOsc.connect(f); f.connect(Audio.msnGain); Audio.msnGain.connect(Audio.master); Audio.msnOsc.start(); }
+function missileWarble(){ if(Audio.msnOsc&&Audio.ctx) Audio.msnOsc.frequency.setValueAtTime(150+Math.random()*520,Audio.ctx.currentTime); }
+function missileSoundStop(){ if(Audio.msnOsc){ try{Audio.msnOsc.stop();}catch(e){} Audio.msnOsc=null; Audio.msnGain=null; } }
+
+/* ====================================================================
+   HRA
+   ==================================================================== */
+const DIFFS=[
+  { name:'REKRUT',  move:2.4, turn:0.55, fireMin:4.6, fireRnd:3.3, range:38, aim:0.10, count:2 },
+  { name:'VOJÁK',   move:5.0, turn:1.1,  fireMin:2.5, fireRnd:2.2, range:50, aim:0.17, count:3 },
+  { name:'VETERÁN', move:7.5, turn:1.6,  fireMin:1.5, fireRnd:1.5, range:58, aim:0.25, count:3 },
+];
+let difficulty=1;
+let state='menu';
+let player, enemies=[], buildings=[], trees=[], hills=[], shells=[];
+let score=0, lives=3, level=1, lockTarget=false, shake=0, msgTimer=0, banner='';
+let missilesOn=false, missile=null, missileTimer=0, booms=[];
+const keys={};
+const ARENA=110;
+function missileInterval(){ return (difficulty===0?28:difficulty===1?20:14)+Math.random()*8; }
+
+function buildWorld(){
+  buildings=[]; trees=[]; hills=[];
+  const N=20;
+  for(let i=0;i<N;i++){ let x,z,ok,t=0;
+    do{ x=(Math.random()*2-1)*90; z=(Math.random()*2-1)*90;
+      ok=Math.hypot(x,z)>16 && buildings.every(b=>Math.hypot(b.x-x,b.z-z)>15); t++;
+    }while(!ok&&t<40);
+    if(ok){ const w=6+Math.random()*7, d=6+Math.random()*7, h=8+Math.random()*26;
+      buildings.push({x,z,w,d,h, fac:Math.random()*3|0, roof:Math.random()<0.45,
+        r:Math.hypot(w,d)/2*0.85}); }
+  }
+  for(let i=0;i<28;i++){ let x=(Math.random()*2-1)*100,z=(Math.random()*2-1)*100;
+    if(Math.hypot(x,z)<14) continue;
+    if(buildings.some(b=>Math.hypot(b.x-x,b.z-z)<7)) continue;
+    trees.push({x,z,h:3.5+Math.random()*2.5,r:2+Math.random()*1.2});
+  }
+  for(let i=0;i<26;i++){ const a=i/26*Math.PI*2, r=215+Math.random()*70, hh=45+Math.random()*75;
+    hills.push({x:Math.sin(a)*r, z:Math.cos(a)*r, r:65+Math.random()*55, h:hh}); }
+}
+
+function startGame(){
+  audioInit(); if(Audio.ctx&&Audio.ctx.state==='suspended') Audio.ctx.resume();
+  player={x:0,z:0,a:0,cool:0,hit:0};
+  enemies=[]; shells=[];
+  score=0; level=1; lives=difficulty===0?5:3; shake=0;
+  missile=null; missileTimer=missileInterval(); booms=[]; missileSoundStop();
+  buildWorld(); spawnWave();
+  state='playing';
+  document.getElementById('msg').classList.add('hidden');
+  engineStart();
+}
+function spawnWave(){
+  const D=DIFFS[difficulty];
+  const grow=difficulty===0?Math.floor((level-1)/2):(level-1);
+  const cap=difficulty===0?3:5;
+  const count=Math.min(D.count+grow,cap);
+  for(let i=0;i<count;i++) spawnEnemy();
+  banner='VLNA '+level; msgTimer=2.0; sfxWave();
+}
+function spawnEnemy(){
+  const D=DIFFS[difficulty];
+  const ang=Math.random()*Math.PI*2, dist=42+Math.random()*22;
+  enemies.push({ x:player.x+Math.sin(ang)*dist, z:player.z+Math.cos(ang)*dist,
+    a:Math.random()*Math.PI*2, cool:D.fireMin+Math.random()*D.fireRnd, alive:true, boom:0, parts:null,
+    steer:Math.random()<0.5?-1:1, stuck:0 });
+}
+function fire(){ if(state!=='playing'||player.cool>0)return; player.cool=0.4;
+  spawnShell(player.x,player.z,player.a,'p'); shake=Math.max(shake,0.12); sfxShot(); }
+function enemyFire(e){ spawnShell(e.x,e.z,e.a,'e'); sfxEnemyShot(); }
+function spawnShell(x,z,a,owner){ const sp=owner==='p'?70:48;
+  shells.push({x,z,y:2.0,vx:Math.sin(a)*sp,vz:Math.cos(a)*sp,life:2.4,owner}); }
+
+function explode(e){
+  e.alive=false; e.boom=0.9; e.parts=[];
+  for(let i=0;i<16;i++){ const a=Math.random()*Math.PI*2, el=Math.random()*1.4;
+    const sp=4+Math.random()*9;
+    e.parts.push({x:e.x,y:1.4,z:e.z,
+      vx:Math.cos(a)*Math.cos(el)*sp, vy:3+Math.random()*9, vz:Math.sin(a)*Math.cos(el)*sp,
+      rx:Math.random()*6, ry:Math.random()*6, s:0.3+Math.random()*0.5,
+      col:Math.random()<0.5?[1,0.55,0.15]:[0.2,0.2,0.18]}); }
+  sfxBoom(); shake=Math.max(shake,0.3);
+}
+
+function boomAt(x,z){ const e={x,z,boom:0.9,parts:[]};
+  for(let i=0;i<16;i++){ const a=Math.random()*Math.PI*2, el=Math.random()*1.4, sp=4+Math.random()*9;
+    e.parts.push({x,y:1.4,z, vx:Math.cos(a)*Math.cos(el)*sp, vy:3+Math.random()*9, vz:Math.sin(a)*Math.cos(el)*sp,
+      rx:Math.random()*6, ry:Math.random()*6, s:0.3+Math.random()*0.5,
+      col:Math.random()<0.5?[1,0.55,0.15]:[0.2,0.2,0.18]}); }
+  booms.push(e); sfxBoom(); shake=Math.max(shake,0.3); }
+
+// naváděná střela
+function spawnMissile(){ const ang=Math.random()*Math.PI*2, dist=60;
+  missile={ x:player.x+Math.sin(ang)*dist, z:player.z+Math.cos(ang)*dist, a:0, spd:17, life:10, phase:0 };
+  missile.a=Math.atan2(player.x-missile.x, player.z-missile.z);
+  sfxMissileLaunch(); missileSoundStart(); }
+function killMissile(){ missile=null; missileTimer=missileInterval(); missileSoundStop(); }
+function updateMissile(dt){
+  if(!missilesOn || state!=='playing'){ if(missile) killMissile(); return; }
+  if(!missile){ missileTimer-=dt; if(missileTimer<=0) spawnMissile(); return; }
+  const m=missile, p=player;
+  const da=((Math.atan2(p.x-m.x, p.z-m.z)-m.a+Math.PI*3)%(Math.PI*2))-Math.PI;
+  m.a += Math.max(-1.7*dt, Math.min(1.7*dt, da));   // navádí, ale jde uhnout
+  m.x += Math.sin(m.a)*m.spd*dt; m.z += Math.cos(m.a)*m.spd*dt; m.life-=dt; m.phase+=dt*12;
+  if(Math.hypot(p.x-m.x,p.z-m.z)<3.2){ killMissile(); hitPlayer(); }   // zásah hráče
+  else if(blocked(m.x,m.z,0.5)){ boomAt(m.x,m.z); killMissile(); }     // schoval ses za dům
+  else if(m.life<=0){ killMissile(); }
+  else { if(ready()){ missileSoundStart(); missileWarble(); } else missileSoundStop(); }
+}
+
+function blocked(x,z,r){ if(Math.hypot(x,z)>ARENA) return true;
+  for(const b of buildings) if(Math.hypot(b.x-x,b.z-z)<b.r+r) return true; return false; }
+function tankOverlap(self,x,z){ for(const e of enemies) if(e!==self&&e.alive&&Math.hypot(e.x-x,e.z-z)<5) return true; return false; }
+function lineClear(x,z,a,dist){ for(const b of buildings){ const bd=Math.hypot(b.x-x,b.z-z);
+  if(bd<dist){ let ba=((Math.atan2(b.x-x,b.z-z)-a+Math.PI*3)%(Math.PI*2))-Math.PI;
+    if(Math.abs(ba)<Math.atan2(b.r,bd)) return false; } } return true; }
+
+function update(dt){
+  if(state!=='playing') return;
+  const p=player, D=DIFFS[difficulty];
+  if(p.cool>0)p.cool-=dt; if(p.hit>0)p.hit-=dt; if(shake>0)shake-=dt; if(msgTimer>0)msgTimer-=dt;
+
+  const fine=(keys['ShiftLeft']||keys['ShiftRight'])?0.4:1;
+  const turn=1.5*fine*dt, spd=14*dt;
+  // OPRAVENO: doleva = doleva
+  if(keys['ArrowLeft']||keys['KeyA']) p.a+=turn;
+  if(keys['ArrowRight']||keys['KeyD']) p.a-=turn;
+  let mv=0;
+  if(keys['ArrowUp']||keys['KeyW']) mv=spd;
+  if(keys['ArrowDown']||keys['KeyS']) mv=-spd*0.6;
+  if(mv){ const nx=p.x+Math.sin(p.a)*mv, nz=p.z+Math.cos(p.a)*mv;
+    if(!blocked(nx,nz,2.4)){ p.x=nx; p.z=nz; } }
+  engineSet(!!mv);
+
+  for(const e of enemies){
+    if(!e.alive){ if(e.boom>0){ e.boom-=dt;
+        for(const pt of e.parts){ pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.z+=pt.vz*dt;
+          pt.vy-=20*dt; if(pt.y<0.2){pt.y=0.2;pt.vy*=-0.3;pt.vx*=0.7;pt.vz*=0.7;} pt.rx+=dt*4; pt.ry+=dt*5; } }
+      continue; }
+    const dx=p.x-e.x, dz=p.z-e.z, dist=Math.hypot(dx,dz);
+    const target=Math.atan2(dx,dz);
+    let da=((target-e.a+Math.PI*3)%(Math.PI*2))-Math.PI;
+    e.a+=Math.max(-D.turn*dt,Math.min(D.turn*dt,da));
+    if(dist>20){ const step=D.move*dt;
+      const nx=e.x+Math.sin(e.a)*step, nz=e.z+Math.cos(e.a)*step;
+      if(!blocked(nx,nz,2.4)&&!tankOverlap(e,nx,nz)){ e.x=nx; e.z=nz; e.stuck=0; }
+      else { // objíždění překážky, ať se tank nezasekne (jinak by vlna nikdy neskončila)
+        e.stuck=(e.stuck||0)+dt; e.a += (e.steer||1)*1.4*dt;
+        if(e.stuck>1.0){ e.steer=Math.random()<0.5?-1:1; e.stuck=0; } } }
+    e.cool-=dt;
+    if(e.cool<=0 && Math.abs(da)<D.aim && dist<D.range && lineClear(e.x,e.z,e.a,dist)){
+      enemyFire(e); e.cool=D.fireMin+Math.random()*D.fireRnd; }
+  }
+
+  for(const s of shells){ s.x+=s.vx*dt; s.z+=s.vz*dt; s.life-=dt;
+    if(blocked(s.x,s.z,0.3)) s.life=0;
+    if(s.owner==='p'){ for(const e of enemies) if(e.alive&&Math.hypot(e.x-s.x,e.z-s.z)<2.6){ explode(e); s.life=0; score+=100; }
+      if(missile && Math.hypot(missile.x-s.x,missile.z-s.z)<2.4){ boomAt(missile.x,missile.z); killMissile(); s.life=0; score+=150; } }
+    else if(Math.hypot(p.x-s.x,p.z-s.z)<2.4){ s.life=0; hitPlayer(); } }
+  shells=shells.filter(s=>s.life>0);
+
+  // naváděná střela + dohasínání výbuchů
+  updateMissile(dt);
+  for(const b of booms){ b.boom-=dt;
+    for(const pt of b.parts){ pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.z+=pt.vz*dt; pt.vy-=20*dt;
+      if(pt.y<0.2){pt.y=0.2;pt.vy*=-0.3;pt.vx*=0.7;pt.vz*=0.7;} pt.rx+=dt*4; pt.ry+=dt*5; } }
+  booms=booms.filter(b=>b.boom>0);
+
+  lockTarget=false;
+  for(const e of enemies){ if(!e.alive) continue;
+    const dx=e.x-p.x, dz=e.z-p.z, dist=Math.hypot(dx,dz);
+    let da=((Math.atan2(dx,dz)-p.a+Math.PI*3)%(Math.PI*2))-Math.PI;
+    if(Math.abs(da)<Math.atan2(2.4,dist) && lineClear(p.x,p.z,p.a,dist)){ lockTarget=true; break; } }
+  if(!lockTarget && missile){ const dx=missile.x-p.x, dz=missile.z-p.z, dist=Math.hypot(dx,dz);
+    let da=((Math.atan2(dx,dz)-p.a+Math.PI*3)%(Math.PI*2))-Math.PI;
+    if(Math.abs(da)<Math.atan2(2.2,dist) && lineClear(p.x,p.z,p.a,dist)) lockTarget=true; }
+
+  if(enemies.length && enemies.every(e=>!e.alive&&e.boom<=0)){ enemies=[]; level++; spawnWave(); }
+}
+
+function hitPlayer(){ player.hit=0.5; shake=0.5; lives--; sfxHit();
+  if(lives<=0){ state='gameover'; engineStop();
+    showMsg('KONEC HRY','Skóre: '+score+' &nbsp;•&nbsp; vlna '+level,'ZNOVA'); } }
+function showMsg(title,sub,btn){ const m=document.getElementById('msg');
+  m.querySelector('h1').textContent=title;
+  const ps=m.querySelectorAll('p'); ps.forEach((el,i)=>el.style.display=i===0?'block':'none');
+  ps[0].innerHTML=sub; document.getElementById('startBtn').textContent=btn; m.classList.remove('hidden'); }
+
+/* ---------------- render ---------------- */
+function drawTank(e,isPlayer){
+  const tex=isPlayer?TEX.tankP:TEX.tankE;
+  const base=compose(M.T(e.x,0,e.z),M.Ry(e.a));
+  const part=(lx,ly,lz,sx,sy,sz,opt)=>draw(GEO.box,compose(base,M.T(lx,ly,lz),M.S(sx,sy,sz)),opt||{tex});
+  // pásy + blatníky
+  for(const sx of [-1.85,1.85]){
+    draw(GEO.box,compose(base,M.T(sx,0.55,0),M.S(0.85,1.0,5.0)),{tex:TEX.track,uv:[1,4]});
+    part(sx,1.12,0, 1.05,0.16,5.1,{tex});
+  }
+  // korba (spodek + šikmá nástavba)
+  part(0,0.85,0, 3.2,0.95,4.6,{tex});
+  part(0,1.55,0, 2.7,0.6,3.4,{tex});
+  // věž (osmihran) + hlaveň + kupole
+  draw(GEO.cyl8,compose(base,M.T(0,2.15,-0.1),M.S(1.35,0.85,1.6)),{tex});
+  draw(GEO.cyl12,compose(base,M.T(0,2.2,1.6),M.Rx(Math.PI/2),M.S(0.16,3.4,0.16)),{color:[0.13,0.13,0.11]});
+  draw(GEO.box,compose(base,M.T(0,2.55,0.6),M.S(0.9,0.4,1.0)),{tex}); // mantlet
+  draw(GEO.cyl8,compose(base,M.T(0.4,2.75,-0.4),M.S(0.45,0.4,0.45)),{tex}); // kupole
+  draw(GEO.box,compose(base,M.T(-0.6,3.6,-0.6),M.S(0.05,1.4,0.05)),{color:[0.1,0.1,0.1]}); // anténa
+}
+function drawExplosion(e){
+  const k=Math.max(0,e.boom/0.9);
+  if(e.boom>0.55){ const s=1.2+(1-(e.boom-0.55)/0.35)*4.2;
+    draw(GEO.sph,compose(M.T(e.x,1.6,e.z),M.S(s,s,s)),{color:[1,0.5+0.3*k,0.1],lit:0,fog:0}); }
+  for(const pt of e.parts) draw(GEO.box,compose(M.T(pt.x,pt.y,pt.z),M.Rx(pt.rx),M.Ry(pt.ry),M.S(pt.s,pt.s,pt.s)),{color:pt.col});
+}
+function drawMissile3d(m){
+  const base=compose(M.T(m.x,1.4,m.z),M.Ry(m.a));
+  const blink=(Math.floor(m.phase)%2===0);
+  const tip=blink?[1,1,1]:[1,0.7,0.2];
+  draw(GEO.cyl12,compose(base,M.Rx(Math.PI/2),M.S(0.32,1.8,0.32)),{color:[0.56,0.59,0.63]}); // trup
+  draw(GEO.cone7,compose(base,M.T(0,0,0.95),M.Rx(Math.PI/2),M.S(0.34,1.0,0.34)),{color:tip,lit:0}); // špička
+  draw(GEO.sph,compose(base,M.T(0,0,-1.05),M.S(0.3,0.3,0.3)),{color:[1,0.5,0.12],lit:0,fog:0}); // tryska
+  draw(GEO.box,compose(base,M.T(0,0,-0.7),M.S(1.15,0.07,0.7)),{color:[0.5,0.53,0.57]}); // vodorovné ploutve
+  draw(GEO.box,compose(base,M.T(0,0,-0.7),M.S(0.07,1.15,0.7)),{color:[0.5,0.53,0.57]}); // svislé ploutve
+}
+function render(){
+  gl.viewport(0,0,cv.width,cv.height);
+  gl.clearColor(0.81,0.88,0.92,1); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  const proj=M.persp(70*Math.PI/180, cv.width/cv.height, 0.1, 1200);
+  let ex=0,ez=0,ey=0;
+  if(shake>0){ ex=(Math.random()*2-1)*shake*1.1; ey=(Math.random()*2-1)*shake*1.1; }
+  const p=player||{x:0,z:0,a:0};
+  const eye=[p.x+ex, 3.2+ey, p.z+ez];
+  const tgt=[p.x+Math.sin(p.a)*10, 2.55+ey, p.z+Math.cos(p.a)*10];
+  const view=M.lookAt(eye,tgt,[0,1,0]);
+  gl.uniformMatrix4fv(U.uProj,false,proj);
+  gl.uniformMatrix4fv(U.uView,false,view);
+  gl.uniform3fv(U.uLightDir,LIGHT);
+  gl.uniform3fv(U.uFogColor,[0.81,0.88,0.92]);
+  gl.uniform1f(U.uNear,70); gl.uniform1f(U.uFar,320);
+
+  // obloha (bez mlhy/světla, bez zápisu hloubky)
+  gl.depthMask(false);
+  draw(GEO.sph,compose(M.T(eye[0],eye[1],eye[2]),M.S(600,600,600)),{tex:TEX.sky,lit:0,fog:0});
+  gl.depthMask(true);
+
+  // země
+  draw(GEO.plane,M.S(1400,1,1400),{tex:TEX.ground,uv:[70,70]});
+  // kopce
+  for(const h of hills) draw(GEO.cone7,compose(M.T(h.x,0,h.z),M.S(h.r,h.h,h.r)),{color:[0.33,0.40,0.25]});
+  // domy
+  for(const b of buildings){
+    draw(GEO.box,compose(M.T(b.x,b.h/2,b.z),M.S(b.w,b.h,b.d)),
+      {tex:TEX.fac[b.fac],uv:[Math.max(1,Math.round(b.w/6)),Math.max(1,Math.round(b.h/6))]});
+    if(b.roof) draw(GEO.cone4,compose(M.T(b.x,b.h,b.z),M.Ry(Math.PI/4),M.S(Math.max(b.w,b.d)*0.72,5,Math.max(b.w,b.d)*0.72)),{tex:TEX.roof});
+    else draw(GEO.box,compose(M.T(b.x,b.h+0.6,b.z),M.S(b.w+0.6,1.2,b.d+0.6)),{color:[0.23,0.25,0.27]});
+  }
+  // stromy
+  for(const t of trees){ draw(GEO.cyl8,compose(M.T(t.x,t.h*0.5,t.z),M.S(0.45,t.h,0.45)),{color:[0.35,0.23,0.13]});
+    draw(GEO.sph,compose(M.T(t.x,t.h+t.r*0.6,t.z),M.S(t.r,t.r*1.1,t.r)),{color:[0.24,0.47,0.21]}); }
+  // tanky + výbuchy
+  for(const e of enemies){ if(e.alive) drawTank(e,false); else if(e.boom>0) drawExplosion(e); }
+  for(const b of booms) drawExplosion(b);
+  if(missile) drawMissile3d(missile);
+  // střely
+  for(const s of shells) draw(GEO.sph,compose(M.T(s.x,s.y,s.z),M.S(0.34,0.34,0.34)),
+    {color:s.owner==='p'?[1,0.94,0.6]:[1,0.38,0.28],lit:0,fog:0});
+}
+
+/* ---------------- HUD / radar / cross ---------------- */
+const radar=document.getElementById('radar'), rctx=radar.getContext('2d');
+function drawRadar(){ const R=75; rctx.clearRect(0,0,150,150);
+  rctx.strokeStyle='rgba(110,227,160,.4)'; rctx.lineWidth=1;
+  rctx.beginPath(); rctx.moveTo(R,8);rctx.lineTo(R,142);rctx.moveTo(8,R);rctx.lineTo(142,R);rctx.stroke();
+  rctx.fillStyle='rgba(110,227,160,.12)'; rctx.beginPath(); rctx.moveTo(R,R); rctx.arc(R,R,R-6,-Math.PI/2-0.5,-Math.PI/2+0.5); rctx.closePath(); rctx.fill();
+  rctx.fillStyle='#bfffd6'; rctx.beginPath(); rctx.arc(R,R,4,0,7); rctx.fill();
+  const scale=(R-8)/ARENA*1.6;
+  if(state==='playing') for(const e of enemies){ if(!e.alive) continue;
+    const dx=e.x-player.x, dz=e.z-player.z;
+    const fwd=dx*Math.sin(player.a)+dz*Math.cos(player.a);
+    const side=-(dx*Math.cos(player.a)-dz*Math.sin(player.a));
+    let rx=R+side*scale, ry=R-fwd*scale;
+    if(Math.hypot(rx-R,ry-R)<=R-6){ rctx.fillStyle='#ff5b5b'; rctx.beginPath(); rctx.arc(rx,ry,4,0,7); rctx.fill(); } }
+  if(state==='playing' && missile){ const dx=missile.x-player.x, dz=missile.z-player.z;
+    const fwd=dx*Math.sin(player.a)+dz*Math.cos(player.a);
+    const side=-(dx*Math.cos(player.a)-dz*Math.sin(player.a));
+    let rx=R+side*scale, ry=R-fwd*scale;
+    if(Math.hypot(rx-R,ry-R)<=R-6){ rctx.fillStyle=(Math.floor(missile.phase)%2===0)?'#ffe14d':'#fff';
+      rctx.beginPath(); rctx.arc(rx,ry,4.5,0,7); rctx.fill(); } } }
+const crossSvg=document.querySelector('#cross svg');
+let lastLock=null;
+function drawCross(){ if(lockTarget===lastLock) {} lastLock=lockTarget;
+  const col=lockTarget?'#ff4d4d':'#9fe9c0', wd=lockTarget?3:2;
+  let s=`<g stroke="${col}" stroke-width="${wd}" fill="none">`;
+  s+=`<line x1="4" y1="30" x2="22" y2="30"/><line x1="38" y1="30" x2="56" y2="30"/>`;
+  s+=`<line x1="30" y1="4" x2="30" y2="22"/><line x1="30" y1="38" x2="30" y2="56"/>`;
+  s+=`<rect x="27" y="27" width="6" height="6"/>`;
+  if(lockTarget) s+=`<path d="M12 19 L12 12 L19 12 M41 12 L48 12 L48 19 M12 41 L12 48 L19 48 M41 48 L48 48 L48 41"/>`;
+  s+=`</g>`; crossSvg.innerHTML=s;
+  document.getElementById('lockTxt').style.display=lockTarget?'block':'none'; }
+function drawHud(){ const hud=document.getElementById('hud');
+  if(state==='playing'){ hud.innerHTML='SKÓRE <b>'+score+'</b> &nbsp;•&nbsp; ŽIVOTY <b>'+'▮'.repeat(Math.max(0,lives))+'</b> &nbsp;•&nbsp; VLNA <b>'+level+'</b>'
+    +(missile?' &nbsp;•&nbsp; <span style="color:#ffe14d">⚠ STŘELA!</span>':'')
+    +(msgTimer>0?'<div style="font-size:34px;margin-top:30px;color:#ffd86b">'+banner+'</div>':''); }
+  else hud.innerHTML=''; }
+
+let flash=document.createElement('div');
+flash.style.cssText='position:fixed;inset:0;background:#ff2020;opacity:0;pointer-events:none;transition:opacity .1s';
+document.body.appendChild(flash);
+
+/* ---------------- smyčka ---------------- */
+let last=0;
+function loop(t){ requestAnimationFrame(loop);
+  const dt=Math.min((t-last)/1000||0,0.05); last=t;
+  update(dt); render();
+  flash.style.opacity=(player&&player.hit>0)?(player.hit/0.5*0.4):0;
+  drawHud(); drawRadar(); drawCross();
+}
+
+/* ---------------- boot ---------------- */
+function resize(){ cv.width=W()*Math.min(devicePixelRatio,2); cv.height=H()*Math.min(devicePixelRatio,2);
+  cv.style.width=W()+'px'; cv.style.height=H()+'px'; }
+function boot(){
+  if(!gl){ document.querySelector('#msg p').textContent='Tvůj prohlížeč nepodporuje WebGL — hru bohužel nelze spustit.'; return; }
+  resize(); addEventListener('resize',resize);
+  initProgram();
+  gl.enable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE); gl.clearColor(0.81,0.88,0.92,1);
+  makeTextures();
+  GEO={ box:boxGeom(), plane:planeGeom(), cyl8:cylGeom(8), cyl12:cylGeom(12),
+        cone4:coneGeom(4), cone7:coneGeom(7), sph:sphereGeom(10,14) };
+
+  document.querySelectorAll('#diff button').forEach(b=>{
+    b.onclick=()=>{ difficulty=+b.dataset.d;
+      document.querySelectorAll('#diff button').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); }; });
+  document.getElementById('startBtn').onclick=startGame;
+  document.getElementById('missileToggle').onclick=function(){ missilesOn=!missilesOn;
+    this.textContent=missilesOn?'☑ Naváděné střely: ZAPNUTO (klikni pro vypnutí)':'☐ Naváděné střely: VYPNUTO (klikni pro zapnutí)'; };
+  document.getElementById('sound').onclick=function(){ Audio.on=!Audio.on;
+    this.textContent=Audio.on?'🔊 zvuk zapnut (klikni pro vypnutí)':'🔇 zvuk vypnut (klikni pro zapnutí)';
+    if(!Audio.on) engineStop(); else if(state==='playing') engineStart(); };
+
+  addEventListener('keydown',e=>{ keys[e.code]=true;
+    if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
+    if(e.code==='Space') fire(); });
+  addEventListener('keyup',e=>{ keys[e.code]=false; });
+  requestAnimationFrame(loop);
+}
+boot();
+</script>
+</body>
+</html>

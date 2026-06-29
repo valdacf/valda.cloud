@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Tank Duel</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden;
+    font-family:"Courier New",monospace;color:#3f6;}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+  canvas{background:#000;image-rendering:pixelated;max-width:100%;max-height:100%;}
+  #hud{position:fixed;top:8px;left:0;right:0;text-align:center;
+    font-size:18px;letter-spacing:2px;text-shadow:0 0 6px #0f6;pointer-events:none;}
+  #msg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;text-align:center;text-shadow:0 0 8px #0f6;}
+  #msg h1{font-size:34px;margin:0 0 10px;letter-spacing:4px;}
+  #msg p{font-size:16px;margin:4px;line-height:1.5;}
+  .key{color:#9fc;}
+  #msg.hidden{display:none;}
+  button{margin-top:18px;background:#031;color:#5fa;border:2px solid #3f6;
+    padding:10px 22px;font-family:inherit;font-size:18px;letter-spacing:2px;
+    cursor:pointer;text-shadow:0 0 6px #0f6;}
+  button:hover{background:#063;}
+  #diff{display:flex;gap:10px;margin-top:16px;}
+  #diff button{margin-top:0;padding:8px 16px;font-size:15px;opacity:.55;}
+  #diff button.sel{opacity:1;background:#063;box-shadow:0 0 10px #0f6;}
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="c" width="800" height="600"></canvas></div>
+<div id="hud"></div>
+<div id="msg">
+  <h1>3D TANK DUEL</h1>
+  <p>Vektorový tankový souboj z kokpitu — pocta ZX Spectru.</p>
+  <p><span class="key">↑ ↓ / W S</span> jezdi &nbsp; <span class="key">← → / A D</span> otáčej věž</p>
+  <p><span class="key">MEZERNÍK</span> palba &nbsp; <span class="key">SHIFT</span> přesné míření</p>
+  <p>Když zaměřovač zčervená a ukáže „ZAMĚŘENO", máš jistý zásah.</p>
+  <p>Znič nepřátelské tanky. Sleduj radar. Nedostaň zásah.</p>
+  <div id="diff">
+    <button data-d="0">REKRUT</button>
+    <button data-d="1" class="sel">VOJÁK</button>
+    <button data-d="2">VETERÁN</button>
+  </div>
+  <div id="missileToggle" style="margin-top:10px;font-size:14px;color:#9fc;cursor:pointer">☐ Naváděné střely: VYPNUTO (klikni pro zapnutí)</div>
+  <button id="startBtn">START</button>
+  <div id="zxSound" style="margin-top:12px;font-size:13px;color:#9fc;cursor:pointer">🔊 zvuk zapnut (klikni pro vypnutí)</div>
+</div>
+
+<script>
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+const horizon = H * 0.42;
+const focal = 520;          // ohnisková délka projekce
+const NEAR = 0.4;
+const EYE = 1.2;            // výška oka nad zemí
+const GREEN = '#39ff88';
+const DIM = '#1b6b40';
+
+const hud = document.getElementById('hud');
+const msg = document.getElementById('msg');
+const startBtn = document.getElementById('startBtn');
+
+// ---------- stav hry ----------
+let state = 'menu';
+let player, enemies, obstacles, shells, score, lives, level, shake, msgTimer, banner;
+
+// obtížnosti: rychlost jízdy, otáčení k hráči, min/max prodleva mezi výstřely,
+// dostřel a jak často vůbec vystřelí (chance)
+const DIFFS = [
+  { name:'REKRUT',  move:0.05, turn:0.010, fireMin:280, fireRnd:200, range:38, aim:0.10, count:2 },
+  { name:'VOJÁK',   move:0.11, turn:0.020, fireMin:150, fireRnd:130, range:50, aim:0.17, count:3 },
+  { name:'VETERÁN', move:0.18, turn:0.030, fireMin:90,  fireRnd:90,  range:58, aim:0.25, count:3 },
+];
+let difficulty = 1;
+let lockTarget = false;
+document.querySelectorAll('#diff button').forEach(b=>{
+  b.onclick = ()=>{
+    difficulty = +b.dataset.d;
+    document.querySelectorAll('#diff button').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel');
+  };
+});
+
+// ---------- ZX Spectrum beeper zvuky (1-bit, jen obdélníkové vlny) ----------
+const ZX = { ctx:null, on:true, master:null };
+function zxInit(){ if(ZX.ctx) return;
+  try{ ZX.ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return; }
+  ZX.master = ZX.ctx.createGain(); ZX.master.gain.value = 0.16; ZX.master.connect(ZX.ctx.destination);
+}
+function zxReady(){ return ZX.ctx && ZX.on; }
+// základní pípnutí beeperu
+function beep(f0, f1, dur, vol){ if(!zxReady()) return;
+  const o = ZX.ctx.createOscillator(); o.type='square';
+  const g = ZX.ctx.createGain(); const t = ZX.ctx.currentTime;
+  o.frequency.setValueAtTime(f0, t);
+  if(f1!=null) o.frequency.linearRampToValueAtTime(Math.max(1,f1), t+dur);
+  g.gain.setValueAtTime(vol||0.2, t);
+  g.gain.setValueAtTime(vol||0.2, t+dur*0.8);
+  g.gain.linearRampToValueAtTime(0.0001, t+dur);
+  o.connect(g); g.connect(ZX.master); o.start(t); o.stop(t+dur+0.02);
+}
+// "šum" jako na Spectru: rychlé náhodné skoky frekvence obdélníku
+function zxNoise(dur, vol, fLo, fHi){ if(!zxReady()) return;
+  const o = ZX.ctx.createOscillator(); o.type='square';
+  const g = ZX.ctx.createGain(); const t = ZX.ctx.currentTime;
+  let tt=t; const step=0.011;
+  while(tt < t+dur){ o.frequency.setValueAtTime(fLo+Math.random()*(fHi-fLo), tt); tt+=step; }
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.0008, t+dur);
+  o.connect(g); g.connect(ZX.master); o.start(t); o.stop(t+dur+0.02);
+}
+function sndFire(){ beep(950,150,0.13,0.22); }
+function sndEnemyFire(){ beep(520,110,0.12,0.12); }
+function sndExpl(){ zxNoise(0.34,0.26,90,1300); beep(160,50,0.3,0.14); }
+function sndHit(){ zxNoise(0.5,0.3,40,520); beep(240,60,0.45,0.18); }
+function sndWave(){ beep(523,523,0.09,0.18); setTimeout(()=>beep(784,784,0.13,0.18),120); }
+function sndGameOver(){ [392,330,262,196].forEach((f,i)=>setTimeout(()=>beep(f,f,0.2,0.18),i*160)); }
+function sndMissileLaunch(){ beep(300,1100,0.25,0.2); }
+// chrčení naváděné střely (trvalý warble, dokud letí)
+const MSND = { osc:null, gain:null };
+function startMissileSnd(){ if(!zxReady()||MSND.osc) return;
+  MSND.osc = ZX.ctx.createOscillator(); MSND.osc.type='square';
+  MSND.gain = ZX.ctx.createGain(); MSND.gain.gain.value=0.09;
+  MSND.osc.connect(MSND.gain); MSND.gain.connect(ZX.master); MSND.osc.start(); }
+function warbleMissileSnd(){ if(MSND.osc && ZX.ctx) MSND.osc.frequency.setValueAtTime(130+Math.random()*520, ZX.ctx.currentTime); }
+function stopMissileSnd(){ if(MSND.osc){ try{MSND.osc.stop();}catch(e){} MSND.osc=null; MSND.gain=null; } }
+
+const zxBtn = document.getElementById('zxSound');
+if(zxBtn) zxBtn.onclick = function(){ ZX.on=!ZX.on; if(!ZX.on) stopMissileSnd();
+  this.textContent = ZX.on ? '🔊 zvuk zapnut (klikni pro vypnutí)' : '🔇 zvuk vypnut (klikni pro zapnutí)'; };
+
+// ---------- naváděná střela ----------
+let missilesOn = false, missile = null, missileTimer = 0;
+let booms = [];
+function missileInterval(){ return (difficulty===0?1700:difficulty===1?1250:900) + Math.random()*500; }
+const mBtn = document.getElementById('missileToggle');
+if(mBtn) mBtn.onclick = function(){ missilesOn=!missilesOn;
+  this.textContent = missilesOn ? '☑ Naváděné střely: ZAPNUTO (klikni pro vypnutí)' : '☐ Naváděné střely: VYPNUTO (klikni pro zapnutí)'; };
+function spawnMissile(){
+  const ang=Math.random()*Math.PI*2, dist=58;
+  missile={ x:player.x+Math.cos(ang)*dist, z:player.z+Math.sin(ang)*dist, a:0, spd:0.55, life:900, phase:0 };
+  missile.a=Math.atan2(player.z-missile.z, player.x-missile.x);
+  sndMissileLaunch(); startMissileSnd();
+}
+function killMissile(){ missile=null; missileTimer=missileInterval(); stopMissileSnd(); }
+function updateMissile(){
+  if(!missilesOn || state!=='playing'){ if(missile) killMissile(); return; }
+  if(!missile){ missileTimer--; if(missileTimer<=0) spawnMissile(); return; }
+  const m=missile, p=player;
+  const da=((Math.atan2(p.z-m.z, p.x-m.x)-m.a+Math.PI*3)%(Math.PI*2))-Math.PI;
+  m.a += Math.max(-0.034, Math.min(0.034, da));   // navádí, ale jde uhnout
+  m.x += Math.cos(m.a)*m.spd; m.z += Math.sin(m.a)*m.spd; m.life--; m.phase++;
+  if(Math.hypot(p.x-m.x,p.z-m.z)<3.0){ killMissile(); hitPlayer(); }   // zásah hráče
+  else if(collides(m.x,m.z,0.5)){ booms.push({x:m.x,z:m.z,boom:24}); sndExpl(); killMissile(); }   // schoval ses za překážku
+  else if(m.life<=0){ killMissile(); }            // minula a odletěla
+  else { if(zxReady()){ startMissileSnd(); warbleMissileSnd(); } else stopMissileSnd(); }
+}
+
+const keys = {};
+addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if ([' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+  if (e.code === 'Space' && state === 'playing') fire();
+});
+addEventListener('keyup', e => keys[e.code] = false);
+startBtn.onclick = startGame;
+
+function startGame(){
+  zxInit(); if(ZX.ctx && ZX.ctx.state==='suspended') ZX.ctx.resume();
+  player = { x:0, z:0, a:0, cool:0, hit:0 };
+  enemies = [];
+  shells = [];
+  obstacles = [];
+  score = 0; lives = difficulty===0 ? 5 : 3; level = 1; shake = 0;
+  missile = null; missileTimer = missileInterval(); booms = []; stopMissileSnd();
+  buildField();
+  spawnWave();
+  state = 'playing';
+  msg.classList.add('hidden');
+}
+
+function buildField(){
+  obstacles = [];
+  const N = 14;
+  for(let i=0;i<N;i++){
+    let x,z,ok,tries=0;
+    do{
+      x = (Math.random()*2-1)*70;
+      z = (Math.random()*2-1)*70;
+      ok = Math.hypot(x,z) > 14;
+      tries++;
+    }while(!ok && tries<20);
+    obstacles.push({ x, z, type: Math.random()<0.5?'cube':'pyr', s: 1.6+Math.random()*1.2 });
+  }
+}
+
+function spawnWave(){
+  const D = DIFFS[difficulty];
+  // na lehké přibývají nepřátelé pomaleji a je jich míň najednou
+  const grow = difficulty===0 ? Math.floor((level-1)/2) : (level-1);
+  const cap  = difficulty===0 ? 3 : 5;
+  const count = Math.min(D.count + grow, cap);
+  for(let i=0;i<count;i++) spawnEnemy();
+  banner = 'VLNA ' + level;
+  msgTimer = 90;
+  sndWave();
+}
+
+function spawnEnemy(){
+  const ang = Math.random()*Math.PI*2;
+  const dist = 40 + Math.random()*25;
+  const D = DIFFS[difficulty];
+  enemies.push({
+    x: player.x + Math.cos(ang)*dist,
+    z: player.z + Math.sin(ang)*dist,
+    a: Math.random()*Math.PI*2,
+    cool: D.fireMin + Math.random()*D.fireRnd,
+    alive: true,
+    boom: 0,
+    steer: Math.random()<0.5?-1:1, stuck: 0
+  });
+}
+
+function fire(){
+  if(player.cool>0) return;
+  player.cool = 22;
+  sndFire();
+  shells.push({
+    x: player.x, z: player.z, a: player.a,
+    vx: Math.cos(player.a)*1.6, vz: Math.sin(player.a)*1.6,
+    life: 130, owner:'p'
+  });
+}
+
+function enemyFire(e){
+  sndEnemyFire();
+  shells.push({
+    x: e.x, z: e.z, a: e.a,
+    vx: Math.cos(e.a)*1.1, vz: Math.sin(e.a)*1.1,
+    life: 140, owner:'e'
+  });
+}
+
+// ---------- update ----------
+function update(){
+  if(state!=='playing') return;
+  const p = player;
+  if(p.cool>0) p.cool--;
+  if(p.hit>0) p.hit--;
+  if(shake>0) shake--;
+  if(msgTimer>0) msgTimer--;
+
+  // pohyb hráče — jemné otáčení; podrž SHIFT pro přesné mikro-míření
+  const fine = (keys['ShiftLeft']||keys['ShiftRight']) ? 0.4 : 1;
+  const turn = 0.022 * fine, spd = 0.42;
+  if(keys['ArrowLeft']||keys['KeyA']) p.a -= turn;
+  if(keys['ArrowRight']||keys['KeyD']) p.a += turn;
+  let mv=0;
+  if(keys['ArrowUp']||keys['KeyW']) mv = spd;
+  if(keys['ArrowDown']||keys['KeyS']) mv = -spd*0.6;
+  if(mv){
+    const nx = p.x + Math.cos(p.a)*mv;
+    const nz = p.z + Math.sin(p.a)*mv;
+    if(!collides(nx,nz,2)){ p.x=nx; p.z=nz; }
+  }
+
+  // nepřátelé
+  const D = DIFFS[difficulty];
+  for(const e of enemies){
+    if(!e.alive){ if(e.boom>0) e.boom--; continue; }
+    const dx = p.x-e.x, dz = p.z-e.z;
+    const dist = Math.hypot(dx,dz);
+    const target = Math.atan2(dz,dx);
+    // natoč se k hráči
+    let da = ((target - e.a + Math.PI*3)%(Math.PI*2)) - Math.PI;
+    e.a += Math.max(-D.turn, Math.min(D.turn, da));
+    // přibliž se / drž odstup
+    if(dist>18){
+      const nx = e.x + Math.cos(e.a)*D.move;
+      const nz = e.z + Math.sin(e.a)*D.move;
+      if(!collides(nx,nz,2) && !tankOverlap(e,nx,nz)){ e.x=nx; e.z=nz; e.stuck=0; }
+      else { // objíždění překážky, ať se tank nezasekne
+        e.stuck=(e.stuck||0)+1; e.a += (e.steer||1)*0.04;
+        if(e.stuck>60){ e.steer=Math.random()<0.5?-1:1; e.stuck=0; } }
+    }
+    e.cool--;
+    if(e.cool<=0 && Math.abs(da)<D.aim && dist<D.range){
+      enemyFire(e);
+      e.cool = D.fireMin + Math.random()*D.fireRnd;
+    }
+  }
+
+  // střely
+  for(const s of shells){
+    s.x += s.vx; s.z += s.vz; s.life--;
+    if(collides(s.x,s.z,0.6)) s.life = 0;
+    if(s.owner==='p'){
+      for(const e of enemies){
+        if(e.alive && Math.hypot(e.x-s.x,e.z-s.z)<2.4){
+          e.alive=false; e.boom=24; s.life=0;
+          score += 100; shake = 6; sndExpl();
+        }
+      }
+      if(missile && Math.hypot(missile.x-s.x,missile.z-s.z)<2.2){
+        booms.push({x:missile.x,z:missile.z,boom:24}); killMissile();
+        s.life=0; score += 150; shake = 6; sndExpl();
+      }
+    } else {
+      if(Math.hypot(p.x-s.x,p.z-s.z)<2.2){
+        s.life=0; hitPlayer();
+      }
+    }
+  }
+  shells = shells.filter(s=>s.life>0);
+
+  // zaměřeno? (střela letí podél p.a — je v dráze nějaký tank a nic ji neblokuje?)
+  lockTarget = false;
+  for(const e of enemies){
+    if(!e.alive) continue;
+    const dx=e.x-p.x, dz=e.z-p.z, dist=Math.hypot(dx,dz);
+    let da = ((Math.atan2(dz,dx) - p.a + Math.PI*3)%(Math.PI*2)) - Math.PI;
+    if(Math.abs(da) < Math.atan2(2.2, dist)){
+      let blocked=false;
+      for(const o of obstacles){
+        const od=Math.hypot(o.x-p.x,o.z-p.z);
+        if(od<dist){
+          let oda=((Math.atan2(o.z-p.z,o.x-p.x)-p.a+Math.PI*3)%(Math.PI*2))-Math.PI;
+          if(Math.abs(oda)<Math.atan2(o.s,od)){ blocked=true; break; }
+        }
+      }
+      if(!blocked){ lockTarget=true; break; }
+    }
+  }
+  // zaměření i na naváděnou střelu
+  if(!lockTarget && missile){
+    const dx=missile.x-p.x, dz=missile.z-p.z, dist=Math.hypot(dx,dz);
+    let da=((Math.atan2(dz,dx)-p.a+Math.PI*3)%(Math.PI*2))-Math.PI;
+    if(Math.abs(da)<Math.atan2(2.0,dist)){
+      let blk=false;
+      for(const o of obstacles){ const od=Math.hypot(o.x-p.x,o.z-p.z);
+        if(od<dist){ let oda=((Math.atan2(o.z-p.z,o.x-p.x)-p.a+Math.PI*3)%(Math.PI*2))-Math.PI;
+          if(Math.abs(oda)<Math.atan2(o.s,od)){ blk=true; break; } } }
+      if(!blk) lockTarget=true;
+    }
+  }
+
+  // naváděná střela + dohasínání výbuchů
+  updateMissile();
+  for(const b of booms) b.boom--;
+  booms = booms.filter(b=>b.boom>0);
+
+  // konec vlny
+  if(enemies.every(e=>!e.alive && e.boom<=0)){
+    level++;
+    spawnWave();
+  }
+}
+
+function tankOverlap(self,x,z){
+  for(const e of enemies){ if(e!==self && e.alive && Math.hypot(e.x-x,e.z-z)<4) return true; }
+  return false;
+}
+
+function collides(x,z,r){
+  for(const o of obstacles){
+    if(Math.hypot(o.x-x,o.z-z) < o.s + r) return true;
+  }
+  return false;
+}
+
+function hitPlayer(){
+  player.hit = 30; shake = 14;
+  lives--;
+  sndHit();
+  if(lives<=0){
+    state='gameover';
+    sndGameOver();
+    showMsg('KONEC HRY','Skóre: '+score+' &nbsp; (vlna '+level+')','ZNOVA');
+  }
+}
+
+function showMsg(title, sub, btn){
+  msg.querySelector('h1').textContent = title;
+  msg.querySelectorAll('p').forEach((el,i)=> el.style.display = i===0?'block':'none');
+  msg.querySelector('p').innerHTML = sub;
+  startBtn.textContent = btn;
+  msg.classList.remove('hidden');
+}
+
+// ---------- projekce ----------
+function project(wx, wz, wy){
+  // do soustavy kamery
+  const dx = wx - player.x, dz = wz - player.z;
+  const ca = Math.cos(-player.a), sa = Math.sin(-player.a);
+  // dopředná osa = směr a; "right" = +90°
+  const depth = dx*Math.cos(player.a) + dz*Math.sin(player.a);
+  const side  = -dx*Math.sin(player.a) + dz*Math.cos(player.a);
+  return { depth, side, wy };
+}
+
+function toScreen(c){
+  const sx = W/2 + focal * c.side / c.depth;
+  const sy = horizon - focal * (c.wy - EYE) / c.depth;
+  return { x: sx, y: sy };
+}
+
+// nakreslí 3D úsečku s ořezem near-plane
+function line3d(ax,az,ay, bx,bz,by, color, lw){
+  let A = project(ax,az,ay), B = project(bx,bz,by);
+  if(A.depth<=NEAR && B.depth<=NEAR) return;
+  if(A.depth<=NEAR || B.depth<=NEAR){
+    const t = (NEAR - A.depth)/(B.depth - A.depth);
+    const cx={ depth:NEAR, side:A.side+(B.side-A.side)*t, wy:A.wy+(B.wy-A.wy)*t };
+    if(A.depth<=NEAR) A=cx; else B=cx;
+  }
+  const pa=toScreen(A), pb=toScreen(B);
+  ctx.strokeStyle=color; ctx.lineWidth=lw||2;
+  ctx.beginPath(); ctx.moveTo(pa.x,pa.y); ctx.lineTo(pb.x,pb.y); ctx.stroke();
+}
+
+function drawCube(o, color){
+  const s=o.s, x=o.x, z=o.z, h=o.s*1.4;
+  const c=[[x-s,z-s],[x+s,z-s],[x+s,z+s],[x-s,z+s]];
+  for(let i=0;i<4;i++){
+    const j=(i+1)%4;
+    line3d(c[i][0],c[i][1],0, c[j][0],c[j][1],0, color); // spodek
+    line3d(c[i][0],c[i][1],h, c[j][0],c[j][1],h, color); // vršek
+    line3d(c[i][0],c[i][1],0, c[i][0],c[i][1],h, color); // sloupek
+  }
+}
+
+function drawPyr(o, color){
+  const s=o.s, x=o.x, z=o.z, h=o.s*2.2;
+  const c=[[x-s,z-s],[x+s,z-s],[x+s,z+s],[x-s,z+s]];
+  for(let i=0;i<4;i++){
+    const j=(i+1)%4;
+    line3d(c[i][0],c[i][1],0, c[j][0],c[j][1],0, color);
+    line3d(c[i][0],c[i][1],0, x,z,h, color);
+  }
+}
+
+function drawTank(e, color){
+  // tělo
+  const s=1.6, x=e.x, z=e.z, bh=1.0;
+  const ca=Math.cos(e.a), sa=Math.sin(e.a);
+  function pt(fx,fy,fz){ // fx=dopředu, fy=stranou
+    return [ x + fx*ca - fy*sa, z + fx*sa + fy*ca, fz ];
+  }
+  const body=[ pt(-s,-s,0), pt(s,-s,0), pt(s,s,0), pt(-s,s,0) ];
+  const top =[ pt(-s,-s,bh), pt(s,-s,bh), pt(s,s,bh), pt(-s,s,bh) ];
+  for(let i=0;i<4;i++){
+    const j=(i+1)%4;
+    line3d(...body[i], ...body[j], color);
+    line3d(...top[i], ...top[j], color);
+    line3d(...body[i], ...top[i], color);
+  }
+  // věž
+  const t=0.8, th=bh+0.7;
+  const tur=[ pt(-t,-t,th), pt(t,-t,th), pt(t,t,th), pt(-t,t,th) ];
+  for(let i=0;i<4;i++){
+    const j=(i+1)%4;
+    line3d(...tur[i], ...tur[j], color);
+    line3d(...top[i], ...tur[i], color);
+  }
+  // hlaveň
+  const g0=pt(t,0,th-0.3), g1=pt(t+2.4,0,th-0.3);
+  line3d(...g0, ...g1, color, 2);
+}
+
+function drawExplosion(e){
+  const n=10, r=2.5*(1 - e.boom/24)+0.5;
+  for(let i=0;i<n;i++){
+    const a=i/n*Math.PI*2;
+    line3d(e.x, e.z, 0.5, e.x+Math.cos(a)*r, e.z+Math.sin(a)*r, 0.5+Math.sin(a)*1.5, GREEN);
+  }
+}
+
+function drawMissile(m){
+  const x=m.x, z=m.z, ca=Math.cos(m.a), sa=Math.sin(m.a), fh=1.0;
+  const P=(fwd,side,up)=>[ x+fwd*ca - side*sa, z+fwd*sa + side*ca, fh+up ];
+  const nose=P(1.6,0,0), tail=P(-1.0,0,0);
+  const ring=[P(0,0.45,0),P(0,0,0.45),P(0,-0.45,0),P(0,0,-0.45)];
+  const col=(m.phase%4<2)?'#ffffff':'#9fffd0';   // bliká
+  for(let i=0;i<4;i++){ const j=(i+1)%4;
+    line3d(...ring[i],...ring[j],col);
+    line3d(...nose,...ring[i],col);
+    line3d(...tail,...ring[i],col);
+  }
+  // ocasní ploutve
+  line3d(...tail,...P(-1.0,0.65,0.65),col); line3d(...tail,...P(-1.0,-0.65,-0.65),col);
+  line3d(...tail,...P(-1.0,0.65,-0.65),col); line3d(...tail,...P(-1.0,-0.65,0.65),col);
+}
+
+// ---------- render ----------
+function render(){
+  ctx.clearRect(0,0,W,H);
+  // chvění při zásahu
+  let ox=0, oy=0;
+  if(shake>0){ ox=(Math.random()*2-1)*shake; oy=(Math.random()*2-1)*shake; }
+  ctx.save();
+  ctx.translate(ox,oy);
+
+  if(state==='menu'){ ctx.restore(); drawGrid(); return; }
+
+  // obloha/země rozdělení + horizont
+  drawHorizon();
+  drawGroundGrid();
+
+  // objekty seřazené dle vzdálenosti (zezadu dopředu)
+  const items=[];
+  for(const o of obstacles) items.push({d:dist2(o), draw:()=> (o.type==='cube'?drawCube(o,DIM):drawPyr(o,DIM))});
+  for(const e of enemies){
+    if(e.alive) items.push({d:dist2(e), draw:()=>drawTank(e,GREEN)});
+    else if(e.boom>0) items.push({d:dist2(e), draw:()=>drawExplosion(e)});
+  }
+  for(const b of booms) items.push({d:dist2(b), draw:()=>drawExplosion(b)});
+  if(missile) items.push({d:dist2(missile), draw:()=>drawMissile(missile)});
+  items.sort((a,b)=>b.d-a.d);
+  for(const it of items) it.draw();
+
+  // střely
+  for(const s of shells){
+    const c=project(s.x,s.z,0.8);
+    if(c.depth>NEAR){
+      const p=toScreen(c);
+      const r=Math.max(1.5, 60/c.depth);
+      ctx.fillStyle = s.owner==='p'? '#bfffd6' : '#ff6b6b';
+      ctx.beginPath(); ctx.arc(p.x,p.y,r,0,7); ctx.fill();
+    }
+  }
+
+  ctx.restore();
+
+  // zaměřovač
+  drawCrosshair();
+  // radar
+  drawRadar();
+  // flash zásahu
+  if(player && player.hit>0){
+    ctx.fillStyle='rgba(255,40,40,'+(player.hit/30*0.35)+')';
+    ctx.fillRect(0,0,W,H);
+  }
+  // banner vlny
+  if(msgTimer>0 && banner){
+    ctx.fillStyle=GREEN; ctx.font='bold 40px "Courier New"';
+    ctx.textAlign='center'; ctx.shadowColor='#0f6'; ctx.shadowBlur=12;
+    ctx.fillText(banner, W/2, H*0.3); ctx.shadowBlur=0;
+  }
+}
+
+function dist2(o){ return (o.x-player.x)**2 + (o.z-player.z)**2; }
+
+function drawHorizon(){
+  ctx.strokeStyle=GREEN; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0,horizon); ctx.lineTo(W,horizon); ctx.stroke();
+  // dálkové hory
+  ctx.strokeStyle=DIM; ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.moveTo(0,horizon);
+  let h=horizon;
+  for(let x=0;x<=W;x+=40){
+    const peak = horizon - 6 - (Math.sin(x*0.21+1)*0.5+0.5)*22;
+    ctx.lineTo(x, x%80<40? peak : horizon-4);
+  }
+  ctx.lineTo(W,horizon); ctx.stroke();
+}
+
+function drawGroundGrid(){
+  // perspektivní mřížka země pro pocit pohybu
+  ctx.strokeStyle='rgba(40,170,90,0.35)'; ctx.lineWidth=1;
+  // čáry kolmé na pohled (konstantní hloubka)
+  for(let d=4; d<=60; d+=4){
+    const pts=[];
+    for(let s=-60;s<=60;s+=4){
+      // bod na zemi v souřadnicích kamery
+      const sx = W/2 + focal*s/d;
+      const sy = horizon - focal*(0-EYE)/d;
+      pts.push([sx,sy]);
+    }
+    ctx.beginPath();
+    let started=false;
+    for(const [px,py] of pts){
+      if(px<-50||px>W+50) {started=false; continue;}
+      if(!started){ctx.moveTo(px,py);started=true;} else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+  }
+}
+
+function drawGrid(){ // pozadí menu
+  ctx.strokeStyle='rgba(40,170,90,0.25)';
+  ctx.beginPath(); ctx.moveTo(0,horizon); ctx.lineTo(W,horizon); ctx.stroke();
+}
+
+function drawCrosshair(){
+  const cx=W/2, cy=horizon+ (H-horizon)*0.18;
+  const locked = lockTarget;
+  const col = locked ? '#ff4d4d' : GREEN;
+  ctx.strokeStyle=col; ctx.lineWidth=locked?3:2;
+  if(locked){ ctx.shadowColor='#f33'; ctx.shadowBlur=12; }
+  ctx.beginPath();
+  ctx.moveTo(cx-26,cy); ctx.lineTo(cx-8,cy);
+  ctx.moveTo(cx+8,cy); ctx.lineTo(cx+26,cy);
+  ctx.moveTo(cx,cy-26); ctx.lineTo(cx,cy-8);
+  ctx.moveTo(cx,cy+8); ctx.lineTo(cx,cy+26);
+  ctx.stroke();
+  ctx.strokeRect(cx-3,cy-3,6,6);
+  if(locked){
+    // rohové závorky + nápis ZAMĚŘENO
+    const r=22;
+    ctx.beginPath();
+    ctx.moveTo(cx-r,cy-r+7); ctx.lineTo(cx-r,cy-r); ctx.lineTo(cx-r+7,cy-r);
+    ctx.moveTo(cx+r-7,cy-r); ctx.lineTo(cx+r,cy-r); ctx.lineTo(cx+r,cy-r+7);
+    ctx.moveTo(cx-r,cy+r-7); ctx.lineTo(cx-r,cy+r); ctx.lineTo(cx-r+7,cy+r);
+    ctx.moveTo(cx+r-7,cy+r); ctx.lineTo(cx+r,cy+r); ctx.lineTo(cx+r,cy+r-7);
+    ctx.stroke();
+    ctx.fillStyle='#ff4d4d'; ctx.font='bold 15px "Courier New"'; ctx.textAlign='center';
+    ctx.fillText('ZAMĚŘENO', cx, cy-r-10);
+  }
+  ctx.shadowBlur=0;
+}
+
+function drawRadar(){
+  const R=58, cx=W-R-18, cy=H-R-18;
+  ctx.save();
+  ctx.fillStyle='rgba(0,20,8,0.75)';
+  ctx.strokeStyle=GREEN; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,7); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx-R,cy); ctx.lineTo(cx+R,cy);
+  ctx.moveTo(cx,cy-R); ctx.lineTo(cx,cy+R); ctx.stroke();
+  // hráč uprostřed, dopředu = nahoru
+  ctx.fillStyle='#bfffd6';
+  ctx.beginPath(); ctx.arc(cx,cy,3,0,7); ctx.fill();
+  // výseč pohledu
+  ctx.fillStyle='rgba(60,255,140,0.12)';
+  ctx.beginPath(); ctx.moveTo(cx,cy);
+  ctx.arc(cx,cy,R,-Math.PI/2-0.5,-Math.PI/2+0.5); ctx.closePath(); ctx.fill();
+  const scale=R/65;
+  if(enemies) for(const e of enemies){
+    if(!e.alive) continue;
+    const dx=e.x-player.x, dz=e.z-player.z;
+    // otoč do soustavy hráče: dopředu nahoru
+    const fwd = dx*Math.cos(player.a)+dz*Math.sin(player.a);
+    const side= -dx*Math.sin(player.a)+dz*Math.cos(player.a);
+    let rx=cx + side*scale, ry=cy - fwd*scale;
+    const dd=Math.hypot(rx-cx,ry-cy);
+    if(dd<=R){ ctx.fillStyle='#ff5b5b'; ctx.beginPath(); ctx.arc(rx,ry,3,0,7); ctx.fill(); }
+  }
+  if(missile){
+    const dx=missile.x-player.x, dz=missile.z-player.z;
+    const fwd=dx*Math.cos(player.a)+dz*Math.sin(player.a);
+    const side=-dx*Math.sin(player.a)+dz*Math.cos(player.a);
+    let rx=cx+side*scale, ry=cy-fwd*scale;
+    if(Math.hypot(rx-cx,ry-cy)<=R){ ctx.fillStyle=(missile.phase%4<2)?'#ffe14d':'#fff';
+      ctx.beginPath(); ctx.arc(rx,ry,3.2,0,7); ctx.fill(); }
+  }
+  ctx.restore();
+}
+
+// ---------- HUD + smyčka ----------
+function drawHud(){
+  if(state==='playing'){
+    hud.innerHTML = 'SKÓRE '+score+' &nbsp;&nbsp; ŽIVOTY '+'▮'.repeat(Math.max(0,lives))+' &nbsp;&nbsp; VLNA '+level
+      + (missile?' &nbsp;&nbsp; <span style="color:#ffe14d">⚠ STŘELA!</span>':'');
+  } else hud.innerHTML='';
+}
+
+function loop(){
+  update();
+  render();
+  drawHud();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

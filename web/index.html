@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>valda.cloud</title>
+  <meta name="description" content="Sbírka zajímavostí, experimentů a her.">
+  <style>
+    :root{
+      --bg:#0e1014;
+      --bg2:#15181f;
+      --card:#191d26;
+      --card-h:#202634;
+      --line:#2a3140;
+      --txt:#e6e8ee;
+      --muted:#8b93a3;
+      --accent:#5ad1c4;
+      --accent2:#f0a868;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{-webkit-text-size-adjust:100%}
+    body{
+      font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 600px at 80% -10%, #1c2433 0%, transparent 60%),
+        radial-gradient(900px 500px at -10% 110%, #1a2a28 0%, transparent 55%),
+        var(--bg);
+      color:var(--txt);
+      min-height:100vh;
+      line-height:1.55;
+      -webkit-font-smoothing:antialiased;
+    }
+    .wrap{max-width:880px;margin:0 auto;padding:clamp(2.5rem,6vw,5rem) clamp(1.2rem,4vw,2rem) 4rem}
+    header{margin-bottom:3rem}
+    .logo{
+      font-size:clamp(2.4rem,7vw,3.6rem);
+      font-weight:800;
+      letter-spacing:-.02em;
+    }
+    .logo .dot{color:var(--accent)}
+    .tagline{color:var(--muted);font-size:1.05rem;margin-top:.6rem;max-width:46ch}
+    .rule{height:1px;background:linear-gradient(90deg,var(--line),transparent);margin:2.2rem 0 2rem}
+    h2{
+      font-size:.82rem;font-weight:600;text-transform:uppercase;letter-spacing:.18em;
+      color:var(--muted);margin-bottom:1.1rem;
+    }
+    .grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))}
+    .card{
+      display:flex;flex-direction:column;gap:.5rem;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:1.35rem 1.4rem;
+      text-decoration:none;color:inherit;
+      transition:transform .15s ease,border-color .15s ease,background .15s ease;
+      position:relative;overflow:hidden;
+    }
+    .card:hover{transform:translateY(-3px);border-color:var(--accent);background:var(--card-h)}
+    .card .emoji{font-size:1.8rem;line-height:1}
+    .card .name{font-size:1.18rem;font-weight:700;letter-spacing:-.01em}
+    .card .desc{color:var(--muted);font-size:.92rem}
+    .card .arrow{margin-top:.4rem;color:var(--accent);font-size:.85rem;font-weight:600;letter-spacing:.03em}
+    .card.soon{opacity:.55;pointer-events:none}
+    .badge{
+      position:absolute;top:1rem;right:1rem;
+      font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;
+      background:var(--bg2);border:1px solid var(--line);color:var(--muted);
+      padding:.2rem .5rem;border-radius:6px;
+    }
+    footer{margin-top:3.5rem;color:var(--muted);font-size:.82rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+    footer .pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(90,209,196,.5);animation:p 2.4s infinite}
+    @keyframes p{0%{box-shadow:0 0 0 0 rgba(90,209,196,.5)}70%{box-shadow:0 0 0 7px rgba(90,209,196,0)}100%{box-shadow:0 0 0 0 rgba(90,209,196,0)}}
+    a.plain{color:var(--accent);text-decoration:none}
+    .source{
+      display:inline-flex;align-items:center;gap:.55rem;
+      margin-top:1.4rem;
+      color:var(--muted);text-decoration:none;font-size:.92rem;
+      background:var(--card);border:1px solid var(--line);
+      padding:.6rem 1rem;border-radius:10px;
+      transition:border-color .15s ease,color .15s ease,background .15s ease;
+    }
+    .source:hover{border-color:var(--accent);color:var(--txt);background:var(--card-h)}
+    .source svg{flex:none;fill:currentColor}
+    .source b{font-weight:700;color:var(--txt)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">valda<span class="dot">.</span>cloud</div>
+      <p class="tagline">Sbírka drobných experimentů, her a zajímavostí. Postupně sem přibývá další.</p>
+    </header>
+
+    <div class="rule"></div>
+
+    <section>
+      <h2>🎮 Hry</h2>
+      <div class="grid">
+        <a class="card" href="/games/tank-duel-3d.html">
+          <span class="emoji">🛡️</span>
+          <span class="name">Tank Duel 3D</span>
+          <span class="desc">Texturovaný tankový souboj v 3D městě. Lov nepřátelské tanky mezi domy, sleduj radar a nenech se trefit.</span>
+          <span class="arrow">Spustit →</span>
+        </a>
+        <a class="card" href="/games/3d-tank-duel-zx-spectrum.html">
+          <span class="emoji">📼</span>
+          <span class="name">3D Tank Duel — ZX Spectrum</span>
+          <span class="desc">Vektorový tankový souboj z kokpitu — drátěná grafika jako pocta osmibitovému ZX Spectru.</span>
+          <span class="arrow">Spustit →</span>
+        </a>
+      </div>
+    </section>
+
+    <div class="rule"></div>
+
+    <section>
+      <h2>✨ Brzy přibyde</h2>
+      <div class="grid">
+        <div class="card soon">
+          <span class="badge">soon</span>
+          <span class="emoji">🧪</span>
+          <span class="name">Další zajímavost</span>
+          <span class="desc">Tady postupně přibudou další experimenty.</span>
+        </div>
+      </div>
+    </section>
+
+    <a class="source" href="https://github.com/valdacf/valda.cloud" target="_blank" rel="noopener">
+      <svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      <span>Všechno je open-source na <b>GitHubu</b> → valdacf/valda.cloud</span>
+    </a>
+
+    <footer>
+      <span class="pulse"></span>
+      <span>běží na nginx za Traefikem · <a class="plain" href="https://valda.cloud">valda.cloud</a></span>
+    </footer>
+  </div>
+</body>
+</html>
