@@ -365,7 +365,7 @@ function buildWorld(){
 
 function startGame(){
   audioInit(); if(Audio.ctx&&Audio.ctx.state==='suspended') Audio.ctx.resume();
-  player={x:0,z:0,a:0,cool:0,hit:0};
+  player={x:0,z:0,a:0,av:0,cool:0,hit:0};
   enemies=[]; shells=[];
   score=0; level=1; lives=difficulty===0?5:3; shake=0;
   missile=null; missileTimer=missileInterval(); booms=[]; missileSoundStop();
@@ -450,11 +450,16 @@ function update(dt){
   const p=player, D=DIFFS[difficulty];
   if(p.cool>0)p.cool-=dt; if(p.hit>0)p.hit-=dt; if(shake>0)shake-=dt; if(msgTimer>0)msgTimer-=dt;
 
-  const fine=(keys['ShiftLeft']||keys['ShiftRight'])?0.4:1;
-  const turn=1.5*fine*dt, spd=14*dt;
-  // OPRAVENO: doleva = doleva
-  if(keys['ArrowLeft']||keys['KeyA']) p.a+=turn;
-  if(keys['ArrowRight']||keys['KeyD']) p.a-=turn;
+  const fine=(keys['ShiftLeft']||keys['ShiftRight'])?0.35:1;
+  const spd=14*dt;
+  // plynulé otáčení s rozjezdem/dojezdem — krátké ťuknutí = jemné doladění mířidla
+  const maxTurn=1.7*fine;                 // max. úhlová rychlost (rad/s)
+  let want=0;                             // doleva = +, doprava = -
+  if(keys['ArrowLeft']||keys['KeyA']) want+=1;
+  if(keys['ArrowRight']||keys['KeyD']) want-=1;
+  p.av+=((want*maxTurn)-p.av)*(1-Math.exp(-dt/0.07));
+  if(want===0 && Math.abs(p.av)<0.02) p.av=0;
+  p.a+=p.av*dt;
   let mv=0;
   if(keys['ArrowUp']||keys['KeyW']) mv=spd;
   if(keys['ArrowDown']||keys['KeyS']) mv=-spd*0.6;

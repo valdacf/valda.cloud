@@ -168,7 +168,7 @@ startBtn.onclick = startGame;
 
 function startGame(){
   zxInit(); if(ZX.ctx && ZX.ctx.state==='suspended') ZX.ctx.resume();
-  player = { x:0, z:0, a:0, cool:0, hit:0 };
+  player = { x:0, z:0, a:0, av:0, cool:0, hit:0 };
   enemies = [];
   shells = [];
   obstacles = [];
@@ -252,10 +252,16 @@ function update(){
   if(msgTimer>0) msgTimer--;
 
   // pohyb hráče — jemné otáčení; podrž SHIFT pro přesné mikro-míření
-  const fine = (keys['ShiftLeft']||keys['ShiftRight']) ? 0.4 : 1;
-  const turn = 0.022 * fine, spd = 0.42;
-  if(keys['ArrowLeft']||keys['KeyA']) p.a -= turn;
-  if(keys['ArrowRight']||keys['KeyD']) p.a += turn;
+  const fine = (keys['ShiftLeft']||keys['ShiftRight']) ? 0.35 : 1;
+  const spd = 0.42;
+  // plynulé otáčení s rozjezdem/dojezdem — krátké ťuknutí = jemné doladění mířidla
+  const maxTurn = 0.026 * fine;          // max. otočení za snímek
+  let want = 0;                          // doleva = -, doprava = +
+  if(keys['ArrowLeft']||keys['KeyA']) want -= 1;
+  if(keys['ArrowRight']||keys['KeyD']) want += 1;
+  p.av = (p.av||0) + (want*maxTurn - (p.av||0))*0.18;
+  if(want===0 && Math.abs(p.av)<0.0004) p.av = 0;
+  p.a += p.av;
   let mv=0;
   if(keys['ArrowUp']||keys['KeyW']) mv = spd;
   if(keys['ArrowDown']||keys['KeyS']) mv = -spd*0.6;
