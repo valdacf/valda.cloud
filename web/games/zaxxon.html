@@ -210,6 +210,14 @@ function update(){
           else if(o.t==='turret'){ score+=200; } else if(o.t==='cannon'){ score+=250; }
           else if(o.t==='radar'){ score+=200; }
           else { score+=300; planesLeft=Math.max(0,planesLeft-1); } } } }
+    // střely blokované zdí / silovým polem (projdou jen mezerou/štěrbinou)
+    if(o.t==='wall'||o.t==='field'){
+      for(const b of bullets){ if(b.rd>1e8)continue; if(Math.abs(b.rd-rd)<7){
+        let blocked;
+        if(o.t==='wall'){ const inGap=o.gap&&Math.abs(b.lat-o.gap.c)<o.gap.w; blocked=!inGap&&b.alt<o.h-0.5; }
+        else blocked=(b.alt<o.slotLo-0.4||b.alt>o.slotHi+0.4);
+        if(blocked){ const p=proj(b.lat,b.alt,b.rd); boom(p.x,p.y,6,'#d6def0'); sHit(); b.rd=1e9; } } }
+    }
     // kolize s hracem
     if(rd<PRD+3&&rd>PRD-4){
       if(o.t==='field'){ if(player.alt<o.slotLo-0.5||player.alt>o.slotHi+0.5)killPlayer(); }
