@@ -485,10 +485,6 @@ function drawHUD(){
   g.textAlign='right'; g.fillStyle=C.hud; g.fillText('EP '+String(planesLeft).padStart(2,'0'), W-20, H-30);
   for(let i=0;i<lives;i++){ g.fillStyle=C.ship; const x=W-30-i*22, y=H-18;
     g.beginPath();g.moveTo(x,y-6);g.lineTo(x-7,y+4);g.lineTo(x,y+1);g.lineTo(x+7,y+4);g.closePath();g.fill(); }
-  // vyskomer
-  g.fillStyle=C.hud; g.font='bold 12px Consolas,monospace'; g.textAlign='center'; g.fillText('ALT',W-18,60);
-  g.fillStyle='#222838'; g.fillRect(W-26,70,10,H-160); const ah=(H-160)*Math.min(1,player.alt/30);
-  g.fillStyle=C.canopy; g.fillRect(W-26,70+(H-160)-ah,10,ah);
   // progres
   if(!bossMode){ g.fillStyle='#1a2233'; g.fillRect(20,14,W-40,4); g.fillStyle=C.hud; g.fillRect(20,14,(W-40)*(scroll/(levelLen-VIEW)),4); }
   else { g.fillStyle=C.warn; g.textAlign='center'; g.font='bold 22px Consolas,monospace'; g.fillText('!! ZAXXON !!',W/2,34); }
