@@ -52,10 +52,13 @@ const DUX=FX/_Dl, DUY=-FY/_Dl;      // směr hloubky (nahoru-doprava)
 const LUX=LX/_Ll, LUY=LY/_Ll;       // směr šířky (dolů-doprava)
 // stíhačka ležící naplocho v izo-rovině: f = dopředu (hloubka), s = do strany (šířka)
 // dir = +1 hráč (nos do dálky), -1 nepřítel (nos k hráči)
-function flatPt(cx,cy,sc,dir,f,s){ f*=dir; return { x:cx+(f*DUX+s*LUX)*sc, y:cy+(f*DUY+s*LUY)*sc }; }
+// bank = náklon kolem podélné osy (roll): jedno křídlo se opticky zvedne, druhé klesne
+function flatPt(cx,cy,sc,dir,f,s,bank){ f*=dir; const b=bank||0, cb=Math.cos(b), sb=Math.sin(b);
+  const ss=s*cb, up=s*sb;
+  return { x:cx+(f*DUX+ss*LUX)*sc, y:cy+(f*DUY+ss*LUY)*sc - up*sc }; }
 const FIGHTER=[[1.25,0],[-0.55,0.30],[-0.62,0.98],[-0.95,0.86],[-0.80,0],[-0.95,-0.86],[-0.62,-0.98],[-0.55,-0.30]];
-function fighterPath2(cx,cy,sc,dir){ g.beginPath();
-  FIGHTER.forEach((p,i)=>{ const q=flatPt(cx,cy,sc,dir,p[0],p[1]); i?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y); }); g.closePath(); }
+function fighterPath2(cx,cy,sc,dir,bank){ g.beginPath();
+  FIGHTER.forEach((p,i)=>{ const q=flatPt(cx,cy,sc,dir,p[0],p[1],bank); i?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y); }); g.closePath(); }
 
 // ---------- barvy ----------
 const C={
@@ -86,8 +89,8 @@ const C={
 // ---------- stav ----------
 let state='title', paused=false;
 let scroll=0, speed=0.62, levelLen=2400;
-let score=0, hi=0, fuel=100, lives=3, bossMode=false, blink=0, planesLeft=20;
-const player={lat:0, alt:6, cd:0, inv:0};
+let score=0, hi=0, fuel=100, lives=5, bossMode=false, blink=0, planesLeft=20;
+const player={lat:0, alt:6, cd:0, inv:0, bank:0};
 let bullets=[], ebullets=[], objs=[], parts=[], stars=[], boss=null;
 const keys={};
 
@@ -163,8 +166,8 @@ function buildLevel(){
 }
 function initStars(){ stars=[]; for(let i=0;i<70;i++)stars.push({x:Math.random()*W,y:Math.random()*180,s:Math.random()<.25?2:1}); }
 function startGame(){ AC(); state='play'; }
-function reset(){ state='title'; scroll=0; score=0; fuel=100; lives=3; bossMode=false; boss=null;
-  player.lat=0; player.alt=6; player.inv=0; bullets=[]; ebullets=[]; parts=[]; buildLevel(); initStars(); }
+function reset(){ state='title'; scroll=0; score=0; fuel=100; lives=5; bossMode=false; boss=null;
+  player.lat=0; player.alt=6; player.inv=0; player.bank=0; bullets=[]; ebullets=[]; parts=[]; buildLevel(); initStars(); }
 
 function boom(x,y,n=16,col=C.wTop){ for(let i=0;i<n;i++){ const a=Math.random()*6.28,sp=Math.random()*3.2+0.6;
   parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-0.5,life:Math.random()*26+14,col}); } }
@@ -172,8 +175,10 @@ function boom(x,y,n=16,col=C.wTop){ for(let i=0;i<n;i++){ const a=Math.random()*
 // ---------- update ----------
 function update(){
   if(state!=='play'||paused)return; blink++;
-  if(keys['arrowleft']||keys['a'])player.lat-=0.085;
-  if(keys['arrowright']||keys['d'])player.lat+=0.085;
+  let bt=0;
+  if(keys['arrowleft']||keys['a']){ player.lat-=0.085; bt=1; }
+  if(keys['arrowright']||keys['d']){ player.lat+=0.085; bt=-1; }
+  player.bank += (bt*0.52 - player.bank)*0.16;   // plynulé naklápění (~30°)
   if(keys['arrowup']||keys['w'])player.alt+=0.20;
   if(keys['arrowdown']||keys['s'])player.alt-=0.20;
   player.lat=Math.max(-LATMAX,Math.min(LATMAX,player.lat));
@@ -417,20 +422,20 @@ function drawShip(){
   const base=proj(player.lat,0,PRD), top=proj(player.lat,player.alt,PRD);
   g.strokeStyle='rgba(150,200,255,0.30)'; g.setLineDash([3,4]); g.beginPath();g.moveTo(base.x,base.y);g.lineTo(top.x,top.y);g.stroke(); g.setLineDash([]);
   if(!drawIt)return;
-  const cx=top.x, cy=top.y;
+  const cx=top.x, cy=top.y, bk=player.bank;
   // plamen z motoru (za lodí = směr -f)
-  if((blink>>1)%2){ const a=flatPt(cx,cy,SC,1,-0.9,0.26),b=flatPt(cx,cy,SC,1,-1.7,0),c=flatPt(cx,cy,SC,1,-0.9,-0.26);
+  if((blink>>1)%2){ const a=flatPt(cx,cy,SC,1,-0.9,0.26,bk),b=flatPt(cx,cy,SC,1,-1.7,0,bk),c=flatPt(cx,cy,SC,1,-0.9,-0.26,bk);
     g.fillStyle=C.flame; g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.lineTo(c.x,c.y);g.closePath();g.fill(); }
   // bílé tělo (delta)
-  g.fillStyle=C.shipWing; fighterPath2(cx,cy,SC,1); g.fill(); g.strokeStyle='#9aa0b0'; g.lineWidth=1.4; g.stroke();
+  g.fillStyle=C.shipWing; fighterPath2(cx,cy,SC,1,bk); g.fill(); g.strokeStyle='#9aa0b0'; g.lineWidth=1.4; g.stroke();
   // rudá záď (motorový blok)
-  const r0=flatPt(cx,cy,SC,1,-0.42,0.26),r1=flatPt(cx,cy,SC,1,-0.42,-0.26),r2=flatPt(cx,cy,SC,1,-0.92,-0.20),r3=flatPt(cx,cy,SC,1,-0.92,0.20);
+  const r0=flatPt(cx,cy,SC,1,-0.42,0.26,bk),r1=flatPt(cx,cy,SC,1,-0.42,-0.26,bk),r2=flatPt(cx,cy,SC,1,-0.92,-0.20,bk),r3=flatPt(cx,cy,SC,1,-0.92,0.20,bk);
   g.fillStyle=C.shipRear; g.beginPath();g.moveTo(r0.x,r0.y);g.lineTo(r1.x,r1.y);g.lineTo(r2.x,r2.y);g.lineTo(r3.x,r3.y);g.closePath();g.fill();
   // rudý pruh po trupu
-  const s0=flatPt(cx,cy,SC,1,0.75,0),s1=flatPt(cx,cy,SC,1,-0.42,0.12),s2=flatPt(cx,cy,SC,1,-0.42,-0.12);
+  const s0=flatPt(cx,cy,SC,1,0.75,0,bk),s1=flatPt(cx,cy,SC,1,-0.42,0.12,bk),s2=flatPt(cx,cy,SC,1,-0.42,-0.12,bk);
   g.fillStyle=C.shipStripe; g.beginPath();g.moveTo(s0.x,s0.y);g.lineTo(s1.x,s1.y);g.lineTo(s2.x,s2.y);g.closePath();g.fill();
   // kokpit
-  const cp=flatPt(cx,cy,SC,1,0.34,0); g.fillStyle=C.canopy; g.beginPath(); g.ellipse(cp.x,cp.y,4.2,3.2,0,0,6.283); g.fill();
+  const cp=flatPt(cx,cy,SC,1,0.34,0,bk); g.fillStyle=C.canopy; g.beginPath(); g.ellipse(cp.x,cp.y,4.2,3.2,0,0,6.283); g.fill();
 }
 
 function drawField(o,rd){ // elektrická bariéra přes celou šířku s vodorovnou štěrbinou
