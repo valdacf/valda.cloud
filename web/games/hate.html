@@ -175,30 +175,49 @@ addEventListener('keyup', e => { keys[e.key] = false; });
 /* ---------- level generation ---------- */
 function genLevel(lv){
   const rnd = mulberry32(lv * 7919 + 1013);
-  const h = [], dark = [];
-  for(let u = 0; u < ULEN; u++){ h.push(new Int8Array(VW)); dark.push(new Uint8Array(VW)); }
-  const base = new Int8Array(ULEN);
+  /* corner height field (floats -> slopes) + per-tile lift (integer -> vertical blocks) */
+  const ch = [];
+  for(let u = 0; u <= ULEN; u++) ch.push(new Float32Array(VW + 1));
+  const lift = [], dark = [];
+  for(let u = 0; u < ULEN; u++){ lift.push(new Int8Array(VW)); dark.push(new Uint8Array(VW)); }
+
+  /* raised patch with sloped skirts — the ramp hills of the original */
+  function hill(u0, u1, v0, v1, hh){
+    const su = 2 * hh, sv = hh + 1;
+    for(let k = Math.max(0, u0 - su); k <= Math.min(ULEN, u1 + su); k++)
+      for(let v = Math.max(0, v0 - sv); v <= Math.min(VW, v1 + sv); v++){
+        const fu = k < u0 ? 1 - (u0 - k) / su : (k > u1 ? 1 - (k - u1) / su : 1);
+        const fv = v < v0 ? 1 - (v0 - v) / sv : (v > v1 ? 1 - (v - v1) / sv : 1);
+        ch[k][v] += hh * Math.max(0, Math.min(fu, fv));
+      }
+  }
+
+  const base = new Float32Array(ULEN + 1);
   let b = 0, u = 14;
   while(u < ULEN - 24){
     const r = rnd();
     if(r < 0.26){ u += 6 + (rnd() * 10 | 0); }
-    else if(r < 0.52){                                       // base elevation step
+    else if(r < 0.52){                                       // base elevation ramp
       const de = (rnd() < 0.5 && b > 0) ? -1 : (b < 3 ? 1 : -1);
+      const len = 2 + (rnd() * 3 | 0);
+      for(let k = 0; k <= len; k++) base[Math.min(ULEN, u + k)] = b + de * (k / len);
       b += de;
-      for(let k = u; k < ULEN; k++) base[k] = b;
-      u += 5 + (rnd() * 6 | 0);
-    } else if(r < 0.74){                                     // plateau patch
+      for(let k = Math.min(ULEN, u + len); k <= ULEN; k++) base[k] = b;
+      u += len + 4 + (rnd() * 6 | 0);
+    } else if(r < 0.74){                                     // hill (sloped) or block plateau (vertical)
       const du = 8 + (rnd() * 12 | 0);
       const v0 = rnd() * 6 | 0, v1 = Math.min(VW - 1, v0 + 2 + (rnd() * 4 | 0));
       const hh = 1 + (rnd() * 2 | 0);
-      for(let k = u; k < Math.min(ULEN, u + du); k++)
-        for(let v = v0; v <= v1; v++) h[k][v] += hh;
+      if(rnd() < 0.55) hill(u, Math.min(ULEN, u + du), v0, v1 + 1, hh);
+      else
+        for(let k = u; k < Math.min(ULEN, u + du); k++)
+          for(let v = v0; v <= v1; v++) lift[k][v] += hh;
       u += du + 3;
     } else if(r < 0.88){                                     // wall with a gap
       const gv = 1 + (rnd() * (VW - 4) | 0);
       for(let k = u; k < u + 2; k++)
         for(let v = 0; v < VW; v++)
-          if(v < gv || v > gv + 2) h[k][v] += 4;
+          if(v < gv || v > gv + 2) lift[k][v] += 4;
       u += 12 + (rnd() * 10 | 0);
     } else {                                                 // dithered dark patch
       const du = 6 + (rnd() * 10 | 0);
@@ -208,8 +227,8 @@ function genLevel(lv){
       u += du;
     }
   }
-  for(let k = 0; k < ULEN; k++)
-    for(let v = 0; v < VW; v++) h[k][v] += base[k];
+  for(let k = 0; k <= ULEN; k++)
+    for(let v = 0; v <= VW; v++) ch[k][v] += base[k];
 
   /* entities */
   const ents = [], trig = [];
@@ -230,11 +249,15 @@ function genLevel(lv){
     uu += Math.max(6, 13 - lv) + (rnd() * 12 | 0);
   }
   const col = LVL_COLS[(lv - 1) % 4];
-  return {h, dark, ents, trig, col, pat50:makePat(col, 50), pat25:makePat(col, 25)};
+  return {ch, lift, dark, ents, trig, col, pat50:makePat(col, 50), pat25:makePat(col, 25)};
 }
 function groundAt(u, v){
   const iu = clamp(Math.floor(u), 0, ULEN - 1), iv = clamp(Math.floor(v), 0, VW - 1);
-  return terr.h[iu][iv];
+  const fu = clamp(u - iu, 0, 1), fv = clamp(v - iv, 0, 1);
+  const c = terr.ch;
+  const h = (c[iu][iv] * (1 - fu) + c[iu + 1][iv] * fu) * (1 - fv)
+          + (c[iu][iv + 1] * (1 - fu) + c[iu + 1][iv + 1] * fu) * fv;
+  return h + terr.lift[iu][iv];
 }
 
 /* ---------- game flow ---------- */
@@ -448,44 +471,54 @@ function update(dt){
 }
 
 /* ---------- drawing: world ---------- */
+function tileCorners(u, v){
+  const L = terr.lift[u][v], c = terr.ch;
+  return [c[u][v] + L, c[u + 1][v] + L, c[u + 1][v + 1] + L, c[u][v + 1] + L];
+}
 function drawTileFaces(u, v){
-  const t = terr, hh = t.h[u][v];
-  const x0 = isoX(u, v)      - cam.x, y0t = isoY(u, v, hh)      - cam.y;
-  const x1 = isoX(u + 1, v)  - cam.x, y1t = isoY(u + 1, v, hh)  - cam.y;
-  const x2 = isoX(u + 1, v + 1) - cam.x, y2t = isoY(u + 1, v + 1, hh) - cam.y;
-  const x3 = isoX(u, v + 1)  - cam.x, y3t = isoY(u, v + 1, hh)  - cam.y;
+  const t = terr;
+  const [h00, h10, h11, h01] = tileCorners(u, v);
+  const x0 = isoX(u, v)         - cam.x, y0 = isoY(u, v, h00)         - cam.y;
+  const x1 = isoX(u + 1, v)     - cam.x, y1 = isoY(u + 1, v, h10)     - cam.y;
+  const x2 = isoX(u + 1, v + 1) - cam.x, y2 = isoY(u + 1, v + 1, h11) - cam.y;
+  const x3 = isoX(u, v + 1)     - cam.x, y3 = isoY(u, v + 1, h01)     - cam.y;
 
-  /* left face (-u), visible when this tile is higher than the previous row */
-  const ln = (u === 0) ? -2 : t.h[u - 1][v];
-  if(hh > ln){
-    const yb0 = y0t + (hh - ln) * HZ, yb3 = y3t + (hh - ln) * HZ;
+  /* left face (-u): drawn where this tile's near edge rises above the previous tile's far edge */
+  let n00 = -2, n01 = -2;
+  if(u > 0){ const nb = tileCorners(u - 1, v); n00 = nb[1]; n01 = nb[2]; }
+  if(h00 > n00 + 0.01 || h01 > n01 + 0.01){
+    const yb0 = isoY(u, v, Math.min(n00, h00)) - cam.y;
+    const yb3 = isoY(u, v + 1, Math.min(n01, h01)) - cam.y;
     ctx.fillStyle = t.pat25;
     ctx.beginPath();
-    ctx.moveTo(x0, y0t); ctx.lineTo(x3, y3t); ctx.lineTo(x3, yb3); ctx.lineTo(x0, yb0);
+    ctx.moveTo(x0, y0); ctx.lineTo(x3, y3); ctx.lineTo(x3, yb3); ctx.lineTo(x0, yb0);
     ctx.closePath(); ctx.fill();
     ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
   }
-  /* right face (+v), visible when higher than next column (or strip edge) */
-  const rn = (v === VW - 1) ? -2 : t.h[u][v + 1];
-  if(hh > rn){
-    const yb3 = y3t + (hh - rn) * HZ, yb2 = y2t + (hh - rn) * HZ;
+  /* right face (+v): drawn where higher than the next column's near edge (or strip edge) */
+  let m01 = -2, m11 = -2;
+  if(v < VW - 1){ const nb = tileCorners(u, v + 1); m01 = nb[0]; m11 = nb[1]; }
+  if(h01 > m01 + 0.01 || h11 > m11 + 0.01){
+    const yb3 = isoY(u, v + 1, Math.min(m01, h01)) - cam.y;
+    const yb2 = isoY(u + 1, v + 1, Math.min(m11, h11)) - cam.y;
     ctx.fillStyle = t.pat50;
     ctx.beginPath();
-    ctx.moveTo(x3, y3t); ctx.lineTo(x2, y2t); ctx.lineTo(x2, yb2); ctx.lineTo(x3, yb3);
+    ctx.moveTo(x3, y3); ctx.lineTo(x2, y2); ctx.lineTo(x2, yb2); ctx.lineTo(x3, yb3);
     ctx.closePath(); ctx.fill();
     ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
   }
-  /* top diamond */
-  ctx.fillStyle = t.dark[u][v] ? t.pat50 : t.col;
+  /* top face — slopes falling toward the viewer get dither shading */
+  const shade = t.dark[u][v] || (h01 + h11) - (h00 + h10) < -0.5;
+  ctx.fillStyle = shade ? t.pat50 : t.col;
   ctx.beginPath();
-  ctx.moveTo(x0, y0t); ctx.lineTo(x1, y1t); ctx.lineTo(x2, y2t); ctx.lineTo(x3, y3t);
+  ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3);
   ctx.closePath(); ctx.fill();
   ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
 }
 
 /* forward/side unit vectors in screen space */
 const FX = 2 / Math.sqrt(5), FY = -1 / Math.sqrt(5);
-const SX = 1 / Math.sqrt(5), SY = 2 / Math.sqrt(5);
+const SX = 2 / Math.sqrt(5), SY = 1 / Math.sqrt(5);   // iso +v axis — wings lie in the ground plane
 
 function drawCraft(x, y, dir, bank, fill, sc, outline){
   const fx = FX * dir, fy = FY * dir;
@@ -573,18 +606,16 @@ function drawStars(){
 
 function drawStreaks(){
   /* purple diagonal hatch streaks, like the original backdrop */
-  ctx.strokeStyle = MAG; ctx.lineWidth = 4;
-  ctx.setLineDash([9, 7]);
-  const g = [[700, 60, 5], [40, 300, 4], [820, 420, 3], [120, 620, 3]];
+  ctx.strokeStyle = MAG; ctx.lineWidth = 3;
+  const g = [[620, 14, 10], [10, 210, 7], [880, 360, 5]];
   for(const [gx, gy, n] of g){
     for(let i = 0; i < n; i++){
       ctx.beginPath();
-      ctx.moveTo(gx + i * 14, gy + i * 6);
-      ctx.lineTo(gx + i * 14 + 46, gy + i * 6 - 66);
+      ctx.moveTo(gx + i * 9, gy + 34);
+      ctx.lineTo(gx + i * 9 + 24, gy);
       ctx.stroke();
     }
   }
-  ctx.setLineDash([]);
 }
 
 function renderWorld(fu, fv, showPlayer){
