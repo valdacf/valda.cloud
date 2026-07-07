@@ -1,0 +1,64 @@
+<x-dc>
+<footer style="background:#181510;color:#B7B0A0">
+    <div style="width:min(1240px,100% - 40px);margin-inline:auto;padding:clamp(48px,6vw,80px) 0 40px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:36px;padding-bottom:44px;border-bottom:1px solid rgba(244,240,231,0.16)">
+        <div style="max-width:34ch">
+          <div style="display:flex;align-items:center;gap:11px;margin-bottom:14px">
+            <svg width="34" height="39" viewBox="0 0 100 110" style="flex:none" aria-label="Rokytka žije">
+              <path d="M16,62 C24,51 41,49 53,56 C61,60 64,69 61,80 C55,70 41,68 31,74 C23,72 15,69 16,62 Z" fill="#3E5540"></path>
+              <path d="M60,74 C67,89 63,102 50,110" fill="none" stroke="#3E5540" stroke-width="4.5" stroke-linecap="round"></path>
+              <path d="M47,67 C53,44 68,26 91,14 C85,40 72,59 53,72 Z" fill="#7FA06A"></path>
+              <circle cx="30" cy="26" r="11" fill="#C9A24B"></circle>
+            </svg>
+            <span style="display:flex;flex-direction:column;line-height:1.05">
+              <span style="font-family:'Newsreader',serif;font-size:1.4rem;color:#F4F0E7">Rokytka žije</span>
+              <span style="font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:#7A7261;margin-top:4px">Park Zahrádky</span>
+            </span>
+          </div>
+          <p style="font-size:0.92rem;line-height:1.6;margin:0">Informační web rozvojové čtvrti Vysočany u Rokytky. Tvoříme město pro nás.</p>
+        </div>
+        <div>
+          <div style="font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;color:#7A7261;margin-bottom:16px">Rozcestník</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ nav }}" as="item" hint-placeholder-count="5">
+              <a href="{{ item.href }}" style="color:#D9D2C3;font-size:0.95rem">{{ item.label }}</a>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;color:#7A7261;margin-bottom:16px">Kontakt</div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:0.95rem">
+            <a href="mailto:info@parkzahradky.cz" style="color:#D9D2C3">info@parkzahradky.cz</a>
+            <a href="mailto:spolek@rokytkazije.cz" style="color:#D9D2C3">spolek@rokytkazije.cz</a>
+            <a href="https://www.facebook.com/rokytkazije/" style="color:#D9D2C3">Facebook · Rokytka žije</a>
+            <a href="https://www.instagram.com/rokytkazije/" style="color:#D9D2C3">Instagram</a>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;color:#7A7261;margin-bottom:16px">Podpořte nás</div>
+          <a href="https://www.darujme.cz/rokytkazije" style="background:{{ accent }};color:#F4F0E7;padding:12px 20px;border-radius:2px;font-weight:600;display:inline-block;font-size:0.92rem">Darujme.cz →</a>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;padding-top:26px;font-size:0.82rem;color:#7A7261">
+        <span>© 2026 Rokytka žije, z.s. · Praha 9 – Vysočany</span>
+        <span>parkzahradky.cz</span>
+      </div>
+    </div>
+  </footer>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#3E5540&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#3E5540&quot;,&quot;#2F5D50&quot;,&quot;#3A4C63&quot;,&quot;#7A5B34&quot;],&quot;section&quot;:&quot;Vzhled&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      accent: this.props.accent || '#3E5540',
+      nav: [
+        { label: 'Kauzy', href: 'kauzy.html' },
+        { label: 'Akce', href: 'akce.html' },
+        { label: 'Zahrádky', href: 'zahradky.html' },
+        { label: 'O spolku', href: 'o-spolku.html' },
+        { label: 'Kontakt', href: 'kontakt.html' },
+      ],
+    };
+  }
+}
+</script>
