@@ -148,6 +148,11 @@
   }
   .meld.canext{cursor:pointer}
   .meld.canext:hover{background:rgba(127,230,160,.12);outline:2px solid rgba(127,230,160,.55);outline-offset:2px}
+  .meld.fits{outline:2px solid rgba(127,230,160,.75);outline-offset:2px;background:rgba(127,230,160,.08)}
+  .meld.fits::before{
+    content:"sem pasuje";position:absolute;top:-9px;right:6px;font-size:.55rem;letter-spacing:.08em;
+    background:#1d5636;color:#8ce6a5;padding:0 5px;border-radius:4px;
+  }
   .meld .card.jok{cursor:pointer}
   .meld .card.jok:hover{transform:translateY(-4px)}
   .meld .rep{
@@ -727,19 +732,28 @@ function onMeld(){
     sMeld(); afterLayMsg(); render();
     return;
   }
-  if(!layCards(selectedCards())) return;
-  sel.clear();
-  sMeld();
-  afterLayMsg();
-  render();
-}
-function onMeldClick(m){
-  if(state!=='pAct'||!sel.size) return;
-  if(!opened.p||m.pending){ sBad(); msg('Přikládat můžeš až po svém vyložení (a jen k hotovým kombinacím).'); return; }
   const cards=selectedCards();
-  if(cards.length>=hands.p.length){ sBad(); msg('Musíš si nechat jednu kartu na závěrečné odhození.'); return; }
+  if(cards.length===hands.p.length){ sBad(); msg('Musíš si nechat jednu kartu na závěrečné odhození.'); return; }
+  if(cards.length>=3&&arrange(cards)){
+    layCards(cards);
+    sel.clear();
+    sMeld();
+    afterLayMsg();
+    render();
+    return;
+  }
+  // není to nová kombinace → zkusit přiložit k vyloženým na stole
+  const fits=fittingMelds(cards);
+  if(fits.length===1){ extendMeld(fits[0],cards); return; }
+  if(fits.length>1){ sBad(); msg('Karta pasuje k více kombinacím — klikni přímo na tu, kam ji chceš přiložit.'); return; }
+  sBad();
+  msg(cards.length<3
+    ?'Vyber aspoň 3 karty tvořící postupku nebo skupinu.'
+    :'Tohle není platná kombinace — postupka je jedna barva za sebou, skupina stejné hodnoty různých barev.');
+}
+function extendMeld(m,cards){
   const plan=planExtendAll(m,cards);
-  if(!plan){ sBad(); msg('Tyhle karty k této kombinaci nepasují.'); return; }
+  if(!plan){ sBad(); msg('Tyhle karty k této kombinaci nepasují.'); return false; }
   for(const st of plan){
     const a=tryExtend(m,st.card);
     applyExtend(m,st.card,a);
@@ -749,6 +763,18 @@ function onMeldClick(m){
   sMeld();
   msg('Přiloženo.');
   render();
+  return true;
+}
+function fittingMelds(cards){
+  if(!opened.p||!cards.length) return [];
+  return melds.filter(m=>!m.pending&&planExtendAll(m,cards));
+}
+function onMeldClick(m){
+  if(state!=='pAct'||!sel.size) return;
+  if(!opened.p||m.pending){ sBad(); msg('Přikládat můžeš až po svém vyložení (a jen k hotovým kombinacím).'); return; }
+  const cards=selectedCards();
+  if(cards.length>=hands.p.length){ sBad(); msg('Musíš si nechat jednu kartu na závěrečné odhození.'); return; }
+  extendMeld(m,cards);
 }
 function onJokerClick(m,idx){
   if(state!=='pAct') return;
@@ -1058,9 +1084,12 @@ function renderMelds(){
     box.appendChild(d); return;
   }
   const canExt=state==='pAct'&&opened.p&&sel.size>0;
+  const selCards=canExt?selectedCards():[];
+  const okKeep=selCards.length<hands.p.length;
   for(const m of melds){
+    const fit=canExt&&okKeep&&!m.pending&&planExtendAll(m,selCards);
     const el=document.createElement('div');
-    el.className='meld'+(m.pending?' pending':'')+(canExt&&!m.pending?' canext':'');
+    el.className='meld'+(m.pending?' pending':'')+(canExt&&!m.pending?' canext':'')+(fit?' fits':'');
     const cards=m.type==='run'?m.slots.map(sl=>sl.card):m.cards;
     cards.forEach((c,i)=>{
       const d=document.createElement('div');
@@ -1197,8 +1226,16 @@ function renderButtons(){
   $('bSort').hidden=!(act||state==='pDraw'||state==='ai');
   const groups=act?handGroups():[];
   const gtot=groups.reduce((t,g)=>t+meldValue(g.m),0);
-  $('bMeld').disabled=sel.size?sel.size<3:!groups.length;
-  $('bMeld').textContent=sel.size?`Vyložit (${sel.size})`:(groups.length?`Vyložit složené (${gtot} b.)`:'Vyložit');
+  let mLbl='Vyložit', mOn=false;
+  if(act){
+    const cards=selectedCards();
+    if(!cards.length){ mOn=!!groups.length; if(mOn) mLbl=`Vyložit složené (${gtot} b.)`; }
+    else if(cards.length>=3&&cards.length<hands.p.length&&arrange(cards)){ mOn=true; mLbl=`Vyložit (${cards.length})`; }
+    else if(cards.length<hands.p.length&&fittingMelds(cards).length){ mOn=true; mLbl=`Přiložit (${cards.length})`; }
+    else mLbl=`Vyložit (${cards.length})`;
+  }
+  $('bMeld').disabled=!mOn;
+  $('bMeld').textContent=mLbl;
   $('bDiscard').disabled=sel.size!==1;
   $('bDiscard').className=sel.size===1?'primary':'';
   $('bSort').textContent=sortMode==='suit'?'Seřadit: hodnoty':'Seřadit: barvy';
