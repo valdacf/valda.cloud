@@ -210,6 +210,18 @@
   Esa a desítky za 10 bodů, poslední štych +10. Zeleně orámované karty právě štych vyhrávají.
 </div>
 
+<div class="overlay show" id="startOverlay">
+  <div class="panel">
+    <h2 class="draw">♥ SEDMA ♥</h2>
+    <div class="sub">Kdo vynáší první?</div>
+    <div class="series" id="startSeries"></div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="primary" id="bStartMe" type="button">Začnu já</button>
+      <button id="bStartAi" type="button">Začne počítač</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="overlay">
   <div class="panel">
     <h2 id="ovTitle">Výhra!</h2>
@@ -372,7 +384,7 @@ function cardBack(){
 }
 
 /* ---------- stav hry ---------- */
-let deck=[], hands={p:[],a:[]}, table=[], leader='p', firstLeader='p',
+let deck=[], hands={p:[],a:[]}, table=[], leader='p',
     pts={p:0,a:0}, tricks={p:0,a:0}, state='idle', gen=0;
 let match={p:0,a:0};
 try{ const m=JSON.parse(localStorage.getItem('sedma_match')||'null'); if(m&&typeof m.p==='number') match=m; }catch(e){}
@@ -381,15 +393,24 @@ const $=id=>document.getElementById(id);
 const later=(ms,fn)=>{const g0=gen;setTimeout(()=>{if(g0===gen)fn();},ms);};
 const msg=t=>{$('msg').textContent=t;};
 
-function newGame(){
+function showStart(){
+  gen++; state='idle'; table=[]; msg('');
+  render();
+  $('overlay').classList.remove('show');
+  $('startSeries').textContent=(match.p||match.a)?`Dlouhodobé skóre — ty ${match.p} : ${match.a} počítač`:'';
+  $('startOverlay').classList.add('show');
+  $('bStartMe').focus();
+}
+function newGame(starter){
   gen++;
   deck=[];
   for(let s=0;s<4;s++)for(let r=0;r<8;r++)deck.push({s,r});
   for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
   hands={p:[],a:[]}; table=[]; pts={p:0,a:0}; tricks={p:0,a:0};
   for(let i=0;i<4;i++){hands.p.push(deck.pop());hands.a.push(deck.pop());}
-  leader=firstLeader;
+  leader=starter;
   $('overlay').classList.remove('show');
+  $('startOverlay').classList.remove('show');
   sDeal();
   startTrick();
 }
@@ -584,7 +605,6 @@ function gameOver(){
   $('ovSeries').textContent=`Dlouhodobé skóre — ty ${match.p} : ${match.a} počítač`;
   $('overlay').classList.add('show');
   $('bAgain').focus();
-  firstLeader=firstLeader==='p'?'a':'p';
   renderStats();
 }
 
@@ -640,11 +660,13 @@ function render(){ renderStats(); renderHands(); renderTable(); renderButtons();
 
 /* ---------- ovládání ---------- */
 $('bEnd').addEventListener('click',()=>{ if(state==='pFight'){ state='ai'; renderButtons(); endTrick(); } });
-$('bNew').addEventListener('click',()=>newGame());
-$('bAgain').addEventListener('click',()=>newGame());
+$('bNew').addEventListener('click',()=>showStart());
+$('bAgain').addEventListener('click',()=>showStart());
+$('bStartMe').addEventListener('click',()=>newGame('p'));
+$('bStartAi').addEventListener('click',()=>newGame('a'));
 $('bRules').addEventListener('click',()=>$('dlgRules').showModal());
 
-newGame();
+showStart();
 })();
 </script>
 </body>
