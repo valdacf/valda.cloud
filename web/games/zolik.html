@@ -153,6 +153,12 @@
     content:"sem pasuje";position:absolute;top:-9px;right:6px;font-size:.55rem;letter-spacing:.08em;
     background:#1d5636;color:#8ce6a5;padding:0 5px;border-radius:4px;
   }
+  .meld.swapfit{outline:2px solid rgba(127,230,160,.75);outline-offset:2px;background:rgba(127,230,160,.08)}
+  .meld.swapfit::before{
+    content:"výměna za žolíka";position:absolute;top:-9px;right:6px;font-size:.55rem;letter-spacing:.08em;
+    background:#1d5636;color:#8ce6a5;padding:0 5px;border-radius:4px;
+  }
+  .meld .card.jokhot{filter:drop-shadow(0 0 6px rgba(127,230,160,.9))}
   .meld .card.jok{cursor:pointer}
   .meld .card.jok:hover{transform:translateY(-4px)}
   .meld .rep{
@@ -746,6 +752,11 @@ function onMeld(){
   const fits=fittingMelds(cards);
   if(fits.length===1){ extendMeld(fits[0],cards); return; }
   if(fits.length>1){ sBad(); msg('Karta pasuje k více kombinacím — klikni přímo na tu, kam ji chceš přiložit.'); return; }
+  if(cards.length===1){
+    const sw=swapTargets(cards[0]);
+    if(sw.length===1){ doSwap(sw[0].m,sw[0].idx,cards[0]); return; }
+    if(sw.length>1){ sBad(); msg('Kartou jde vyměnit víc žolíků — klikni přímo na toho pravého.'); return; }
+  }
   sBad();
   msg(cards.length<3
     ?'Vyber aspoň 3 karty tvořící postupku nebo skupinu.'
@@ -765,38 +776,68 @@ function extendMeld(m,cards){
   render();
   return true;
 }
+function canAttachTo(m){
+  if(m.pending) return true;              // vlastní rozpracované vyložení — přikládat lze vždy
+  if(opened.p) return true;
+  const pend=melds.filter(x=>x.pending);  // ke stolu až když rozpracované vyložení splní limit
+  const tot=pend.reduce((t,x)=>t+meldValue(x),0);
+  return tot>=OPEN_MIN&&pend.some(isPureRun);
+}
 function fittingMelds(cards){
-  if(!opened.p||!cards.length) return [];
-  return melds.filter(m=>!m.pending&&planExtendAll(m,cards));
+  if(!cards.length) return [];
+  return melds.filter(m=>canAttachTo(m)&&planExtendAll(m,cards));
 }
 function onMeldClick(m){
   if(state!=='pAct'||!sel.size) return;
-  if(!opened.p||m.pending){ sBad(); msg('Přikládat můžeš až po svém vyložení (a jen k hotovým kombinacím).'); return; }
+  if(!canAttachTo(m)){ sBad(); msg(`Ke kombinacím na stole můžeš přikládat až po svém vyložení (nebo jakmile rozpracované vyložení splní ${OPEN_MIN} b. s čistou postupkou).`); return; }
   const cards=selectedCards();
   if(cards.length>=hands.p.length){ sBad(); msg('Musíš si nechat jednu kartu na závěrečné odhození.'); return; }
-  extendMeld(m,cards);
+  if(planExtendAll(m,cards)){ extendMeld(m,cards); return; }
+  // nepasuje na konec — zkusit výměnu žolíka za vybranou kartu
+  if(cards.length===1&&!m.pending){
+    const n=m.type==='run'?m.slots.length:m.cards.length;
+    for(let i=0;i<n;i++) if(canSwapWith(m,i,cards[0])){ doSwap(m,i,cards[0]); return; }
+  }
+  sBad(); msg('Tyhle karty k této kombinaci nepasují.');
 }
-function onJokerClick(m,idx){
-  if(state!=='pAct') return;
-  if(!opened.p||m.pending){ sBad(); msg('Žolíka smíš měnit až po svém vyložení.'); return; }
-  let need=null,doSwap=null;
+function canSwapWith(m,idx,c){
+  if(!c||c.j) return false;
   if(m.type==='run'){
     const sl=m.slots[idx];
-    need=hands.p.find(c=>!c.j&&c.s===m.s&&(c.r===sl.rr||(c.r===1&&sl.rr===14)));
-    if(need) doSwap=()=>{ const j=sl.card; sl.card=need; return j; };
-  }else{
-    const used=m.cards.filter(x=>!x.j).map(x=>x.s);
-    need=hands.p.find(c=>!c.j&&c.r===m.r&&!used.includes(c.s));
-    if(need) doSwap=()=>{ const j=m.cards[idx]; m.cards[idx]=need; return j; };
+    return sl.card.j&&c.s===m.s&&(c.r===sl.rr||(c.r===1&&sl.rr===14));
   }
-  if(!doSwap){ sBad(); msg('Nemáš v ruce kartu, kterou tenhle žolík zastupuje.'); return; }
+  if(!m.cards[idx]||!m.cards[idx].j) return false;
+  const used=m.cards.filter(y=>!y.j).map(y=>y.s);
+  return c.r===m.r&&!used.includes(c.s);
+}
+function swapTargets(c){ // kde všude na stole jde za tuhle kartu vyměnit žolík
+  const out=[];
+  for(const m of melds){
+    if(m.pending||!canAttachTo(m)) continue;
+    const n=m.type==='run'?m.slots.length:m.cards.length;
+    for(let i=0;i<n;i++) if(canSwapWith(m,i,c)) out.push({m,idx:i});
+  }
+  return out;
+}
+function doSwap(m,idx,need){
   hands.p.splice(hands.p.indexOf(need),1);
-  const j=doSwap();
+  let j;
+  if(m.type==='run'){ j=m.slots[idx].card; m.slots[idx].card=need; }
+  else{ j=m.cards[idx]; m.cards[idx]=need; }
   hands.p.push(j);
   mustMeld.push(j.id); freshIds.add(j.id);
+  sel.clear();
   sMeld();
   msg('Žolík je tvůj — musíš ho ale ještě v tomto tahu vyložit (jinak ↩ Zpět).');
   render();
+}
+function onJokerClick(m,idx){
+  if(state!=='pAct') return;
+  if(m.pending||!canAttachTo(m)){ sBad(); msg('Žolíka smíš měnit až po svém vyložení.'); return; }
+  const selC=sel.size===1?selectedCards()[0]:null;
+  const need=(selC&&canSwapWith(m,idx,selC))?selC:hands.p.find(c=>canSwapWith(m,idx,c));
+  if(!need){ sBad(); msg('Nemáš v ruce kartu, kterou tenhle žolík zastupuje.'); return; }
+  doSwap(m,idx,need);
 }
 function doDiscard(){
   if(state!=='pAct') return;
@@ -1083,17 +1124,20 @@ function renderMelds(){
     d.textContent='…stůl je zatím prázdný, tady se vykládají kombinace…';
     box.appendChild(d); return;
   }
-  const canExt=state==='pAct'&&opened.p&&sel.size>0;
-  const selCards=canExt?selectedCards():[];
+  const selActive=state==='pAct'&&sel.size>0;
+  const selCards=selActive?selectedCards():[];
   const okKeep=selCards.length<hands.p.length;
   for(const m of melds){
-    const fit=canExt&&okKeep&&!m.pending&&planExtendAll(m,selCards);
+    const canExt=selActive&&canAttachTo(m);
+    const fit=canExt&&okKeep&&planExtendAll(m,selCards);
+    const swapIdx=(selActive&&!m.pending&&selCards.length===1&&canAttachTo(m))
+      ?(m.type==='run'?m.slots:m.cards).findIndex((_,i)=>canSwapWith(m,i,selCards[0])):-1;
     const el=document.createElement('div');
-    el.className='meld'+(m.pending?' pending':'')+(canExt&&!m.pending?' canext':'')+(fit?' fits':'');
+    el.className='meld'+(m.pending?' pending':'')+(canExt?' canext':'')+(fit?' fits':'')+(!fit&&swapIdx>=0?' swapfit':'');
     const cards=m.type==='run'?m.slots.map(sl=>sl.card):m.cards;
     cards.forEach((c,i)=>{
       const d=document.createElement('div');
-      d.className='card'+(c.j?' jok':'');
+      d.className='card'+(c.j?' jok':'')+(i===swapIdx?' jokhot':'');
       d.innerHTML=cardFace(c);
       if(c.j){
         const rp=document.createElement('span');
@@ -1232,6 +1276,7 @@ function renderButtons(){
     if(!cards.length){ mOn=!!groups.length; if(mOn) mLbl=`Vyložit složené (${gtot} b.)`; }
     else if(cards.length>=3&&cards.length<hands.p.length&&arrange(cards)){ mOn=true; mLbl=`Vyložit (${cards.length})`; }
     else if(cards.length<hands.p.length&&fittingMelds(cards).length){ mOn=true; mLbl=`Přiložit (${cards.length})`; }
+    else if(cards.length===1&&swapTargets(cards[0]).length){ mOn=true; mLbl='Vyměnit za žolíka'; }
     else mLbl=`Vyložit (${cards.length})`;
   }
   $('bMeld').disabled=!mOn;
