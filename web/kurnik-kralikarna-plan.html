@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kurník + králíkárna 3,5 × 1,5 m — stavební plán a kusovník</title>
+<style>
+  :root{ --ink:#26221c; --dim:#0a58a3; --paper:#fdfcf9; --line:#d8d2c4; }
+  *{box-sizing:border-box}
+  body{margin:0;background:#efece4;color:var(--ink);font:15px/1.55 "Segoe UI",system-ui,sans-serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 60px}
+  header.hd{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:22px 26px;margin-bottom:18px}
+  h1{margin:0 0 6px;font-size:26px}
+  h2{margin:0 0 4px;font-size:19px}
+  h3{font-size:16px;margin:18px 0 6px}
+  .sub{color:#6b6353;margin:0}
+  .params{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:14px}
+  .p{background:#f4f0e6;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13.5px}
+  .p b{display:block;font-size:15px}
+  .radios label{margin-right:10px;cursor:pointer;white-space:nowrap}
+  .radios input{accent-color:#0a58a3}
+  section.view{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px 22px;margin-bottom:18px}
+  .cap{color:#6b6353;font-size:13.5px;margin:8px 0 0}
+  svg.plan{width:100%;height:auto;display:block;background:#fff;border:1px solid #eee;border-radius:6px}
+  /* SVG styly */
+  .ln{fill:none;stroke:#333;stroke-width:.7}
+  .thin{fill:none;stroke:#999;stroke-width:.35}
+  .thick{fill:none;stroke:#222;stroke-width:1.6}
+  .wall{fill:#f7f1e0;stroke:#39352c;stroke-width:1}
+  .wall2{fill:#fcf9f0;stroke:#8a7a5c;stroke-width:.6}
+  .cut{fill:url(#pat-cut);stroke:#222;stroke-width:1.2}
+  .wl{fill:none;stroke:#cbbc94;stroke-width:.35}
+  .wood{fill:#eee3c8;stroke:#8a7a5c;stroke-width:.5}
+  .dash{fill:none;stroke:#555;stroke-width:.6;stroke-dasharray:4 3}
+  .axis{fill:none;stroke:#a33;stroke-width:.5;stroke-dasharray:10 3 2 3}
+  .dim{stroke:var(--dim);stroke-width:.45;fill:none}
+  .roofband{fill:url(#pat-roof);stroke:#222;stroke-width:1}
+  .seno{fill:url(#pat-seno);stroke:#c19a2e;stroke-width:.4}
+  .mesh{fill:url(#pat-mesh);stroke:#666;stroke-width:.6}
+  .poly{fill:#cfe8f7;stroke:#4a86b0;stroke-width:.7}
+  text{font-family:"Segoe UI",system-ui,sans-serif}
+  .t{font-size:6.4px;fill:#26221c;paint-order:stroke;stroke:#fff;stroke-width:1.6;stroke-linejoin:round}
+  .dt{font-size:6.2px;fill:var(--dim);paint-order:stroke;stroke:#fff;stroke-width:1.6;stroke-linejoin:round}
+  .lbl{font-size:5.6px;fill:#59513f;paint-order:stroke;stroke:#fff;stroke-width:1.4;stroke-linejoin:round}
+  .big{font-size:8px;font-weight:600}
+  /* BOM */
+  table{border-collapse:collapse;width:100%;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:#f0ead9}
+  td.n,th.n{text-align:right;white-space:nowrap}
+  tr.kat td{background:#e9e2cf;font-weight:600}
+  tr.total td{background:#f0ead9;font-weight:700;font-size:15px}
+  input.cena{width:74px;text-align:right;border:1px solid #c9c2b2;border-radius:4px;padding:2px 4px;font:inherit;background:#fffdf5}
+  .note{background:#fbf7ea;border-left:4px solid #d9b24a;padding:10px 14px;border-radius:0 8px 8px 0;font-size:14px;margin:10px 0}
+  ol.steps li{margin-bottom:6px}
+  a{color:#0a58a3}
+  @media print{
+    body{background:#fff} .wrap{max-width:none;padding:0}
+    section.view,header.hd{border:none;page-break-inside:avoid;padding:8px 0}
+    input.cena{border:none}
+  }
+</style>
+</head>
+<body>
+<!-- sdílené šrafovací vzory -->
+<svg style="position:absolute;width:0;height:0" aria-hidden="true">
+  <defs>
+    <pattern id="pat-cut" width="4" height="4" patternUnits="userSpaceOnUse">
+      <path d="M0,4 L4,0" stroke="#8b8378" stroke-width=".5"/>
+    </pattern>
+    <pattern id="pat-roof" width="6" height="6" patternUnits="userSpaceOnUse">
+      <rect width="6" height="6" fill="#6f6d68"/>
+      <path d="M0,6 L6,0" stroke="#8d8b85" stroke-width=".6"/>
+    </pattern>
+    <pattern id="pat-seno" width="6" height="6" patternUnits="userSpaceOnUse">
+      <rect width="6" height="6" fill="#f8efd2"/>
+      <path d="M0,6 L6,0 M0,3 L3,0" stroke="#d9b95a" stroke-width=".45"/>
+    </pattern>
+    <pattern id="pat-mesh" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="4" fill="#fdfdfd"/>
+      <path d="M0,0 H4 M0,0 V4" stroke="#9aa0a6" stroke-width=".4"/>
+    </pattern>
+  </defs>
+</svg>
+
+<div class="wrap">
+<header class="hd">
+  <h1>Kurník + králíkárna — stavební plán</h1>
+  <p class="sub">Dřevostavba 3,5 × 1,5 m, sedlová střecha (sklon přepínatelný níže), vstup z jihu · kreslíno parametricky — výkresy, kusovník i výpočet sena se přepočítávají samy; ostatní rozměry lze měnit v objektu <code>CFG</code> ve zdrojáku · srpen 2026</p>
+  <div class="params">
+    <div class="p"><b>3,50 × 1,50 m</b>vnější půdorys (S↑)</div>
+    <div class="p"><b>2,00 m</b>výška stěn od podlahy</div>
+    <div class="p"><b>Sklon střechy</b><span class="radios">
+      <label><input type="radio" name="uhel" value="30"> 30°</label>
+      <label><input type="radio" name="uhel" value="45" checked> 45°</label>
+      <label><input type="radio" name="uhel" value="60"> 60°</label></span></div>
+    <div class="p"><b id="p-vyska">≈ 3,0 m</b>celková výška od terénu</div>
+    <div class="p"><b>Palubky</b><span class="radios" style="display:block;line-height:1.9">
+      <label><input type="radio" name="palubky" value="artisan27" checked> Artisan 27×146×4000 BC</label><br>
+      <label><input type="radio" name="palubky" value="vencl28"> Vencl 28×146×5000 BC</label><br>
+      <label><input type="radio" name="palubky" value="online25"> palubky-online 25×146×5000 I.tř.</label><br>
+      <label><input type="radio" name="palubky" value="bios28"> BIOS 28×205×5000 C</label></span></div>
+    <div class="p"><b id="p-cena">…</b>materiál celkem — přepočítává se podle sklonu, typu palubek i cen přepsaných v kusovníku</div>
+    <div class="p"><b id="p-seno">≈ 1,1 m³</b>seno nahoře: kapsa nad kurníkem + klín nad kotci (+ sklad 1,5 m³)</div>
+    <div class="p"><b>6 kotců</b>králíci 2 × 3, dvířka do uličky</div>
+    <div class="p"><b>8–10 nosnic</b>kurník 1,42 × 1,32 m + půda na seno</div>
+  </div>
+</header>
+
+<section class="view">
+  <h2>1 · Pohled od jihu (vstupní průčelí)</h2>
+  <div id="v-jih"></div>
+  <p class="cap">Dveře 80 × 190 cm z palubek na svislo, zpevněné rámem a diagonálou z prkna 22 × 120; okénko z dutinkového polykarbonátu. Stěny: vodorovné podlahové palubky 27 mm (pero-drážka) na sloupcích z latí 40 × 60. Pozor: u všech tří sklonů by přesah střechy nad okapem srazil podchozí výšku (u přesahu 20 cm by hrana visela ~165–188 cm nad podlahou, dveře mají 190) — proto střecha končí na líci stěny jen s okapnicí; nad dveře doporučuji žlab nebo malou stříšku.</p>
+</section>
+
+<section class="view">
+  <h2>2 · Půdorys (sever nahoře)</h2>
+  <div id="v-pud"></div>
+  <p class="cap">Vnitřní šířka 332 cm se dělí: 75 cm hluboký pruh kotců u západní stěny (dvířka na východ do uličky), ulička 115 cm proti dveřím, kurník 142 cm na východě. Vejce i králíci se obsluhují z uličky pod střechou. Nad uličkou není záklop stropu — jsou tam jen trámky, takže se seno hází na půdu rovnou od dveří. Okno kurníku 20 × 80 je v severní stěně: dává stálé rozptýlené světlo bez letního přehřívání a v létě se dá vyklopit jako větrání (zevnitř pletivo). Vylez slepic s rampou ve východním štítu.</p>
+</section>
+
+<section class="view">
+  <h2>3 · Řez A–A, pohled na západ — králičí kotce</h2>
+  <div id="v-rezA"></div>
+  <p class="cap">6 kotců hlubokých 75 cm (2 sloupce à 66 cm × 3 patra à 60 cm), spodní patro 20 cm nad podlahou (vzduchová mezera + úklid). Podlážky pater z palubek 27 mm — masiv v pero-drážce: těsná spára, snese okus i moč a jednotlivá palubka jde vyměnit; podlážky nechat volně vyjmutelné kvůli čištění a 2× natřít fermeží/olejem. Rám z latí 40 × 60, dvířka rámek z latí + pozinkované svařované pletivo oko 19 mm. Zadní stěna kotců = palubková stěna budovy.</p>
+</section>
+
+<section class="view">
+  <h2>4 · Řez B–B, pohled na východ — kurník</h2>
+  <div id="v-rezB"></div>
+  <p class="cap">Podlaha kurníku (palubky 27 na roštu z latí) 80 cm nad podlahou budovy, pod ní sklad nářadí a sena. Strop kurníku je snížený na 170 cm — vnitřních 90 cm slepicím bohatě stačí (hřady 40/55 cm nad podlahou kurníku, ≥35 cm nad horním hřadem) a nad stropem začíná velká kapsa na seno, která pokračuje bez mezistropu až pod střechu (jen skrz ni procházejí stropní trámky). Čelo do uličky: dole dvoje dvířka skladu, nahoře dvoje velká servisní dvířka (výběr vajec, čištění). Hnízda = dvě uzavřené tmavé budky 35 × 35 × 35 cm z prken na podlaze kurníku hned za servisními dvířky — jedna u jižní, druhá u severní stěny; mezi nimi zůstává volný pruh ~55 cm, kterým se dvířky pohodlně vyhrabává trus z podlahy kurníku. Čelo budky do kurníku je otevřené jen s prahem ~10 cm (aby nevypadávala vejce a stelivo), uvnitř hobliny. Slepice si do budky vleze snést vejce — má tam ráda šero a klid; ty vejce vybereš dvířky z uličky, aniž lezeš do kurníku. Musí být níž než hřady, jinak v nich slepice spí a kálí. Hřady 2 latě 4 × 6 se zaoblenými hranami ve dvou výškách. Vylez 30 × 35 cm ve východním štítu s rampou ven.</p>
+</section>
+
+<section class="view">
+  <h2>4b · Řez C–C, podélný východ–západ — pohled na sever</h2>
+  <div id="v-rezC"></div>
+  <p class="cap">Podélný řez vedený středem budovy (rovina prochází vylezem, kotci a volným středem mezi hnízdy; dveře jsou před rovinou řezu — čárkovaně). Je tu vidět celá logika na jeden pohled: kotce z boku se třemi patry, otevřený strop nad uličkou (jen trámky — tudy se hází seno na půdu), kurník se skladem dole, sníženým stropem ve 170 cm a kapsou na seno pokračující bez mezistropu až pod střechu, hnízda za čelní stěnou, hřady v řezu (kolečka) a vylez ve východní stěně. Rovina řezu prochází šikmou jižní rovinou střechy — hřeben je za řezem (čárkovaně).</p>
+</section>
+
+<section class="view">
+  <h2>5 · Krov — kostra střechy</h2>
+  <div id="v-krov"></div>
+  <p class="cap">Pohled shora na krov: 7 párů krokví z prken 22 × 120 na výšku à ~56 cm, nahoře opřených o hřebenové prkno 22 × 120 (s přesahem 15 cm přes štíty). Pod každým párem leží na horních ližinách stropní trámek 22 × 120 na výšku — trojice krokev–krokev–trámek se u okapu sešroubuje, takže tvoří tuhý trojúhelník. Záklop z prken na sraz je nad kotci a je protažený až na 3. stropní trámek — vznikne souvislá podlážka 111 × 132 cm, na kterou se seno skládá (kotce pod ní jsou hluboké jen 75 cm, zbylých 36 cm přečnívá nad uličku). Nad kurníkem záklop není — kapsa na seno tam začíná už na sníženém stropu ve 170. Nad zbytkem uličky zůstávají holé trámky: otvor 79 cm na házení sena nahoru.</p>
+  <div id="v-krovdet"></div>
+  <p class="cap">Detail vazby: krokev se dole osedlá (zářez ~3 cm) na horní ližinu, přišroubuje se 2 × vrutem 6 × 140 šikmo a z boku sešroubuje se stropním trámkem (3 × vrut 5 × 80). U hřebene se krokve opřou o hřebenové prkno a stáhnou vruty 5 × 80 + úhelníkem. Na krokve kolmo bednění z prken 22 × 120 na sraz, na něj asfaltový pás rovnoběžně s okapem (spodní pruh první, přesahy 10 cm, hřeben přeložit pruhem přes obě strany).</p>
+</section>
+
+<section class="view">
+  <h2>6 · Základ — betonové kostky a rošt podlahy</h2>
+  <div id="v-rost"></div>
+  <p class="cap">Půdorys roštu: 10 příčníků 22 × 120 na výšku à ~39 cm (směr S–J, délka 145,6 cm) je z jihu i severu zaklopených čelním prknem 22 × 120 na výšku — do čela každého příčníku 2 vruty 5 × 80. Vznikne tuhý rám 350 × 150, který drží rozteče a nekroutí se. Pod příčníky dvě podélné latě 4 × 6 naležato (čárkovaně), 20 cm od hran.</p>
+  <div id="v-zaklad"></div>
+  <p class="cap">Opření o kostky: pod latěmi je 2 × 5 kostek 40 × 40 à ~78 cm na urovnaném, zhutněném podloží — ideálně na 5 cm štěrkového lože. Lať leží na celé ploše kostky (40 cm), takže volně visí jen ~38 cm mezi kostkami — na tom lať 4 × 6 naležato nese i plnou váhu stavby, sena a sněhu s velkou rezervou (a jako průběžný nosník přes pět podpor se prakticky neprohne). Víc kostek by mělo smysl jen na měkkém podloží, kvůli menšímu tlaku na bod. Skladba: kostka 5 + lať 4 + příčník 12 + palubka 3 ≈ 24 cm nad terén; mezi kostku a lať kousek asfaltového pásu proti vlhkosti. Pod roštem proudí vzduch a dřevo je nad odstřikující vodou. Před dveře jedna kostka navíc jako schůdek.</p>
+</section>
+
+<section class="view">
+  <h2>Kapacita, seno, větrání, provoz</h2>
+  <p><b>Kolik zvířat se vejde:</b></p>
+  <p><b>Slepice — 8, max 10 nosnic.</b> Podlaha kurníku má 1,42 × 1,32 m ≈ 1,9 m². S celodenním výběhem (kurník slouží hlavně na spaní a snášení) je to pohodlných 8 nosnic, 10 je horní hranice. Hřady 2 × 125 cm = 2,5 m dávají při 25 cm na slepici místo pro 10 ks — hřady stačí, limitem je podlahová plocha. Hnízda jsou 2 (u jižní a severní stěny, volný střed na vyhrabávání) — pro 8 nosnic to stačí, slepice se stejně rády mačkají do jednoho oblíbeného; při 10 už může být tlačenice a do volného středu jde kdykoli doplnit třetí budka. Vnitřní výška 90 cm (strop snížený na 170 cm) je pro nosnice plný komfort — víc výšky slepice nevyužijí, a získala se tím velká kapsa na seno přímo nad nimi, která v zimě funguje i jako izolace nad hřady. Menší objem vzduchu = o důvod víc nechat průběžně otevřené větrání (okno + vylez + štítové mřížky).</p>
+  <p><b>Králíci — 6 dospělých středních plemen, v pohodě.</b> Jeden kotec má s hloubkou 75 cm vnitřních ~62 × 72 × 57 cm ≈ 0,45 m² — komfort pro dospělého králíka středních plemen (~4–5 kg) i pro výkrm 2–3 mladých do porážky. Samici s vrhem se doporučuje ~0,5 m² a víc — 0,45 m² je těsně pod tím, takže pro kojící samici pořád platí tip s dvojkotcem: vyndat dělící stěnu jednoho patra a nechat jí 1,32 × 0,72 m. Jen pro velká plemena (belgický obr apod.) je kotec malý i takhle.</p>
+  <p><b>Kolik sena se vejde:</b> <span id="seno-info">…</span> <span id="seno-role"></span> (Sklon střechy přepneš přepínačem v hlavičce — čísla v tomto odstavci, výkresy i kusovník se přepočítají samy.)</p>
+  <p><b>Z jaké louky se seník naplní:</b> <span id="seno-louka">…</span></p>
+  <p><b>Seno na půdě jako letní izolace — ano.</b> Vrstva sena nad stropem funguje jako výborný tepelný nárazník proti přehřívání i promrzání. Podmínky: seno ukládat jen dokonale suché (riziko plísní a v extrému samovznícení) a nechat volný klín u hřebene. Záklop je jen nad kotci, položený na sraz — slouží zároveň jako strop horního kotce (žádný dvojitý strop) a je protažený 36 cm za kotce až na 3. stropní trámek, takže vznikne rovná podlážka 111 × 132 cm, na kterou se dá seno pořádně naskládat. Nad kurníkem je kapsa bez záklopu a zbylým otvorem 79 cm nad uličkou se seno hází mezi holé trámky.</p>
+  <p><b>Králíci a zima:</b> okna do králičí části nejsou potřeba — světlo jim dá otevřená ulička a okénko ve dveřích. Králíci snášejí suchý mráz výborně (i −15 °C), nebezpečný je průvan a vlhko. V zimě tedy stačí zavřít hlavní dveře (polykarbonátové okénko dál pouští světlo) a přidat do kotců silnou vrstvu slámy; dvířka s pletivem se zateplovat nemusí — vzduch v uzavřené uličce je závětří sám o sobě. Jen při extrémních mrazech pod −15 °C můžeš dvířka přes noc překrýt prknem či pytlovinou (nechat škvíru na vzduch) a hlídat zamrzání napáječek.</p>
+  <p><b>Větrání:</b> dva otvory 20 × 20 cm s pletivem v obou štítech nad stropem + mezera nad dveřmi. Vzduch tak proudí nad zvířaty, ne na ně — v zimě to stačí, v létě se větrá otevřenými dveřmi (pletivová vložka místo dveří se hodí, stačí ale i pletivo v otevřených dveřích na háčku).</p>
+  <p><b>Drobnosti z praxe:</b> podlahy kurníku i kotců (palubky) 2× natřít fermeží/olejem a sypat hoblinami; pod hřady rovná „trusná deska“ z palubek, která se seškrabuje; rampu k vylezu s příčnými lištěmi à 10 cm; stavbu vyvýšit na dlaždicích ≥ 5 cm nad terén (odvětrání roštu, ochrana před hlodavci).</p>
+  <div class="note">Stavba má ~5,25 m² a výšku ~3,5 m — u staveb do 25 m² a do 5 m výšky na pozemku u domu se obvykle nevyžaduje povolení ani ohlášení, ale ověř si to na svém stavebním úřadě (hospodářská stavba, odstupy od hranice pozemku).</div>
+</section>
+
+<section class="view">
+  <h2>Postup stavby (víkendový plán)</h2>
+  <ol class="steps">
+    <li><b>Základ + rošt (výkres 6):</b> urovnat a zhutnit, položit 10 betonových kostek 40 × 40 ve dvou řadách à ~78 cm, na ně přes kousky asfaltového pásu dvě podélné latě 4 × 6 <i>naležato</i>. Na latě příčníky à ~39 cm a z jihu i severu je zaklopit čelním prknem 22 × 120 (2 vruty 5 × 80 do čela každého příčníku) — vznikne tuhý rám.</li>
+    <li><b>Podlaha:</b> palubky napříč přes rošt, samovrtací vruty 4 × 50 TX20 (2 ks do každého křížení) — bez předvrtání.</li>
+    <li><b>Stěnové rámy:</b> na podlaze smontovat 4 rámy z latí 40 × 60 (spodní + horní ližina, sloupky à ~58 cm, zdvojení u dveří), postavit, svázat v rozích.</li>
+    <li><b>Opláštění:</b> palubky vodorovně perem nahoru, u štítů dořezávat podle sklonu. Osadit dveře.</li>
+    <li><b>Strop + střecha (výkres 5):</b> stropní trámky 22 × 120 na výšku à ~56 cm přes ližiny; záklop nad kotci na sraz, protažený od západní stěny až na 3. stropní trámek (111 cm) — je zároveň stropem horního kotce a za kotci pokračuje jako podlážka, na kterou se skládá seno; volný pruh 12 cm mezi čelem kotců a záklopem u trámků zaklopit lištou, aby králík neutekl horem. Nad kurníkem ani uličkou záklop není — kapsa na seno a otvor na házení. Krokve 22 × 120 na výšku (7 párů à ~106 cm, z jednoho prkna 3 ks; nahoře na hřebenové prkno, dole sedlový zářez), bednění z prken, asfaltový pás od okapu k hřebeni s přesahy 10 cm, hřeben přeložit pruhem pásu.</li>
+    <li><b>Interiér:</b> rám kotců, podlážky z palubek 27 (volně vyjmutelné), dělící stěny; rošt z latí a podlaha kurníku z palubek, snížený strop kurníku ve 170 cm (polička na seno), čelní stěna s dvířky, hnízda, hřady, vylez + rampa.</li>
+    <li><b>Dokončení:</b> pletivo do dvířek a větráků, kování, polykarbonát do dveří a do výklopného okna kurníku (severní stěna), 2× lazura zvenku.</li>
+  </ol>
+</section>
+
+<section class="view">
+  <h2>Kusovník (BOM) — co koupit</h2>
+  <p class="cap" style="margin-bottom:10px">Ceny s DPH jsou předvyplněné podle e-shopů (srpen 2026); můžeš je přepsat, součty se přepočítají. Krokve, bednění a asfaltový pás se přepočítávají podle zvoleného sklonu střechy; řádek palubek podle zvoleného typu (přepínač v hlavičce) a sklonu — počty kusů vychází z řezacího plánu níže.</p>
+  <table id="bom"></table>
+  <div class="note" id="bom-note">Rezerva ~8 % na řezivu je už v počtech kusů. Prkna a latě bere DEK i po kuse. Palubky od Vencla a palubky-online se prodávají po balících 4 ks (2,92 m²) — řádek palubek je na celé balíky už zaokrouhlený, přebytečné kusy jdou do rezervy; u Artisanu velikost balení ověř v e-shopu, BIOS prodává po bm.</div>
+</section>
+
+<section class="view">
+  <h2>Řezací plán — kus po kuse, s minimálním odpadem</h2>
+  <h3>Palubky (stěny, štíty, podlahy, dveře, podlážky, trusná deska)</h3>
+  <p class="cap" id="cut-sum" style="margin-bottom:10px"></p>
+  <table id="cutplan"></table>
+  <h3>Prkna 22×120×4000 (DEK) — krov, bednění, rošt, kotce, hnízda</h3>
+  <p class="cap" id="cut-sum-prkna" style="margin-bottom:10px"></p>
+  <table id="cutplan-prkna"></table>
+  <div class="note">Oba plány jsou spočítané dopředu (bin-packing, prořez pily 4 mm na řez) — plán palubek pro každý typ palubky × sklon střechy, plán prken pro každý sklon; přepínače nahoře v hlavičce je přepnou. Jak číst tabulky: každý řádek = kolik kusů řeziva nařezat stejným způsobem; délky jsou hotové kusy. <b>Kusy do štítů</b> mají uvedenou délku spodní (delší) hrany — šikmé konce se ořezávají až na stavbě podle skutečného sklonu, klín z ořezu je odpad; stejně tak <b>krokve</b> mají délku po vnější líc a sedlový zářez i šikmý ořez u hřebene se dělá na stavbě; řady štítu užší než 10 cm už v plánu nejsou — poslední špička pod hřebenem (nanejvýš ~7 × 6 cm při 60°) se zakryje hřebenovým prknem nebo kouskem ze zbytků. <b>Poslední řada</b> stěn a poslední palubka podlahy se navíc podélně přiřízne na zbývající šířku. Zbytky &gt;50 cm neházej do kamen hned: hodí se na lišty krycí spáry u záklopu, prahy hnízd a příčky rampy. Tloušťka 25/27/28 mm nemá na rozměry stavby vliv (stěna ~9 cm je počítaná s 27 mm). Pozor na dva detaily: <b>25×146 z palubky-online je obkladová palubka s V-spárou</b> — na stěny, dveře a podlážky kotců v pohodě, na pochozí podlahu budovy a kurníku je lepší podlahovka 27/28 mm (nebo u 25 mm zhustit příčníky roštu z ~39 na ~30 cm); <b>BIOS 28×205 je kvalita C</b> — nejlevnější na m², ale počítej s viditelnými suky a občas kusem na vyhození (proto rezerva), a délky ověř při objednávce (prodej po bm, plán počítá s 5 m).</div>
+</section>
+
+<footer style="color:#6b6353;font-size:13px">
+  Zdroje: <a href="https://www.artisan.cz/podlahove-palubky-27x146x4000-smrk-kvalita-b">Artisan — podlahové palubky 27×146×4000 smrk BC</a> ·
+  <a href="https://palubky-vencl.cz/smrkove-podlahy-bc-28x146x5000-mm-">Palubky Vencl — smrkové podlahy BC 28×146×5000</a> ·
+  <a href="https://palubky-online.cz/palubky-25x146-smrk-i-trida">palubky-online.cz — palubky 25×146×5000 smrk I. třída</a> ·
+  <a href="https://www.biossro.cz/cz/eshop/detail/1012/podlaha-smrk-c-28-mm-x-205-mm">BIOS s.r.o. — podlaha smrk C 28×205</a> ·
+  <a href="https://www.dek.cz/produkty/detail/3020201230-prkno-susene-tl-22-23mm-x-s-120mm-delka-4m">DEK — prkno sušené 22×120×4000</a> ·
+  <a href="https://www.dek.cz/produkty/detail/3020200190-lat-4x6-4m-susena-9ks-bal/57">DEK — lať 40×60×4000</a> ·
+  <a href="https://allegro.cz/produkt/srouby-do-dreva-wurth-4-x-50-mm-500-ks-timtec-7de6286b-5230-4e2a-9fa3-1876b8898935?offerId=18406483464">Allegro — Würth TIMTEC 4×50 samovrtací (500 ks)</a>
+</footer>
+</div>
+
+<script>
+/* ====== PARAMETRY (cm) — tady se ladí ====== */
+const CFG = {
+  W: 350,          // vnější šířka (V–Z)
+  D: 150,          // vnější hloubka (S–J)
+  H: 200,          // výška stěn od podlahy
+  uhel: 45,        // sklon střechy
+  T: 9,            // tloušťka stěny (lať 60 + palubka 27 ≈ 9 cm)
+  teren: -24,      // podlaha je +-0; terén 24 cm níž (kostka 5 + lať 4 + příčník 12 + palubka 3)
+  stitPresah: 15,  // přesah střechy ve štítech
+  dvereW: 80, dvereH: 190,
+  kotceD: 75,      // hloubka pruhu kotců u západní stěny
+  kotceStart: 20,  // spodní kotec začíná 20 cm nad podlahou
+  kotceVys: 60,    // výška jednoho patra kotců
+  ulicka: 115,
+  kurnikPodl: 80,  // podlaha kurníku nad podlahou budovy
+  kurnikStrop: 170,// snížený strop kurníku — nad ním až do 200 polička na seno
+};
+const rad = a => a*Math.PI/180;
+let TAN, RISE, RIDGE;
+function derive(){
+  TAN = Math.tan(rad(CFG.uhel));
+  RISE = Math.round(CFG.D/2*TAN);            // výška hřebene nad stěnou
+  RIDGE = CFG.H + RISE;                      // hřeben nad podlahou
+}
+derive();
+const VIEWS = [];                            // překreslované pohledy
+const iW = CFG.W-2*CFG.T, iD = CFG.D-2*CFG.T;         // 332 × 132
+const kurnikW = iW - CFG.kotceD - CFG.ulicka;         // 142
+const doorX0 = CFG.T + CFG.kotceD + (CFG.ulicka-CFG.dvereW)/2;  // 94
+/* stropní trámky: 7 os à ~55,7 cm od x=8. Záklop nad kotci je protažený od Z stěny
+   až přes 3. trámek — vznikne průběžná podlážka na seno (kotce jsou hluboké jen 75). */
+const tramCC = (CFG.W-16)/6;                                     // rozteč trámků ~55,7
+const zaklopD = Math.round(8 + 2*tramCC + 1.1 - CFG.T);          // 111 cm od líce Z stěny
+const senoOtvor = Math.round(CFG.T + CFG.kotceD + CFG.ulicka - CFG.T - zaklopD); // zbylý otvor ~79
+/* odvozeniny střechy pro BOM a texty */
+function roofCalc(){
+  const s = (CFG.D/2)/Math.cos(rad(CFG.uhel));   // délka krokve (cm)
+  const per = Math.floor(400/s);                  // kolik krokví z jednoho prkna 4 m
+  const krok = Math.ceil(14/per);                 // prken na 14 krokví
+  const bed = 2*Math.ceil(s/12);                  // prken na bednění (řady à 12 cm × 2 strany)
+  const area = 2*3.8*(s/100);                     // m² střechy vč. přesahů štítů
+  return {s:Math.round(s), per, krok, bed, area, rolls: area<=7?1:2};
+}
+
+/* ====== mini kreslicí framework (svět v cm, y nahoru) ====== */
+const NS='http://www.w3.org/2000/svg';
+function el(t,a,parent){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(parent)parent.appendChild(e);return e;}
+function View(mount,x0,y0,x1,y1){
+  const M=8, w=x1-x0+2*M, h=y1-y0+2*M;
+  const host=document.getElementById(mount); host.innerHTML='';
+  const svg=el('svg',{viewBox:`0 0 ${w} ${h}`,class:'plan'},host);
+  const X=x=>x-x0+M, Y=y=>y1-y+M;
+  const a={svg,X,Y};
+  a.ln=(p,q,r,s,c='ln')=>el('line',{x1:X(p),y1:Y(q),x2:X(r),y2:Y(s),class:c},svg);
+  a.rc=(x,y,w2,h2,c='ln')=>el('rect',{x:X(x),y:Y(y+h2),width:w2,height:h2,class:c},svg);
+  a.pg=(pts,c)=>el('polygon',{points:pts.map(p=>X(p[0])+','+Y(p[1])).join(' '),class:c},svg);
+  a.tx=(x,y,s,c='t',an='middle')=>{const t=el('text',{x:X(x),y:Y(y),class:c,'text-anchor':an},svg);t.textContent=s;return t;};
+  a.tick=(x,y)=>a.ln(x-1.8,y-1.8,x+1.8,y+1.8,'dim');
+  a.dimH=(p,q,y,lab)=>{a.ln(p,y,q,y,'dim');a.tick(p,y);a.tick(q,y);a.ln(p,y-2.5,p,y+2.5,'dim');a.ln(q,y-2.5,q,y+2.5,'dim');a.tx((p+q)/2,y+2.5,lab,'dt');};
+  a.dimV=(p,q,x,lab)=>{a.ln(x,p,x,q,'dim');a.tick(x,p);a.tick(x,q);a.ln(x-2.5,p,x+2.5,p,'dim');a.ln(x-2.5,q,x+2.5,q,'dim');
+    const t=a.tx(0,0,lab,'dt');t.setAttribute('transform',`rotate(-90 ${a.X(x)} ${a.Y((p+q)/2)}) translate(${a.X(x)} ${a.Y((p+q)/2)}) translate(0,-2)`);t.removeAttribute('x');t.removeAttribute('y');};
+  a.note=(x,y,tx2,ty,s,an='start')=>{a.ln(x,y,tx2,ty,'thin');a.tx(tx2+(an==='start'?1:-1),ty,s,'lbl',an);};
+  return a;
+}
+function ground(v,x0,x1){
+  v.ln(x0,CFG.teren,x1,CFG.teren,'thick');
+  for(let x=x0;x<x1;x+=14) v.ln(x,CFG.teren,x-6,CFG.teren-6,'thin');
+}
+/* řezový trojúhelník střechy + strop + seno (společné pro oba řezy) */
+function roofSection(v){
+  const {D,H,T}=CFG, ap=[D/2,RIDGE];
+  const th=14.2/Math.cos(rad(CFG.uhel)), dz=th/TAN; // svislá tl. střechy (krokev+bednění)
+  v.pg([[0,H],ap,[D/2,RIDGE-th],[dz,H]],'cut');
+  v.pg([[D,H],ap,[D/2,RIDGE-th],[D-dz,H]],'cut');
+  v.ln(0,H,D/2,RIDGE,'thick'); v.ln(D,H,D/2,RIDGE,'thick');
+  // stropní trámky + záklop
+  v.rc(T,H,iD,12,'wood'); v.ln(T,H+12,T+iD,H+12,'ln');
+  // seno
+  v.pg([[T+8,H+14],[D-T-8,H+14],[D/2,RIDGE-th-6]],'seno');
+  if(RISE-th-14>24){
+    v.tx(D/2,H+26,'SENO — zásoba i letní izolace','lbl');
+    v.tx(D/2,H+18,'(záklop nad kotci = strop kotce i podlážka na seno)','lbl');
+  }else{
+    v.tx(D/2,H+17,'SENO — jen tenká izolační vrstva','lbl');
+  }
+}
+function sectionWalls(v){
+  const {D,H,T,teren}=CFG;
+  ground(v,-25,D+25);
+  // základ: kostky 40×40, latě naležato (řez), příčník z boku + čelní prkna, palubka
+  v.rc(0,teren,40,5,'wall'); v.rc(110,teren,40,5,'wall');
+  v.rc(17,teren+5,6,4,'cut'); v.rc(127,teren+5,6,4,'cut');
+  v.rc(0,teren+9,D,12,'wood');
+  v.rc(0,teren+9,2.2,12,'cut'); v.rc(D-2.2,teren+9,2.2,12,'cut');
+  v.rc(0,teren+21,D,3,'wall');
+  v.tx(D/2,teren+5,'základ: kostky 40×40 + lať + rám roštu (viz výkres 6)','lbl');
+  v.rc(0,0,T,H,'cut'); v.rc(D-T,0,T,H,'cut');   // řez stěnami
+}
+
+/* ====== 1 · POHLED OD JIHU ====== */
+VIEWS.push(function(){
+  const {W,H,teren,stitPresah:SP,dvereW,dvereH}=CFG;
+  const v=View('v-jih',-118,teren-30,W+120,RIDGE+8);
+  ground(v,-40,W+40);
+  // sokl: kostky + latě (skryté) + čelní prkno roštu + palubka podlahy
+  for(let i=0;i<5;i++) v.rc(i*(W-40)/4,teren,40,5,'wall');
+  v.rc(0,teren+5,W,4,'dash');
+  v.rc(0,teren+9,W,12,'wall');
+  v.rc(0,teren+21,W,3,'wall');
+  // stěna s palubkami
+  v.rc(0,0,W,H,'wall');
+  for(let y=14;y<H;y+=14) v.ln(0,y,W,y,'wl');
+  // dveře
+  v.rc(doorX0,0,dvereW,dvereH,'wood');
+  for(let i=1;i<6;i++) v.ln(doorX0+i*dvereW/6,0,doorX0+i*dvereW/6,dvereH,'wl');
+  v.rc(doorX0+3,20,dvereW-6,12,'wood');           // spodní příčka
+  v.rc(doorX0+3,95,dvereW-6,12,'wood');           // střední příčka
+  v.ln(doorX0+3,32,doorX0+dvereW-3,95,'ln');      // diagonála Z
+  v.rc(doorX0+15,140,50,40,'poly');
+  v.tx(doorX0+40,155,'okénko','lbl');
+  // střecha (pohledově: pás od okapu k hřebeni)
+  v.rc(-SP,H,W+2*SP,RIDGE-H,'roofband');
+  v.ln(-SP,RIDGE,W+SP,RIDGE,'thick');
+  v.ln(-SP,H+65,W+SP,H+65,'thin');
+  // popisky
+  v.note(W-40,RIDGE-30,W+16,RIDGE-14,'asfaltový pás (bitumen)');
+  v.note(W-16,H+2,W+16,H+30,'okapnice, bez přesahu');
+  v.note(40,120,-34,150,'palubky '+PAL_TYPES[PAL].dims+' vodorovně','end');
+  v.note(60,teren+15,-34,20,'sokl 24 cm (výkres 6)','end');
+  v.note(doorX0+66,60,doorX0+126,-30,'dveře: palubky + rám a diagonála z prkna 22×120');
+  // kóty
+  v.dimH(0,W,teren-16,'350');
+  v.dimH(doorX0,doorX0+dvereW,teren-8,'80');
+  v.dimV(0,H,W+22,'200');
+  v.dimV(H,RIDGE,W+22,String(RISE));
+  v.dimV(teren,0,W+22,String(-teren));
+  v.dimV(teren,RIDGE,W+34,'≈'+(RIDGE-teren)+' od terénu');
+  v.dimV(0,dvereH,doorX0-8,'190');
+});
+
+/* ====== 2 · PŮDORYS ====== */
+VIEWS.push(function(){
+  const {W,D,T,kotceD,ulicka,dvereW}=CFG;
+  const v=View('v-pud',-42,-116,W+124,D+34);
+  // stěny (řez)
+  v.rc(0,D-T,W,T,'cut');
+  v.rc(0,0,doorX0,T,'cut'); v.rc(doorX0+dvereW,0,W-doorX0-dvereW,T,'cut');
+  v.rc(0,T,T,D-2*T,'cut'); v.rc(W-T,T,T,D-2*T,'cut');
+  v.rc(T,T,iW,iD,'wall2');
+  // dveře — otevírání ven (na jih)
+  v.ln(doorX0,0,doorX0,-dvereW,'thick');
+  el('path',{d:`M ${v.X(doorX0)} ${v.Y(-dvereW)} A ${dvereW} ${dvereW} 0 0 0 ${v.X(doorX0+dvereW)} ${v.Y(0)}`,class:'thin'},v.svg);
+  v.tx(doorX0+dvereW/2,-38,'dveře 80×190, ven','lbl');
+  // kotce
+  v.rc(T,T,kotceD,iD,'wall');
+  v.ln(T,T+iD/2,T+kotceD,T+iD/2,'ln');
+  v.ln(T+kotceD,T,T+kotceD,T+iD,'thick');
+  const tk=v.tx(0,0,'KOTCE 2×3 (dvířka do uličky →)','t');
+  tk.setAttribute('transform',`rotate(-90 ${v.X(T+kotceD/2)} ${v.Y(T+iD/2)}) translate(${v.X(T+kotceD/2)} ${v.Y(T+iD/2)})`);
+  tk.removeAttribute('x');tk.removeAttribute('y');
+  // ulička — nahoře bez záklopu (házení sena)
+  v.tx(T+kotceD+ulicka/2,D-40,'ULIČKA','t big');
+  v.rc(T+kotceD+8,T+8,ulicka-16,iD-16,'dash');
+  v.tx(T+kotceD+ulicka/2,66,'nad uličkou jen trámky,','lbl');
+  v.tx(T+kotceD+ulicka/2,58,'bez záklopu — seno se','lbl');
+  v.tx(T+kotceD+ulicka/2,50,'hází rovnou na půdu','lbl');
+  // kurník
+  const kx=T+kotceD+ulicka;
+  v.ln(kx,T,kx,T+iD,'thick');
+  v.rc(kx,12,35,35,'wall'); v.rc(kx,103,35,35,'wall');
+  v.ln(kx+56,15,kx+56,iD+3,'dash'); v.ln(kx+96,15,kx+96,iD+3,'dash');
+  v.tx(kx+35+(kurnikW-35)/2,D-32,'KURNÍK','t big');
+  v.tx(kx+35+(kurnikW-35)/2,D-41,'(podlaha +80, strop 170, nad ním seno)','lbl');
+  v.note(kx+18,47,kx+18,-36,'2 hnízda 35×35×35 u J a S stěny (za dvířky),');
+  v.tx(kx+20,-44,'uprostřed volno na vyhrabávání trusu','lbl','start');
+  v.note(kx+96,30,kx+120,-20,'2 hřady (lať 4×6) nad podlahou kurníku');
+  // okno kurníku v severní stěně (polykarbonát, výklopné)
+  v.rc(kx+51,D-T,80,T,'poly');
+  v.note(kx+91,D-4,kx+130,D+30,'okno kurníku 20×80 (polykarbonát,');
+  v.tx(kx+131,D+22,'výklopné, zevnitř pletivo)','lbl','start');
+  // vylez
+  v.rc(W-T,57,T,35,'dash');
+  v.ln(W,74,W+20,74,'thin'); v.pg([[W+20,74],[W+15,71.5],[W+15,76.5]],'ln');
+  v.note(W+4,80,W+18,108,'vylez 30×35 + rampa');
+  // řezové čáry
+  const ax=T+kotceD+38, bx=T+kotceD+96;
+  v.ln(ax,-14,ax,D+14,'axis'); v.pg([[ax-7,-10],[ax,-13],[ax,-7]],'ln'); v.pg([[ax-7,D+10],[ax,D+13],[ax,D+7]],'ln');
+  v.tx(ax-3,-24,'A','t big'); v.tx(ax-3,D+16,'A','t big');
+  v.ln(bx,-14,bx,D+14,'axis'); v.pg([[bx+7,-10],[bx,-13],[bx,-7]],'ln'); v.pg([[bx+7,D+10],[bx,D+13],[bx,D+7]],'ln');
+  v.tx(bx+5,-24,'B','t big'); v.tx(bx+5,D+16,'B','t big');
+  // řez C–C (podélný, pohled na sever)
+  const cy=70;
+  v.ln(-14,cy,W+14,cy,'axis');
+  v.pg([[-10,cy+7],[-13,cy],[-7,cy]],'ln'); v.pg([[W+10,cy+7],[W+13,cy],[W+7,cy]],'ln');
+  v.tx(-20,cy+10,'C','t big'); v.tx(W+18,cy+10,'C','t big');
+  // severka
+  el('circle',{cx:v.X(-20),cy:v.Y(D-6),r:7,class:'ln'},v.svg);
+  v.ln(-20,D-12,-20,D,'thick'); v.pg([[-20,D+1],[-22.5,D-5],[-17.5,D-5]],'ln');
+  v.tx(-20,D+6,'S','t big');
+  // kóty
+  v.dimH(0,W,-104,'350');
+  v.dimH(doorX0,doorX0+dvereW,-94,'80');
+  v.dimH(T,T+kotceD,D+22,String(kotceD));
+  v.dimH(T+kotceD,kx,D+22,String(ulicka));
+  v.dimH(kx,W-T,D+22,String(kurnikW));
+  v.dimV(0,D,-26,'150');
+});
+
+/* ====== 3 · ŘEZ A–A (pohled na západ — kotce) ====== */
+VIEWS.push(function(){
+  const {D,H,T,kotceStart,kotceVys}=CFG;
+  const v=View('v-rezA',-104,CFG.teren-40,D+124,RIDGE+8);
+  sectionWalls(v); roofSection(v);
+  // kotce — čelo (2 sloupce à 66, 3 patra à 60, start 20)
+  v.rc(T,kotceStart,iD,3*kotceVys,'wall');
+  v.ln(T+iD/2,kotceStart,T+iD/2,kotceStart+3*kotceVys,'ln');
+  for(let r=0;r<=3;r++) v.ln(T,kotceStart+r*kotceVys,T+iD,kotceStart+r*kotceVys,'ln');
+  for(let c=0;c<2;c++)for(let r=0;r<3;r++){
+    const x=T+c*iD/2, y=kotceStart+r*kotceVys;
+    v.rc(x+8,y+8,iD/2-16,kotceVys-16,'mesh');
+    el('circle',{cx:v.X(x+iD/2-11),cy:v.Y(y+kotceVys/2),r:1.6,class:'ln'},v.svg);
+  }
+  // nohy pod kotci
+  [T,T+iD/2-2,T+iD-4].forEach(x=>v.rc(x,0,4,kotceStart,'wood'));
+  v.tx(T+iD/2,8,'mezera 20 cm (úklid, vzduch)','lbl');
+  // větrák v západním štítu (jen když se do štítu vejde)
+  if(RISE-14.2/Math.cos(rad(CFG.uhel))>=56){
+    v.rc(D/2-10,H+34,20,20,'mesh');
+    v.note(D/2+10,H+44,D+16,H+73,'větrání 20×20 s pletivem (oba štíty)');
+  }else{
+    v.note(D/2,RIDGE-8,D+16,RIDGE+2,'větrání: štěrbina pod hřebenem');
+    v.tx(D+17,RIDGE-7,'+ mřížky ve štítech','lbl','start');
+  }
+  // popisky
+  v.note(T+20,kotceStart+150,-16,H+36,'dvířka: rám z latí','end');
+  v.tx(-16,H+27,'+ pletivo oko 19 mm','lbl','end');
+  v.note(D/2-14,RIDGE-32,D+16,RIDGE-16,'krokve 22×120 na výšku à ~56 cm');
+  v.tx(D+18,RIDGE-24,'bednění z prken + asfaltový pás','lbl','start');
+  v.tx(-16,-8,'J','t big'); v.tx(D+10,-8,'S','t big');
+  // kóty
+  v.dimV(0,kotceStart,D+18,'20');
+  v.dimV(kotceStart,kotceStart+kotceVys,D+18,'60');
+  v.dimV(kotceStart+kotceVys,kotceStart+2*kotceVys,D+18,'60');
+  v.dimV(kotceStart+2*kotceVys,H,D+18,'60');
+  v.dimV(0,H,-24,'200');
+  v.dimV(H,RIDGE,-24,String(RISE));
+  v.dimH(0,D,CFG.teren-32,'150');
+  // úhel
+  el('path',{d:`M ${v.X(D-26)} ${v.Y(H)} A 26 26 0 0 0 ${v.X(D-26+26*Math.cos(rad(CFG.uhel)))} ${v.Y(H+26*Math.sin(rad(CFG.uhel)))}`,class:'dim'},v.svg);
+  v.tx(D-34,H+8,CFG.uhel+'°','dt');
+});
+
+/* ====== 4 · ŘEZ B–B (pohled na východ — kurník) ====== */
+VIEWS.push(function(){
+  const {D,H,T,kurnikPodl}=CFG;
+  const v=View('v-rezB',-104,CFG.teren-40,D+124,RIDGE+8);
+  sectionWalls(v); roofSection(v);
+  // POZOR: pohled na východ => sever vlevo. Pozice z půdorysu (y od jihu) se zrcadlí: x = D - y.
+  const mir=y=>D-y;
+  // čelo kurníku (deska do uličky)
+  const KS=CFG.kurnikStrop;
+  v.rc(T,0,iD,H,'wall');
+  v.ln(T,kurnikPodl,T+iD,kurnikPodl,'thick');
+  v.ln(T,KS,T+iD,KS,'thick');
+  // sklad — 2 dvířka
+  v.rc(T+6,4,iD/2-12,kurnikPodl-10,'wood'); v.rc(T+iD/2+6,4,iD/2-12,kurnikPodl-10,'wood');
+  v.tx(D/2,kurnikPodl/2,'sklad: nářadí, seno, stelivo','lbl');
+  // kurník — 2 servisní dvířka
+  v.rc(T+6,kurnikPodl+6,iD/2-12,KS-kurnikPodl-12,'wood'); v.rc(T+iD/2+6,kurnikPodl+6,iD/2-12,KS-kurnikPodl-12,'wood');
+  [ [T+iD/2-10,kurnikPodl+45],[T+iD/2+14,kurnikPodl+45] ].forEach(p=>el('circle',{cx:v.X(p[0]),cy:v.Y(p[1]),r:1.6,class:'ln'},v.svg));
+  v.tx(D/2,KS-14,'servisní dvířka (vejce, čištění) — z uličky','lbl');
+  // kapsa na seno nad sníženým stropem kurníku (bez mezistropu, pokračuje do střechy)
+  v.rc(T+3,KS+3,iD-6,H-KS-3,'seno');
+  v.tx(D/2,KS+(H-KS)/2,'kapsa na seno — od 170 průběžně až pod střechu','lbl');
+  // hnízda za dvířky — 2 ks u J a S stěny (zrcadlově: x = 150 − y)
+  v.rc(mir(47),kurnikPodl,35,35,'dash'); v.rc(mir(138),kurnikPodl,35,35,'dash');
+  v.note(mir(30),kurnikPodl+30,-16,kurnikPodl+58,'2 hnízda 35×35×35 u J a S stěny,','end');
+  v.tx(-16,kurnikPodl+49,'uprostřed volno na vyhrabávání','lbl','end');
+  // hřady (kolmo na pohled ⇒ vodorovné čáry za čelem)
+  v.ln(T+6,kurnikPodl+40,T+iD-6,kurnikPodl+40,'dash'); v.ln(T+6,kurnikPodl+55,T+iD-6,kurnikPodl+55,'dash');
+  v.note(T+24,kurnikPodl+55,-16,H+36,'hřady: latě 4×6,','end');
+  v.tx(-16,H+27,'40 / 55 cm nad podl. kurníku','lbl','end');
+  v.tx(-16,H+18,'(25 cm na slepici)','lbl','end');
+  // vylez — je ve východní (zadní) stěně, viz půdorys
+  v.tx(D+18,kurnikPodl+42,'vylez 30×35 + rampa','lbl','start');
+  v.tx(D+18,kurnikPodl+34,'ve východní stěně (viz půdorys)','lbl','start');
+  // větrák východního štítu (jen když se vejde)
+  if(RISE-14.2/Math.cos(rad(CFG.uhel))>=56) v.rc(D/2-10,H+34,20,20,'mesh');
+  v.tx(D+10,-8,'J','t big'); v.tx(-16,-8,'S','t big');
+  // kóty
+  v.dimV(0,kurnikPodl,D+18,'80');
+  v.dimV(kurnikPodl,KS,D+18,'90');
+  v.dimV(KS,H,D+18,'30');
+  v.dimV(0,H,-24,'200');
+  v.dimH(0,D,CFG.teren-32,'150');
+  v.dimV(0,kurnikPodl+55,D+30,'135 (horní hřad)');
+});
+
+/* ====== 4b · ŘEZ C–C (podélný V–Z, pohled na sever, rovina y=70) ====== */
+VIEWS.push(function(){
+  const {W,H,T,teren,kotceD,kotceStart,kotceVys,ulicka,kurnikPodl,kurnikStrop:KS,stitPresah:SP}=CFG;
+  const zo=Math.min(RIDGE, H+70*TAN);            // vnější líc střechy v rovině řezu
+  const th=14.2/Math.cos(rad(CFG.uhel));         // svislá tloušťka střechy
+  const v=View('v-rezC',-108,teren-40,W+132,RIDGE+16);
+  ground(v,-40,W+40);
+  // rošt v řezu: příčníky (kostky a latě leží mimo rovinu řezu)
+  const nP=10, ccP=(W-2.2)/(nP-1);
+  for(let i=0;i<nP;i++) v.rc(1.1+i*ccP-1.1,teren+9,2.2,12,'cut');
+  v.rc(0,teren+21,W,3,'wall');
+  v.tx(60,teren+14.5,'rošt v řezu: příčníky à ~39','lbl');
+  // stěny: západní plná, východní s vylezem
+  v.rc(0,0,T,zo-th,'cut');
+  v.rc(W-T,0,T,kurnikPodl,'cut'); v.rc(W-T,kurnikPodl+35,T,zo-th-kurnikPodl-35,'cut');
+  v.ln(W+34,teren,W,kurnikPodl,'dash');
+  v.note(W-4,kurnikPodl+18,W+18,kurnikPodl+52,'vylez 30×35 + rampa');
+  // kotce z boku (za řezem dělící stěna) — horní patro končí až u záklopu (bez dvojstropu)
+  v.rc(T,kotceStart,kotceD,H+12-kotceStart,'wall2');
+  for(let r=0;r<3;r++) v.rc(T,kotceStart+r*kotceVys-((r>0)?2:0),kotceD,2,'cut');
+  v.rc(T+kotceD-4,kotceStart,4,H+12-kotceStart,'wood');
+  [T,T+kotceD-4].forEach(x=>v.rc(x,0,4,kotceStart,'wood'));
+  const tk=v.tx(0,0,'KOTCE (bok)','t');
+  tk.setAttribute('transform',`rotate(-90 ${v.X(T+kotceD/2)} ${v.Y(110)}) translate(${v.X(T+kotceD/2)} ${v.Y(110)})`);
+  tk.removeAttribute('x');tk.removeAttribute('y');
+  // ulička + dveře před rovinou řezu
+  v.rc(doorX0,0,CFG.dvereW,CFG.dvereH,'dash');
+  v.tx(doorX0+CFG.dvereW/2,30,'dveře (před','lbl'); v.tx(doorX0+CFG.dvereW/2,22,'rovinou řezu)','lbl');
+  v.tx(T+kotceD+ulicka/2,120,'ULIČKA','t big');
+  // kurník
+  const kx=T+kotceD+ulicka;
+  v.rc(kx,0,kurnikW,H,'wall2');
+  v.rc(kx-2.2,0,2.2,H,'cut');                       // čelní stěna kurníku v řezu
+  v.rc(kx,kurnikPodl-2,kurnikW,2,'cut');            // podlaha kurníku (OSB)
+  v.rc(kx,KS,kurnikW,2,'cut');                      // snížený strop kurníku
+  v.tx(kx+kurnikW/2,kurnikPodl/2,'sklad','lbl');
+  // hnízda — rovina řezu prochází volným středem, hnízda jsou za řezem (dashed)
+  v.rc(kx+2,kurnikPodl,33,35,'dash');
+  v.note(kx+18,kurnikPodl+30,kx-36,160,'hnízdo u S stěny (za řezem;','end');
+  v.tx(kx-35,151,'druhé u J stěny, střed volný)','lbl','end');
+  el('circle',{cx:v.X(kx+56),cy:v.Y(kurnikPodl+40),r:2.5,class:'wood'},v.svg);
+  el('circle',{cx:v.X(kx+96),cy:v.Y(kurnikPodl+55),r:2.5,class:'wood'},v.svg);
+  v.note(kx+96,kurnikPodl+55,W+38,164,'hřady (120/135)');
+  // strop: trámky v řezu, záklop jen nad kotci a kurníkem
+  const senoTop=zo-th-4;
+  v.rc(kx+2,KS+3,kurnikW-4,Math.max(6,senoTop-KS-3),'seno');   // kapsa: od 170 průběžně nahoru
+  v.tx(kx+kurnikW/2,KS+12,'kapsa na seno (propletená trámky)','lbl');
+  const nT=7, ccT=(W-16)/(nT-1);
+  for(let i=0;i<nT;i++) v.rc(8+i*ccT-1.1,H,2.2,12,'cut');
+  // záklop = strop horního kotce protažený až přes 3. trámek ⇒ podlážka na seno
+  v.rc(T,H+12,zaklopD,2,'wall');
+  if(senoTop>H+18) v.rc(T+2,H+15,zaklopD-4,senoTop-H-15,'seno');
+  v.note(T+10,H+13,-16,H+40,'podlážka na seno '+zaklopD+' cm:','end');
+  v.tx(-16,H+31,'záklop = strop horního kotce,','lbl','end');
+  v.tx(-16,H+23,'protažený na 3. trámek','lbl','end');
+  // otvor na seno nad uličkou (zbytek za podlážkou)
+  const otvS=T+zaklopD, otvC=(otvS+T+kotceD+ulicka)/2;
+  v.ln(otvC,150,otvC,H+34,'thin');
+  v.pg([[otvC,H+38],[otvC-2.5,H+30],[otvC+2.5,H+30]],'ln');
+  v.note(otvC,H+30,W-40,H+46,'otvor '+senoOtvor+' cm: seno nahoru mezi trámky');
+  // střecha v řezu (šikmá rovina) + hřeben za řezem
+  v.rc(-SP,zo-th,W+2*SP,th,'cut');
+  v.ln(-SP,zo,W+SP,zo,'thick');
+  v.ln(-SP,RIDGE,W+SP,RIDGE,'dash');
+  v.tx(W/2,RIDGE+5,'hřeben (za rovinou řezu)','lbl');
+  // kóty
+  v.dimH(0,W,teren-16,'350');
+  v.dimH(T,T+kotceD,-28,String(kotceD)); v.dimH(T+kotceD,kx,-28,String(ulicka)); v.dimH(kx,W-T,-28,String(kurnikW));
+  v.dimV(0,kurnikPodl,W+22,'80'); v.dimV(kurnikPodl,KS,W+22,'90'); v.dimV(KS,H,W+22,'30');
+  v.dimV(0,kotceStart,-24,'20');
+  v.dimV(kotceStart,kotceStart+3*kotceVys,-24,'3×60');
+  v.dimV(0,H,W+34,'200');
+  v.tx(-16,-8,'Z','t big'); v.tx(W+10,-8,'V','t big');
+});
+
+/* ====== 5 · KROV (pohled shora + detail vazby) ====== */
+VIEWS.push(function(){
+  const {W,D,T,stitPresah:SP}=CFG;
+  const v=View('v-krov',-92,-70,W+150,D+34);
+  // záklop = podlážka na seno (nad kotci, protažená až na 3. trámek) — pod krokvemi
+  v.rc(T,T,zaklopD,iD,'seno');
+  v.ln(T+CFG.kotceD,T,T+CFG.kotceD,T+iD,'dash');   // kde pod záklopem končí kotce
+  // obrys stěn + ližiny
+  v.rc(0,0,W,D,'thin');
+  v.rc(1.5,1.5,W-3,6,'wood'); v.rc(1.5,D-7.5,W-3,6,'wood');
+  v.rc(1.5,7.5,6,D-15,'wood'); v.rc(W-7.5,7.5,6,D-15,'wood');
+  // krokve/trámky — 7 os
+  const n=7, edge=8, cc=(W-2*edge)/(n-1);
+  for(let i=0;i<n;i++){ const x=edge+i*cc; v.rc(x-1.1,0,2.2,D,'wall'); }
+  // hřebenové prkno
+  v.rc(-SP,D/2-1.1,W+2*SP,2.2,'wood');
+  // popisky
+  v.tx(T+zaklopD/2,D/2-22,'PODLÁŽKA NA SENO','t');
+  v.tx(T+zaklopD/2,D/2-31,'(záklop = strop horního kotce,','lbl');
+  v.tx(T+zaklopD/2,D/2-39,'protažený '+(zaklopD-CFG.kotceD)+' cm za kotce)','lbl');
+  v.tx(T+zaklopD+(CFG.kotceD+CFG.ulicka-zaklopD)/2,D/2-20,'OTVOR','t');
+  v.tx(T+zaklopD+(CFG.kotceD+CFG.ulicka-zaklopD)/2,D/2-29,senoOtvor+' cm','lbl');
+  v.tx(T+CFG.kotceD+CFG.ulicka+kurnikW/2,D/2-26,'bez záklopu — kapsa na seno','lbl');
+  v.tx(T+CFG.kotceD+CFG.ulicka+kurnikW/2,D/2-34,'(strop kurníku je níž, ve 170)','lbl');
+  v.note(edge+cc,D-8,W+16,D+24,'7 párů krokví 22×120 na výšku');
+  v.tx(W+17,D+16,'+ pod každým stropní trámek','lbl','start');
+  v.note(W/2+40,D/2,W+16,D/2+18,'hřebenové prkno 22×120, přesah 15 přes štíty');
+  v.note(4,D/2+40,-34,D+16,'horní ližiny (pozednice)','end');
+  // kóty
+  v.dimH(edge,edge+cc,-14,'~56');
+  v.dimH(0,W,-58,'350');
+  v.dimH(-SP,0,-40,'15');
+  v.dimV(0,D,-26,'150');
+});
+
+/* ====== 5b · DETAIL VAZBY ====== */
+VIEWS.push(function(){
+  const {D,H,T}=CFG;
+  const v=View('v-krovdet',-116,H-70,D+150,RIDGE+16);
+  const dv=12/Math.cos(rad(CFG.uhel)); // svislá tloušťka krokve
+  // stěny (zkrácené) + ližiny
+  v.rc(0,H-60,T,54,'cut'); v.rc(D-T,H-60,T,54,'cut');
+  v.rc(1.5,H-6,6,6,'wood'); v.rc(D-7.5,H-6,6,6,'wood');
+  // stropní trámek
+  v.rc(0,H,D,12,'wood');
+  // krokve (řez podél)
+  const clipx=(H+12-(H-dv))/TAN; // kde vnitřní hrana protne horní líc trámku
+  v.pg([[0,H],[D/2,RIDGE],[D/2,RIDGE-dv],[clipx,H+12],[0,H+12]],'cut');
+  v.pg([[D,H],[D/2,RIDGE],[D/2,RIDGE-dv],[D-clipx,H+12],[D,H+12]],'cut');
+  v.ln(0,H,D/2,RIDGE,'thick'); v.ln(D,H,D/2,RIDGE,'thick');
+  // hřebenové prkno
+  v.rc(D/2-1.1,RIDGE-dv-14,2.2,20,'wood');
+  // bednění + pás (vnější rovnoběžka)
+  v.ln(0,H+4.4,D/2,RIDGE+4.4,'ln'); v.ln(D,H+4.4,D/2,RIDGE+4.4,'ln');
+  // popisky
+  v.note(D/2,RIDGE-16,D+16,RIDGE-4,'hřebenové prkno 22×120');
+  v.tx(D+17,RIDGE-12,'spoj: vrut 5×80 + úhelník','lbl','start');
+  v.note(30,H+34,-16,RIDGE+4,'bednění prkna 22×120 na sraz','end');
+  v.tx(-16,RIDGE-5,'+ asfaltový pás (od okapu nahoru)','lbl','end');
+  v.note(D-30,H+6,D+16,H+34,'stropní trámek 22×120 —');
+  v.tx(D+17,H+26,'sešroubovat s krokví (3× vrut 5×80)','lbl','start');
+  v.note(6,H+2,-16,H+40,'osedlání na ližinu','end');
+  v.tx(-16,H+31,'+ 2× vrut 6×140 šikmo','lbl','end');
+  v.tx(D/2,H-40,`à ~56 cm, 7 vazeb · délka krokve ~${roofCalc().s} cm (${roofCalc().per} ks z jednoho prkna)`,'lbl');
+  // kóty
+  v.dimH(0,D,H-24,'150');
+  v.dimV(H,RIDGE,-30,String(RISE));
+  el('path',{d:`M ${v.X(D-26)} ${v.Y(H)} A 26 26 0 0 0 ${v.X(D-26+26*Math.cos(rad(CFG.uhel)))} ${v.Y(H+26*Math.sin(rad(CFG.uhel)))}`,class:'dim'},v.svg);
+  v.tx(D-34,H+7,CFG.uhel+'°','dt');
+});
+
+/* ====== 6 · ZÁKLAD: půdorys roštu + detail opření ====== */
+VIEWS.push(function(){
+  const {W,D}=CFG;
+  const v=View('v-rost',-44,-70,W+150,D+30);
+  // podélné latě 4×6 naležato (čárkovaně — pod příčníky)
+  v.rc(0,17,W,6,'dash'); v.rc(0,127,W,6,'dash');
+  // kostky (čárkovaně), 5 na řadu à ~78 cm (mezi kostkami zbývá volných jen ~38 cm)
+  const kc=(W-40)/4;
+  for(let i=0;i<5;i++){ const x=i*kc; v.rc(x,0,40,40,'dash'); v.rc(x,110,40,40,'dash'); }
+  // příčníky (mezi čelními prkny)
+  const n=10, cc=(W-2.2)/(n-1);
+  for(let i=0;i<n;i++){ const x=1.1+i*cc; v.rc(x-1.1,2.2,2.2,D-4.4,'wall'); }
+  // čelní (obvodová) prkna J + S — přišroubovaná do čel příčníků
+  v.rc(0,0,W,2.2,'wall'); v.rc(0,D-2.2,W,2.2,'wall');
+  // popisky
+  v.note(1.1+cc*2,D-25,W+16,D+18,'10 příčníků 22×120 na výšku à ~39 cm');
+  v.note(W-60,D-1,W+16,D-14,'čelní prkno 22×120 na výšku (J i S),');
+  v.tx(W+17,D-22,'2× vrut 5×80 do čela každého příčníku','lbl','start');
+  v.note(W-30,130,W+16,88,'2 podélné latě 4×6 naležato (pod příčníky)');
+  v.note(330,20,W+16,34,'kostky 40×40, 2 řady × 5 ks à ~78 cm');
+  v.tx(W/2,D/2+14,'palubky podlahy se kladou kolmo na příčníky (V–Z) →','lbl');
+  // kóty
+  v.dimH(1.1,1.1+cc,-14,'~39');
+  v.dimH(20,20+kc,-32,'~78');
+  v.dimH(40,kc,-14,'~38 volně');
+  v.dimH(0,W,-58,'350');
+  v.dimV(0,D,-26,'150');
+  v.dimV(0,20,-14,'20');
+});
+VIEWS.push(function(){
+  const {D,teren}=CFG;
+  const v=View('v-zaklad',-128,teren-42,D+150,84);
+  ground(v,-40,D+40);
+  // kostky
+  v.rc(0,teren,40,5,'wall'); v.rc(110,teren,40,5,'wall');
+  // podélné latě 4×6 naležato (řez)
+  v.rc(17,teren+5,6,4,'cut'); v.rc(127,teren+5,6,4,'cut');
+  // příčník z boku + čelní prkna (řez) na koncích
+  v.rc(0,teren+9,D,12,'wood');
+  v.rc(0,teren+9,2.2,12,'cut'); v.rc(D-2.2,teren+9,2.2,12,'cut');
+  // palubka
+  v.rc(0,teren+21,D,3,'wall');
+  // stěny (zkrácené)
+  v.rc(0,0,9,60,'cut'); v.rc(141,0,9,60,'cut');
+  v.ln(-3,60,12,68,'thin'); v.ln(138,60,153,68,'thin');
+  // popisky
+  v.note(20,teren+2,-16,teren+34,'kostka 40×40 na zhutněném','end');
+  v.tx(-16,teren+25,'podloží (5 cm štěrku)','lbl','end');
+  v.note(20,teren+7,-16,teren+56,'lať 4×6 naležato (V–Z),','end');
+  v.tx(-16,teren+47,'pod ní kus asf. pásu','lbl','end');
+  v.note(1.1,teren+15,-16,teren+78,'čelní prkno 22×120 (V–Z)','end');
+  v.note(75,teren+15,D+16,teren+22,'příčník 22×120 na výšku (S–J), à ~39 cm');
+  v.note(100,teren+22.5,D+16,teren+44,'podlaha: palubky 27 (V–Z)');
+  v.note(145,30,D+16,teren+66,'stěna stojí nad konci příčníků');
+  // kóty
+  v.dimV(teren,teren+5,-30,'5');
+  v.dimV(teren+5,teren+9,-40,'4');
+  v.dimV(teren+9,teren+21,-30,'12');
+  v.dimV(teren,0,-52,'24');
+  v.dimH(0,40,teren-14,'40');
+  v.dimH(0,20,teren-24,'20');
+  v.dimH(0,D,teren-36,'150');
+});
+
+/* ====== výpočet sena (z parametrů) ====== */
+function updateSeno(){
+  const {D,uhel,kurnikPodl}=CFG;
+  const th=14.2/Math.cos(rad(uhel)), dz=th/TAN;      // svislá tl. střechy, vodorovný ústupek
+  const hP=RISE-th-14;                               // výška klínu sena nad záklopem
+  const b=2*(D/2-dz-14/TAN);                         // šířka klínu při záklopu
+  const A=Math.max(0,0.5*(b/100)*(hP/100));                       // průřez klínu půdy (m²)
+  const vKotce=A*(zaklopD/100);                                    // klín nad podlážkou (záklop protažený za kotce)
+  const vKapsa=(kurnikW/100)*(iD/100)*((CFG.H+14-CFG.kurnikStrop-2)/100)+A*(kurnikW/100); // kapsa nad kurníkem až pod střechu
+  const vSklad=(kurnikW/100)*(iD/100)*((kurnikPodl-2)/100);
+  const vUp=vKotce+vKapsa, vTot=vUp+vSklad;
+  const kg=v=>Math.round(v*65), bal=v=>Math.floor(v*0.8/0.09), m3=v=>v.toFixed(1).replace('.',',');
+  document.getElementById('seno-info').textContent=
+    `Klín půdy nad záklopem je při ${uhel}° vysoký ~${Math.max(0,Math.round(hP))} cm; na podlážce nad kotci (záklop je protažený za kotce až na 3. stropní trámek, pruh ${zaklopD} cm místo ${CFG.kotceD}) pojme ≈ ${m3(vKotce)} m³. Hlavní je kapsa nad kurníkem — od stropu kurníku (170 cm) průběžně až pod střechu, jen propletená stropními trámky: ≈ ${m3(vKapsa)} m³ (~${kg(vKapsa)} kg volně / ~${bal(vKapsa)} malých balíků). Sklad pod kurníkem přidá ≈ ${m3(vSklad)} m³ (~${kg(vSklad)} kg). Dohromady ~${kg(vTot)} kg — při spotřebě 6 králíků ≈ 1 kg denně i s podestýlkou to vydrží zhruba ${Math.max(1,Math.round(kg(vTot)/30))} měsíců, v balících déle.`;
+  document.getElementById('p-seno').textContent =
+    '≈ '+m3(vUp)+' m³ (~'+kg(vUp)+' kg)';
+  // louka: extenzivní ~3,5 t/ha/rok při 2 sečích (1. seč ~2 t/ha), úrodná/hnojená ~5 t/ha při 3 sečích
+  const K=kg(vTot), r50=x=>Math.round(x/50)*50;
+  document.getElementById('seno-louka').textContent =
+    `Seník (všechny tři prostory) pojme ~${K} kg sena. V Česku počítej u běžné extenzivní louky se 2 sečemi ročně (~3,5 t/ha za rok; červnová seč dá ~2 t/ha, srpnová otava zbytek) — 3 seče vycházejí jen na úrodné, vlhčí a přihnojované louce (~5 t/ha). Seník tedy naplní: jedna červnová seč z ~${r50(K/0.2)} m², celoroční sklizeň už z ~${r50(K/0.35)} m². Roční spotřeba 6 králíků (~365 kg vč. podestýlky) odpovídá ~${r50(365/0.35)} m² louky při 2 sečích, ~${r50(365/0.5)} m² při 3 sečích — seník na to stačí jako průběžný mezisklad, doplňuje se po každé seči.`;
+  document.getElementById('seno-role').textContent =
+    vUp < 0.9 ? 'Nahoře je při tomhle sklonu místa málo — hlavní zásoba patří do skladu pod kurníkem.'
+    : vUp < 1.5 ? 'Kapsa nad kurníkem + sklad dole dají pohodlnou zásobu; klín nad kotci ber hlavně jako izolaci.'
+    : 'Nahoře je teď víc místa než ve skladu — kapsa nad kurníkem s vysokým klínem je plnohodnotný seník.';
+}
+
+/* ====== PALUBKY: typy + předpočítané řezací plány ======
+   Řezací plány jsou spočítané dopředu (skript cutplan.js, FFD bin-packing, prořez 4 mm)
+   pro každý typ palubky × sklon střechy. Krycí šířka (šířka po sražení pero-drážky
+   k sobě) řídí počty řad: celková šířka 146 mm je vč. pera ~8 mm → krycí šířka 138 mm
+   u 146mm palubek (Vencl uvádí explicitně 146 − 8 = 138; Artisan „pero 8–10 mm";
+   palubky-online „krycí ~138"); BIOS 205 mm má krycí šířku 196 mm (tabulka parametrů
+   e-shopu). Ceny s DPH, srpen 2026. Odkazy na e-shopy: PAL_TYPES[].link + patička. */
+const PAL_TYPES={
+  artisan27:{n:'Podlahová palubka 27×146×4000, smrk BC (Artisan)',dims:'27×146',kryci:138,delka:400,
+    c:263,cm2:'450 Kč/m²',link:'https://www.artisan.cz/podlahove-palubky-27x146x4000-smrk-kvalita-b',
+    pozn:'podlahovka, 0,584 m²/ks, pero 8–10 mm'},
+  vencl28:{n:'Smrková podlaha BC 28×146×5000, profil O (Palubky Vencl)',dims:'28×146',kryci:138,delka:500,balik:4,
+    c:274,cm2:'375 Kč/m² s DPH (310 bez DPH)',link:'https://palubky-vencl.cz/smrkove-podlahy-bc-28x146x5000-mm-',
+    pozn:'podlahovka profil O, 0,73 m²/ks; balík 4 ks = 2,92 m² za 1 095 Kč; pero ~8 mm; Vencl radí ~1 mm vůli v peru a 14 dní aklimatizace na místě'},
+  online25:{n:'Palubka 25×146×5000, smrk I. třída/AB (palubky-online.cz)',dims:'25×146',kryci:138,delka:500,balik:4,
+    c:343,cm2:'470 Kč/m²',link:'https://palubky-online.cz/palubky-25x146-smrk-i-trida',
+    pozn:'obkladová s V-spárou, 0,73 m²/ks; balík 4 ks = 2,92 m²'},
+  bios28:{n:'Podlaha smrk C 28×205×5000 (BIOS s.r.o. Dobříš)',dims:'28×205',kryci:196,delka:500,sirka:205,
+    c:373,cm2:'363 Kč/m² s DPH (74,50 Kč/bm)',link:'https://www.biossro.cz/cz/eshop/detail/1012/podlaha-smrk-c-28-mm-x-205-mm',
+    pozn:'podlahovka kvalita C (viditelné suky a vady — na hospodářskou stavbu OK, kusy s velkými vadami padnou do rezervy), 1,025 m²/ks; prodej po bm (74,50 Kč/bm × 5 m = 373 Kč/ks) — délky ověř při objednávce, plán počítá s 5 m; šířka 205 vč. pera, krycí 196 mm'},
+};
+let PAL='artisan27', PAL_LAST='artisan27';
+const PAL_PRICE={artisan27:263,vencl28:274,online25:343,bios28:373};
+const PAL_PLANS={"labels":["stěna S","podlaha budovy","stěna J — východně od dveří","stěna Z","stěna J — západně od dveří","stěna V","dveře — svislé palubky","podlážky kotců","stěna S — západně od okna","podlaha kurníku","stěna S — východně od okna","stěna J — horní řada","štít 1. řada","štít 2. řada","stěna J — nad dveřmi","trusná deska","stěna V — severně od vylezu","stěna V — jižně od vylezu","štít 3. řada","štít 5. řada","štít 6. řada","štít 4. řada","štít 8. řada","štít 9. řada","štít 7. řada","bednění střechy (na sraz, s přesahy štítů)","strop kurníku (snížený, ve 170)","záklop / podlážka na seno nad kotci (na sraz)","čelo kurníku — rámy a dvířka","rošt — příčníky (à ~39 cm)","krokve (sedlový zářez dole)","stropní trámky","rošt — čelní prkna J+S","hnízda — 2 budky 35×35×35","dělící stěny kotců (3 patra)","hřebenové prkno (přesah 15 přes štíty)","dveře — svislice rámu","dveře — diagonála","rampa k vylezu","dveře — příčky"],"plans":{"artisan27_30":{"b":64,"r":6,"t":70,"m2":40.88,"w":7.8,"pat":[[13,50,[[1,350,0]]],[11,50,[[1,350,1]]],[7,47.6,[[2,176,2]]],[7,5.2,[[2,150,3],[1,94,4]]],[5,5.2,[[2,150,5],[1,94,4]]],[3,19.6,[[2,190,6]]],[3,23.4,[[5,75,7]]],[2,7.6,[[1,250,8],[1,142,9]]],[2,3,[[5,75,7],[1,20,10]]],[1,50,[[1,350,11]]],[1,5.2,[[1,150,3],[1,150,5],[1,94,4]]],[1,5.2,[[1,150,5],[1,150,12],[1,94,4]]],[1,4.2,[[1,150,12],[1,142,9],[1,103,13]]],[1,12.2,[[2,142,9],[1,103,13]]],[1,35.2,[[2,142,9],[1,80,14]]],[1,40.2,[[2,142,9],[1,75,7]]],[1,7.2,[[1,142,9],[2,125,15]]],[1,24.2,[[3,125,15]]],[1,40.4,[[4,75,7],[1,58,16]]],[1,0.6,[[2,58,16],[3,57,17],[2,55,18]]]]},"artisan27_45":{"b":65,"r":6,"t":71,"m2":41.46,"w":7.9,"pat":[[13,50,[[1,350,0]]],[11,50,[[1,350,1]]],[5,47.6,[[2,176,2]]],[5,5.2,[[2,150,3],[1,94,4]]],[5,5.2,[[2,150,5],[1,94,4]]],[4,23.4,[[5,75,7]]],[2,7.6,[[1,250,8],[1,142,9]]],[2,19.6,[[2,190,6]]],[2,7.2,[[2,176,2],[1,40,19]]],[2,4.2,[[2,150,3],[1,95,18]]],[1,50,[[1,350,11]]],[1,7.2,[[2,190,6],[1,12,20]]],[1,5.2,[[1,150,3],[1,150,5],[1,94,4]]],[1,5.2,[[1,150,5],[1,150,12],[1,94,4]]],[1,0.8,[[1,150,12],[1,142,9],[1,94,4],[1,12,20]]],[1,0.8,[[2,142,9],[1,94,4],[1,20,10]]],[1,35.2,[[2,142,9],[1,80,14]]],[1,40.2,[[2,142,9],[1,75,7]]],[1,7.2,[[1,142,9],[2,125,15]]],[1,24.2,[[3,125,15]]],[1,2.8,[[2,123,13],[2,75,7]]],[1,3,[[5,75,7],[1,20,10]]],[1,54.4,[[2,75,7],[2,68,21],[1,58,16]]],[1,111.4,[[2,58,16],[3,57,17]]]]},"artisan27_60":{"b":67,"r":6,"t":73,"m2":42.63,"w":8.4,"pat":[[13,50,[[1,350,0]]],[11,50,[[1,350,1]]],[7,5.2,[[2,150,3],[1,94,4]]],[5,47.6,[[2,176,2]]],[5,5.2,[[2,150,5],[1,94,4]]],[3,19.6,[[2,190,6]]],[3,23.4,[[5,75,7]]],[2,7.6,[[1,250,8],[1,142,9]]],[2,8.2,[[2,176,2],[1,39,22]]],[2,3,[[5,75,7],[1,20,10]]],[1,50,[[1,350,11]]],[1,5.2,[[1,150,3],[1,150,5],[1,94,4]]],[1,5.2,[[1,150,5],[1,150,12],[1,94,4]]],[1,4.2,[[1,150,12],[1,142,9],[1,103,21]]],[1,12.2,[[2,142,9],[1,103,21]]],[1,4.8,[[2,142,9],[1,87,19],[1,23,23]]],[1,28.2,[[2,142,9],[1,87,19]]],[1,3.2,[[1,142,9],[1,135,13],[1,119,18]]],[1,14.2,[[1,135,13],[2,125,15]]],[1,0.8,[[3,125,15],[1,23,23]]],[1,49.8,[[1,119,18],[1,80,14],[2,75,7]]],[1,31.4,[[3,75,7],[2,71,20]]],[1,53,[[3,58,16],[3,57,17]]],[1,289.6,[[2,55,24]]]]},"vencl28_30":{"b":51,"r":5,"t":56,"m2":40.88,"w":7.5,"pat":[[10,55.6,[[1,350,0],[1,94,4]]],[7,5.2,[[2,176,2],[1,142,9]]],[5,49.2,[[3,150,3]]],[4,49.2,[[3,150,5]]],[4,48,[[6,75,7]]],[3,7.6,[[1,350,1],[1,142,9]]],[3,24.6,[[1,350,1],[1,125,15]]],[2,4.2,[[1,350,1],[1,125,15],[1,20,10]]],[2,0.2,[[1,350,1],[1,94,4],[1,55,18]]],[2,17.2,[[1,350,0],[1,75,7],[1,57,17]]],[2,1.2,[[1,250,8],[1,190,6],[1,58,16]]],[2,16.2,[[2,190,6],[1,103,13]]],[1,55.6,[[1,350,1],[1,94,4]]],[1,55.6,[[1,350,11],[1,94,4]]],[1,11.2,[[1,350,0],[1,80,14],[1,58,16]]],[1,48.8,[[2,150,12],[2,75,7]]],[1,292.2,[[2,75,7],[1,57,17]]]]},"vencl28_45":{"b":52,"r":5,"t":57,"m2":41.61,"w":7.9,"pat":[[12,55.6,[[1,350,0],[1,94,4]]],[7,5.2,[[2,176,2],[1,142,9]]],[5,49.2,[[3,150,3]]],[4,24.6,[[1,350,1],[1,125,15]]],[4,49.2,[[3,150,5]]],[3,7.6,[[1,350,1],[1,142,9]]],[2,26.6,[[1,350,1],[1,123,13]]],[2,1.2,[[1,250,8],[1,190,6],[1,58,16]]],[2,3.8,[[2,190,6],[1,95,18],[1,20,10]]],[2,7.6,[[6,75,7],[1,40,19]]],[2,48,[[6,75,7]]],[1,12.2,[[1,350,1],[1,125,15],[1,12,20]]],[1,55.6,[[1,350,1],[1,94,4]]],[1,55.6,[[1,350,11],[1,94,4]]],[1,1.2,[[1,350,0],[1,80,14],[1,68,21]]],[1,48.8,[[2,150,12],[2,75,7]]],[1,2.2,[[4,75,7],[1,68,21],[1,58,16],[1,57,17],[1,12,20]]],[1,385.6,[[2,57,17]]]]},"vencl28_60":{"b":53,"r":5,"t":58,"m2":42.34,"w":7.4,"pat":[[11,55.6,[[1,350,0],[1,94,4]]],[7,5.2,[[2,176,2],[1,142,9]]],[5,49.2,[[3,150,3]]],[4,49.2,[[3,150,5]]],[4,48,[[6,75,7]]],[3,7.6,[[1,350,1],[1,142,9]]],[2,14.6,[[1,350,1],[1,135,13]]],[2,1.2,[[1,350,1],[1,125,15],[1,23,23]]],[2,4.2,[[1,350,1],[1,125,15],[1,20,10]]],[2,0.2,[[1,350,0],[1,94,4],[1,55,24]]],[2,1.2,[[1,250,8],[1,190,6],[1,58,16]]],[2,0.2,[[2,190,6],[1,119,18]]],[1,24.6,[[1,350,1],[1,125,15]]],[1,7.2,[[1,350,1],[1,103,21],[1,39,22]]],[1,7.2,[[1,350,11],[1,103,21],[1,39,22]]],[1,17.8,[[2,150,12],[1,94,4],[1,87,19]]],[1,31,[[1,87,19],[1,80,14],[4,75,7]]],[1,33.6,[[2,75,7],[2,71,20],[1,58,16],[2,57,17]]],[1,443,[[1,57,17]]]]},"online25_30":{"b":51,"r":5,"t":56,"m2":40.88,"w":7.5,"pat":[[10,55.6,[[1,350,0],[1,94,4]]],[7,5.2,[[2,176,2],[1,142,9]]],[5,49.2,[[3,150,3]]],[4,49.2,[[3,150,5]]],[4,48,[[6,75,7]]],[3,7.6,[[1,350,1],[1,142,9]]],[3,24.6,[[1,350,1],[1,125,15]]],[2,4.2,[[1,350,1],[1,125,15],[1,20,10]]],[2,0.2,[[1,350,1],[1,94,4],[1,55,18]]],[2,17.2,[[1,350,0],[1,75,7],[1,57,17]]],[2,1.2,[[1,250,8],[1,190,6],[1,58,16]]],[2,16.2,[[2,190,6],[1,103,13]]],[1,55.6,[[1,350,1],[1,94,4]]],[1,55.6,[[1,350,11],[1,94,4]]],[1,11.2,[[1,350,0],[1,80,14],[1,58,16]]],[1,48.8,[[2,150,12],[2,75,7]]],[1,292.2,[[2,75,7],[1,57,17]]]]},"online25_45":{"b":52,"r":5,"t":57,"m2":41.61,"w":7.9,"pat":[[12,55.6,[[1,350,0],[1,94,4]]],[7,5.2,[[2,176,2],[1,142,9]]],[5,49.2,[[3,150,3]]],[4,24.6,[[1,350,1],[1,125,15]]],[4,49.2,[[3,150,5]]],[3,7.6,[[1,350,1],[1,142,9]]],[2,26.6,[[1,350,1],[1,123,13]]],[2,1.2,[[1,250,8],[1,190,6],[1,58,16]]],[2,3.8,[[2,190,6],[1,95,18],[1,20,10]]],[2,7.6,[[6,75,7],[1,40,19]]],[2,48,[[6,75,7]]],[1,12.2,[[1,350,1],[1,125,15],[1,12,20]]],[1,55.6,[[1,350,1],[1,94,4]]],[1,55.6,[[1,350,11],[1,94,4]]],[1,1.2,[[1,350,0],[1,80,14],[1,68,21]]],[1,48.8,[[2,150,12],[2,75,7]]],[1,2.2,[[4,75,7],[1,68,21],[1,58,16],[1,57,17],[1,12,20]]],[1,385.6,[[2,57,17]]]]},"online25_60":{"b":53,"r":5,"t":58,"m2":42.34,"w":7.4,"pat":[[11,55.6,[[1,350,0],[1,94,4]]],[7,5.2,[[2,176,2],[1,142,9]]],[5,49.2,[[3,150,3]]],[4,49.2,[[3,150,5]]],[4,48,[[6,75,7]]],[3,7.6,[[1,350,1],[1,142,9]]],[2,14.6,[[1,350,1],[1,135,13]]],[2,1.2,[[1,350,1],[1,125,15],[1,23,23]]],[2,4.2,[[1,350,1],[1,125,15],[1,20,10]]],[2,0.2,[[1,350,0],[1,94,4],[1,55,24]]],[2,1.2,[[1,250,8],[1,190,6],[1,58,16]]],[2,0.2,[[2,190,6],[1,119,18]]],[1,24.6,[[1,350,1],[1,125,15]]],[1,7.2,[[1,350,1],[1,103,21],[1,39,22]]],[1,7.2,[[1,350,11],[1,103,21],[1,39,22]]],[1,17.8,[[2,150,12],[1,94,4],[1,87,19]]],[1,31,[[1,87,19],[1,80,14],[4,75,7]]],[1,33.6,[[2,75,7],[2,71,20],[1,58,16],[2,57,17]]],[1,443,[[1,57,17]]]]},"bios28_30":{"b":38,"r":4,"t":42,"m2":43.05,"w":8.6,"pat":[[6,55.6,[[1,350,0],[1,94,4]]],[4,5.2,[[2,176,2],[1,142,9]]],[3,7.6,[[1,350,1],[1,142,9]]],[3,49.2,[[3,150,3]]],[3,49.2,[[3,150,5]]],[3,48,[[6,75,7]]],[2,9.2,[[1,350,1],[1,125,15],[1,15,18]]],[2,55.6,[[1,350,1],[1,94,4]]],[2,9.2,[[1,350,0],[1,83,13],[1,57,17]]],[2,1.2,[[1,250,8],[1,190,6],[1,58,16]]],[1,4.2,[[1,350,1],[1,125,15],[1,20,10]]],[1,55.6,[[1,350,11],[1,94,4]]],[1,69.6,[[1,350,0],[1,80,14]]],[1,25.2,[[2,190,6],[1,94,4]]],[1,8.2,[[1,190,6],[1,176,2],[1,125,15]]],[1,2.8,[[1,176,2],[2,150,3],[1,20,10]]],[1,48.8,[[2,150,12],[2,75,7]]],[1,425,[[1,75,7]]]]},"bios28_45":{"b":38,"r":4,"t":42,"m2":43.05,"w":7.4,"pat":[[8,55.6,[[1,350,0],[1,94,4]]],[4,5.2,[[2,176,2],[1,142,9]]],[3,7.6,[[1,350,1],[1,142,9]]],[3,49.2,[[3,150,3]]],[3,49.2,[[3,150,5]]],[2,24.6,[[1,350,1],[1,125,15]]],[2,1.2,[[1,250,8],[1,190,6],[1,58,16]]],[2,48,[[6,75,7]]],[1,4.2,[[1,350,1],[1,125,15],[1,20,10]]],[1,5.2,[[1,350,1],[1,111,13],[1,33,21]]],[1,55.6,[[1,350,1],[1,94,4]]],[1,55.6,[[1,350,11],[1,94,4]]],[1,12.2,[[1,350,0],[1,80,14],[1,57,17]]],[1,8.2,[[2,190,6],[1,111,13]]],[1,8.2,[[1,190,6],[1,176,2],[1,125,15]]],[1,2.8,[[1,176,2],[2,150,3],[1,20,10]]],[1,48.8,[[2,150,12],[2,75,7]]],[1,14.6,[[6,75,7],[1,33,21]]],[1,222.8,[[1,75,7],[2,72,18],[1,57,17]]]]},"bios28_60":{"b":39,"r":4,"t":43,"m2":44.08,"w":7.6,"pat":[[9,55.6,[[1,350,0],[1,94,4]]],[4,5.2,[[2,176,2],[1,142,9]]],[3,7.6,[[1,350,1],[1,142,9]]],[3,24.6,[[1,350,1],[1,125,15]]],[3,49.2,[[3,150,3]]],[3,49.2,[[3,150,5]]],[2,1.2,[[1,250,8],[1,190,6],[1,58,16]]],[1,1.2,[[1,350,1],[1,128,13],[1,20,10]]],[1,9.2,[[1,350,1],[1,125,15],[1,15,24]]],[1,7.2,[[1,350,11],[1,105,18],[1,37,20]]],[1,14.2,[[2,190,6],[1,105,18]]],[1,5.2,[[1,190,6],[1,176,2],[1,128,13]]],[1,7.8,[[1,176,2],[2,150,3],[1,15,24]]],[1,1.4,[[2,150,12],[1,94,4],[1,83,21],[1,20,10]]],[1,35,[[1,83,21],[1,80,14],[4,75,7]]],[1,10.6,[[6,75,7],[1,37,20]]],[1,48,[[6,75,7]]],[1,2.6,[[5,75,7],[2,60,19]]],[1,385.6,[[2,57,17]]]]},"prkna_30":{"b":49,"r":4,"t":53,"m2":25.44,"w":4.9,"pat":[[16,20,[[1,380,25]]],[5,4.2,[[2,142,26],[1,111,27]]],[5,3.2,[[3,132,28]]],[4,20.2,[[2,146,29],[1,87,30]]],[3,12.2,[[2,150,31],[1,87,30]]],[2,14.6,[[1,350,32],[1,35,33]]],[2,23.4,[[5,75,34]]],[1,20,[[1,380,35]]],[1,19.6,[[2,190,36]]],[1,3.2,[[1,150,31],[1,146,29],[1,100,37]]],[1,0.2,[[1,146,29],[1,142,26],[1,111,27]]],[1,21.8,[[1,120,38],[2,111,27],[1,35,33]]],[1,30.8,[[3,111,27],[1,35,33]]],[1,15.4,[[4,87,30],[1,35,33]]],[1,27.4,[[3,87,30],[1,75,34],[1,35,33]]],[1,24.4,[[4,75,34],[1,74,39]]],[1,3.8,[[2,74,39],[7,35,33]]],[1,11,[[11,35,33]]],[1,188,[[6,35,33]]]]},"prkna_45":{"b":52,"r":5,"t":57,"m2":27.36,"w":5.4,"pat":[[18,20,[[1,380,25]]],[5,4.2,[[2,142,26],[1,111,27]]],[5,3.2,[[3,132,28]]],[4,1.2,[[2,146,29],[1,106,30]]],[3,24.2,[[2,150,31],[1,75,34]]],[3,5.8,[[3,106,30],[1,75,34]]],[2,14.6,[[1,350,32],[1,35,33]]],[2,11,[[11,35,33]]],[1,20,[[1,380,35]]],[1,19.6,[[2,190,36]]],[1,3.2,[[1,150,31],[1,146,29],[1,100,37]]],[1,0.2,[[1,146,29],[1,142,26],[1,111,27]]],[1,21.8,[[1,120,38],[2,111,27],[1,35,33]]],[1,30.8,[[3,111,27],[1,35,33]]],[1,32.4,[[1,106,30],[3,75,34],[1,35,33]]],[1,23.4,[[5,75,34]]],[1,31,[[1,75,34],[3,74,39],[2,35,33]]],[1,365,[[1,35,33]]]]},"prkna_60":{"b":62,"r":5,"t":67,"m2":32.16,"w":5.9,"pat":[[26,20,[[1,380,25]]],[6,24.2,[[2,150,30],[1,75,34]]],[5,4.2,[[2,142,26],[1,111,27]]],[5,3.2,[[3,132,28]]],[4,32.2,[[2,146,29],[1,75,34]]],[3,24.2,[[2,150,31],[1,75,34]]],[2,14.6,[[1,350,32],[1,35,33]]],[2,11,[[11,35,33]]],[1,20,[[1,380,35]]],[1,19.6,[[2,190,36]]],[1,24.2,[[1,150,31],[1,150,30],[1,75,34]]],[1,3.2,[[1,150,30],[1,146,29],[1,100,37]]],[1,0.2,[[1,146,29],[1,142,26],[1,111,27]]],[1,21.8,[[1,120,38],[2,111,27],[1,35,33]]],[1,30.8,[[3,111,27],[1,35,33]]],[1,31,[[1,75,34],[3,74,39],[2,35,33]]],[1,329.6,[[2,35,33]]]]}}};
+
+/* ====== BOM ====== */
+const BOM=[
+ {kat:'Řezivo'},
+ {id:'palubky',n:'',spec:'',ks:0,j:'ks',c:263,link:''},
+ {id:'prkno',n:'Prkno sušené 22×120×4000, smrk (DEK)',spec:'',ks:0,j:'ks',c:133,link:'https://www.dek.cz/produkty/detail/3020201230-prkno-susene-tl-22-23mm-x-s-120mm-delka-4m'},
+ {n:'Lať sušená 40×60×4000 (DEK, bal. 9 ks)',spec:'sloupky 9, ližiny 5, rám dveří 2, rám kotců 4, dvířka kotců 4, kurník 4, hřady 1, podélné latě roštu 2, rezerva ⇒ 4 balení',ks:36,j:'ks',c:136,link:'https://www.dek.cz/produkty/detail/3020200190-lat-4x6-4m-susena-9ks-bal/57'},
+ {kat:'Střecha'},
+ {id:'pas',n:'Asfaltový pás V13 (role 10 m²)',spec:'',ks:0,j:'role',c:450},
+ {n:'Lepenkové hřebíky 20 mm',spec:'kotvení pásu do bednění',ks:2,j:'kg',c:95},
+ {n:'Okapnice / závětrná lišta pozink 2 m',spec:'okapové hrany J+S (4 m) + štíty dle chuti',ks:4,j:'ks',c:120},
+ {kat:'Spojovací materiál'},
+ {n:'Vrut samovrtací Würth TIMTEC 4×50, TX20 (bal. 500)',spec:'palubky ↔ sloupky a rošt, záklopy (~1400 ks); samovrtací špička = bez předvrtání a nepraskají konce palubek — u krajů přesto drž ~2 cm od čela; bílý pozink, hlavy zvenku schová lazura',ks:3,j:'bal',c:423,link:'https://allegro.cz/produkt/srouby-do-dreva-wurth-4-x-50-mm-500-ks-timtec-7de6286b-5230-4e2a-9fa3-1876b8898935?offerId=18406483464'},
+ {n:'Vrut samovrtací Würth TIMTEC 4,5×80, TX (bal. 200)',spec:'latě, rámy, krokve ↔ pozednice (~350 ks) — varianta „4,5×80 / 200 ks" na stejné stránce Allegro (v nabídce není 5×80, samovrtací 4,5×80 v suchém smrku drží stejně); cenu přepiš podle zvolené varianty',ks:2,j:'bal',c:260,link:'https://allegro.cz/produkt/srouby-do-dreva-wurth-4-x-50-mm-500-ks-timtec-7de6286b-5230-4e2a-9fa3-1876b8898935?offerId=18406483464'},
+ {n:'Vrut samovrtací konstrukční 6×140, TX',spec:'rošt podlahy, hřebenové spoje — v řadě TIMTEC tahle délka není, vzít ASSY/Rapi-tec/Fischer Power-Fast 6×140 se samovrtnou špičkou',ks:50,j:'ks',c:4},
+ {n:'Úhelník 40×40×60 + konvexní hřebíky',spec:'krokve, stropní trámky, rošt',ks:30,j:'ks',c:12},
+ {kat:'Kování'},
+ {n:'Pant/závěs 60–80 mm',spec:'kotce 12, kurník 4, sklad 4, okno kurníku 2',ks:22,j:'ks',c:35},
+ {n:'Závěs pásový 150 mm',spec:'vstupní dveře',ks:3,j:'ks',c:60},
+ {n:'Petlice / otočka',spec:'kotce 6, kurník 2, sklad 2, dveře 1, okno kurníku 1',ks:12,j:'ks',c:45},
+ {n:'Klika/madlo, zástrčka, háček na dveře',spec:'',ks:1,j:'sada',c:180},
+ {kat:'Ostatní'},
+ {n:'Svařované pletivo pozink, oko 19 mm, 1×5 m',spec:'dvířka kotců (6×), větráky, léto do dveří',ks:1,j:'role',c:650},
+ {n:'Dutinkový polykarbonát 4 mm, ~1050×700',spec:'okénko dveří 50×40 + okno kurníku 20×80 (obojí se z desky vyřeže)',ks:1,j:'ks',c:320},
+ {n:'Betonová kostka/dlaždice 40×40×5',spec:'základ pod rošt 2 řady × 5 ks à ~78 cm + 1 schůdek před dveře',ks:11,j:'ks',c:65},
+ {n:'Lazura / olej na dřevo, exteriér',spec:'2 vrstvy zvenku ≈ 22 m²',ks:5,j:'l',c:190},
+];
+function renderBOM(){
+  // zapamatuj si ceny přepsané uživatelem (palubky per typ — přepnutí typu cenu nesmaže)
+  BOM.forEach(r=>{ if(r.inp){ const v=parseFloat(r.inp.value); if(!isNaN(v)){ if(r.id==='palubky') PAL_PRICE[PAL_LAST]=v; else r.c=v; } } });
+  PAL_LAST=PAL;
+  // řádek palubek podle zvoleného typu a sklonu (předpočítaný řezací plán)
+  const pal=BOM.find(r=>r.id==='palubky'), PT=PAL_TYPES[PAL], PP=PAL_PLANS.plans[PAL+'_'+CFG.uhel];
+  pal.n=PT.n; pal.link=PT.link; pal.c=PAL_PRICE[PAL];
+  let balTxt='';
+  if(PT.balik){
+    const nb=Math.ceil(PP.t/PT.balik);
+    pal.ks=nb*PT.balik;
+    balTxt=` = ${nb} balíků à ${PT.balik} ks (zaokrouhleno nahoru na celé balíky, přebytek jde do rezervy)`;
+  }else{
+    pal.ks=PP.t;
+  }
+  const m2ks=PT.delka/100*(PT.sirka||146)/1000;
+  pal.spec=`podle řezacího plánu níže: ${PP.b} ks vychází přesně + ${PP.r} ks rezerva (~8 %) ⇒ ${pal.ks} ks${balTxt} ≈ ${(pal.ks*m2ks).toFixed(2).replace('.',',')} m² `
+    +`(à ${m2ks.toFixed(2).replace('.',',')} m²/ks vč. pera; e-shop ${PT.cm2}); krycí šířka po sražení ${PT.kryci} mm — všechny počty řad s ní počítají; `
+    +`odpad po nařezání ~${String(PP.w).replace('.',',')} %. ${PT.pozn}. Masiv v pero-drážce: těsná spára, snese okusování i moč a jednotlivé kusy jdou kdykoli vyměnit — proto palubky i na podlahy kotců a kurníku místo OSB. Z palubek jsou i výplně dveří (svisle) a podlážky kotců.`;
+  // řádky závislé na sklonu střechy
+  const rc0=roofCalc();
+  const prkno=BOM.find(r=>r.id==='prkno'), pas=BOM.find(r=>r.id==='pas');
+  const PK=PAL_PLANS.plans['prkna_'+CFG.uhel];
+  prkno.ks=PK.t;
+  prkno.spec=`podle řezacího plánu níže: ${PK.b} ks přesně + ${PK.r} rezerva (~8 %), odpad ~${String(PK.w).replace('.',',')} %. Obsahuje: rošt (10 příčníků + 2 čelní), 7 stropních trámků, 14 krokví à ${rc0.s} cm, hřebenové prkno, bednění střechy ${2*Math.ceil(rc0.s/12)}× 380 cm, záklop nad kotci (na sraz — je zároveň stropem horního kotce), strop kurníku, čelo kurníku s dvířky, dělící stěny kotců, 2 hnízdní budky, rám+příčky+diagonálu dveří a rampu — krokve a bednění se přepočítávají podle sklonu; podlahy kurníku a kotců jsou z palubek (viz výše)`;
+  pas.ks=rc0.rolls;
+  pas.spec=`plocha střechy ≈ ${rc0.area.toFixed(1).replace('.',',')} m² (sklon ${CFG.uhel}°) + přesahy, hřeben a podložky pod rošt`;
+  const tb=document.getElementById('bom');
+  tb.innerHTML='<tr><th>Položka</th><th>Poznámka / rozpis</th><th class="n">Množství</th><th class="n">Cena/jedn. (Kč)</th><th class="n">Celkem (Kč)</th></tr>';
+  const fmt=x=>x.toLocaleString('cs-CZ',{maximumFractionDigits:0});
+  function recalc(){
+    let sum=0;
+    BOM.forEach(r=>{ if(r.kat)return; r.tot=r.ks*parseFloat(r.inp.value||0); sum+=r.tot; r.cell.textContent=fmt(r.tot); });
+    document.getElementById('bom-sum').textContent=fmt(sum)+' Kč';
+    document.getElementById('p-cena').textContent='≈ '+fmt(Math.round(sum/100)*100)+' Kč';
+  }
+  BOM.forEach(r=>{
+    const tr=document.createElement('tr'); tb.appendChild(tr);
+    if(r.kat){ tr.className='kat'; tr.innerHTML=`<td colspan="5">${r.kat}</td>`; return; }
+    const name=r.link?`<a href="${r.link}">${r.n}</a>`:r.n;
+    tr.innerHTML=`<td>${name}</td><td>${r.spec}</td><td class="n">${r.ks} ${r.j}</td><td class="n"></td><td class="n"></td>`;
+    r.inp=document.createElement('input'); r.inp.className='cena'; r.inp.type='number'; r.inp.value=r.c; r.inp.addEventListener('input',recalc);
+    tr.cells[3].appendChild(r.inp);
+    r.cell=tr.cells[4];
+  });
+  const tr=document.createElement('tr'); tr.className='total';
+  tr.innerHTML='<td colspan="4">Celkem (orientačně)</td><td class="n" id="bom-sum"></td>';
+  tb.appendChild(tr);
+  recalc();
+}
+
+/* ====== ŘEZACÍ PLÁN — render předpočítaných dat ====== */
+function cutTable(tableId, plan, firstCol){
+  const L=PAL_PLANS.labels, tb=document.getElementById(tableId);
+  tb.innerHTML=`<tr><th class="n">${firstCol}</th><th>Řezy — délka v cm (kam kus patří)</th><th class="n">Zbytek (cm)</th></tr>`;
+  plan.pat.forEach(p=>{
+    const [cnt,rest,cuts]=p, tr=document.createElement('tr');
+    tr.innerHTML=`<td class="n">${cnt}×</td><td>`
+      +cuts.map(c=>`<b>${c[0]}× ${c[1]}</b>&nbsp;(${L[c[2]]})`).join(' + ')
+      +`</td><td class="n">${String(rest).replace('.',',')}</td>`;
+    tb.appendChild(tr);
+  });
+}
+function renderCut(){
+  const PT=PAL_TYPES[PAL], PP=PAL_PLANS.plans[PAL+'_'+CFG.uhel];
+  const nakup=PT.balik?` → nákup ${Math.ceil(PP.t/PT.balik)} balíků à ${PT.balik} ks = ${Math.ceil(PP.t/PT.balik)*PT.balik} ks`:'';
+  document.getElementById('cut-sum').innerHTML=
+    `<a href="${PT.link}">${PT.n}</a> · sklon střechy ${CFG.uhel}° ⇒ <b>${PP.b} palubek à ${PT.delka/100} m</b> nařezaných podle tabulky `
+    +`+ ${PP.r} ks rezerva na zkažené řezy a vady dřeva (celkem ${PP.t} ks${nakup}). `
+    +`Krycí šířka po sražení: <b>${PT.kryci} mm</b> (celková šířka ${PT.sirka||146} mm vč. pera). Odpad po nařezání ~${String(PP.w).replace('.',',')} % — z velké části použitelné zbytky.`;
+  cutTable('cutplan',PP,'Palubek');
+  const PK=PAL_PLANS.plans['prkna_'+CFG.uhel];
+  document.getElementById('cut-sum-prkna').innerHTML=
+    `<a href="https://www.dek.cz/produkty/detail/3020201230-prkno-susene-tl-22-23mm-x-s-120mm-delka-4m">Prkno sušené 22×120×4000, smrk (DEK)</a> · sklon střechy ${CFG.uhel}° ⇒ <b>${PK.b} prken à 4 m</b> podle tabulky `
+    +`+ ${PK.r} ks rezerva (celkem ${PK.t} ks). Odpad po nařezání ~${String(PK.w).replace('.',',')} %. `
+    +`Bednění a hřebenové prkno se řežou na 380 cm (350 + 2× 15 přesah přes štíty); krokve na ${roofCalc().s} cm.`;
+  cutTable('cutplan-prkna',PK,'Prken');
+}
+
+/* ====== překreslení všeho podle CFG ====== */
+function renderAll(){
+  derive();
+  VIEWS.forEach(f=>f());
+  updateSeno();
+  renderBOM();
+  renderCut();
+  document.getElementById('p-vyska').textContent='≈ '+((RIDGE-CFG.teren)/100).toFixed(1).replace('.',',')+' m';
+}
+document.querySelectorAll('input[name="uhel"]').forEach(r=>r.addEventListener('change',e=>{
+  CFG.uhel=+e.target.value; renderAll();
+}));
+document.querySelectorAll('input[name="palubky"]').forEach(r=>r.addEventListener('change',e=>{
+  PAL=e.target.value; renderAll();
+}));
+renderAll();
+</script>
+</body>
+</html>

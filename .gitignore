@@ -1,0 +1,10 @@
+# Claude Code – lokální nástroje, do repa nepatří
+.claude/
+.playwright-mcp/
+
+# Ukázka nového CF webu – lokální, do repa nepatří
+web/cf-new-web-test-v-001/
+.DS_Store
+
+# Lokální provozní skripty a dokumentace
+/ops/

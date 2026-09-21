@@ -1,0 +1,44 @@
+.books { display: grid; gap: 1.6rem; }
+.book { display: grid; grid-template-columns: minmax(0, 200px) minmax(0, 1fr); gap: clamp(1.5rem, 4vw, 3rem); padding: 1.5rem 0 2.5rem; border-bottom: 1px solid var(--line); }
+.book > a { align-self: start; }
+.cover { width: 100%; height: auto; display: block; box-shadow: 6px 12px 24px #0e17261f; border: 1px solid var(--line); }
+.book h2 { margin: .6rem 0; font-size: clamp(1.8rem, 4vw, 2.5rem); }
+.book h2 a { text-decoration: none; }
+.subtitle { font-size: 1.1rem; max-width: 48ch; }
+.annot { color: var(--muted); margin-top: 1rem; }
+.actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.4rem; }
+.soon { padding: 1rem 1.2rem; border-left: 2px solid var(--line); color: var(--muted); }
+.soon b { display: block; color: var(--txt); }
+.hero { display: grid; grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: clamp(2rem, 5vw, 4rem); align-items: start; }
+.hero h1 { margin: .6rem 0 1rem; }
+.dl { margin-top: 1.7rem; padding: 1.4rem; border: 1px solid var(--line); background: var(--bg2); }
+.dl-title { font-size: .875rem; color: var(--muted); margin-bottom: .9rem; }
+.btns { display: flex; gap: .75rem; flex-wrap: wrap; }
+.btns .btn { flex: 1 1 200px; justify-content: start; }
+.lbl { display: flex; flex-direction: column; line-height: 1.4; }
+.lbl span { font-size: .8125rem; font-weight: 400; }
+.note { font-size: .875rem; color: var(--muted); margin-top: 1rem; }
+.prose { max-width: 76ch; }
+.prose p { margin-bottom: 1rem; }
+.prose p:last-child { margin-bottom: 0; }
+.prose .lead { font: 500 1.25rem/1.65 var(--font-body); }
+.who, .quotes { display: grid; gap: 1.5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.who div { border-top: 1px solid var(--line); padding-top: 1rem; color: var(--muted); }
+.who b { display: block; color: var(--txt); margin-bottom: .4rem; }
+blockquote { border-left: 2px solid var(--accent2); padding: .3rem 0 .3rem 1.2rem; font: 500 1.15rem/1.65 var(--font-heading); }
+blockquote cite { display: block; margin-top: .8rem; font: normal .8125rem/1.5 var(--font-body); color: var(--muted); }
+.toc { columns: 2; column-gap: 2rem; list-style: none; padding: 0; font-size: .9375rem; }
+.toc li { break-inside: avoid; padding: .5rem 0; color: var(--muted); border-bottom: 1px solid var(--line); }
+.toc b { color: var(--txt); font-weight: 500; }
+.toc .num { display: inline-block; min-width: 1.8em; color: var(--accent2); font-variant-numeric: tabular-nums; }
+@media (max-width: 720px) {
+  .hero { grid-template-columns: minmax(0, 180px) minmax(0, 1fr); gap: 1.5rem; }
+  .hero h1 { font-size: 2.5rem; }
+  .dl { padding: 1rem; }
+}
+@media (max-width: 560px) {
+  .hero, .book, .who, .quotes { grid-template-columns: 1fr; }
+  .cover { max-width: 200px; }
+  .hero > .cover, .book > a { justify-self: center; }
+  .toc { columns: 1; }
+}

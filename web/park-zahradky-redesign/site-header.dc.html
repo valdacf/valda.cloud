@@ -1,0 +1,78 @@
+<x-dc>
+<header style="position:sticky;top:0;z-index:50;background:rgba(244,240,231,0.9);backdrop-filter:blur(10px);border-bottom:1px solid #DDD5C4">
+    <div style="width:min(1240px,100% - 40px);margin-inline:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;height:74px">
+      <a href="index.html" style="display:flex;align-items:center;gap:12px;color:#181510">
+        <svg width="40" height="46" viewBox="0 0 100 110" style="flex:none" aria-label="Rokytka žije">
+          <path d="M16,62 C24,51 41,49 53,56 C61,60 64,69 61,80 C55,70 41,68 31,74 C23,72 15,69 16,62 Z" fill="#2C4A34"></path>
+          <path d="M60,74 C67,89 63,102 50,110" fill="none" stroke="#2C4A34" stroke-width="4.5" stroke-linecap="round"></path>
+          <path d="M47,67 C53,44 68,26 91,14 C85,40 72,59 53,72 Z" fill="#3E5540"></path>
+          <circle cx="30" cy="26" r="11" fill="#B98A3C"></circle>
+        </svg>
+        <span style="display:flex;flex-direction:column;line-height:1.05">
+          <span style="font-family:'Newsreader',serif;font-size:1.5rem;font-weight:500;letter-spacing:-0.01em">Rokytka žije</span>
+          <span style="font-size:0.6rem;letter-spacing:0.24em;text-transform:uppercase;color:#7A7261;margin-top:5px">Park Zahrádky · Vysočany</span>
+        </span>
+      </a>
+      <sc-if value="{{ showDesktopNav }}" hint-placeholder-val="{{ true }}">
+      <nav style="display:flex;align-items:center;gap:30px">
+        <sc-for list="{{ nav }}" as="item" hint-placeholder-count="5">
+          <a href="{{ item.href }}" style="color:{{ item.color }};font-size:0.92rem;font-weight:{{ item.weight }}">{{ item.label }}</a>
+        </sc-for>
+        <a href="https://www.darujme.cz/rokytkazije" style="background:{{ accent }};color:#F4F0E7;padding:11px 20px;border-radius:2px;font-size:0.9rem;font-weight:600">Zapojte se</a>
+      </nav>
+      </sc-if>
+      <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+      <button onclick="{{ toggleMenu }}" aria-label="Menu" style="border:1px solid #C9C0AD;background:transparent;width:46px;height:46px;border-radius:2px;display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center;cursor:pointer">
+        <span style="width:20px;height:2px;background:#181510;display:block"></span>
+        <span style="width:20px;height:2px;background:#181510;display:block"></span>
+        <span style="width:20px;height:2px;background:#181510;display:block"></span>
+      </button>
+      </sc-if>
+    </div>
+    <sc-if value="{{ mobileMenuOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="border-top:1px solid #DDD5C4;padding:14px 0 22px">
+      <div style="width:min(1240px,100% - 40px);margin-inline:auto;display:flex;flex-direction:column;gap:4px">
+        <sc-for list="{{ nav }}" as="item" hint-placeholder-count="5">
+          <a href="{{ item.href }}" onclick="{{ closeMenu }}" style="padding:12px 4px;font-size:1.1rem;font-weight:500;color:#181510;border-bottom:1px solid #E7E0D2">{{ item.label }}</a>
+        </sc-for>
+        <a href="https://www.darujme.cz/rokytkazije" style="margin-top:12px;background:{{ accent }};color:#F4F0E7;padding:14px;border-radius:2px;text-align:center;font-weight:600">Zapojte se</a>
+      </div>
+    </div>
+    </sc-if>
+  </header>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;current&quot;:{&quot;tsType&quot;:&quot;string&quot;,&quot;default&quot;:&quot;&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#3E5540&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#3E5540&quot;,&quot;#2F5D50&quot;,&quot;#3A4C63&quot;,&quot;#7A5B34&quot;],&quot;section&quot;:&quot;Vzhled&quot;}}">
+class Component extends DCLogic {
+  state = { vw: (typeof window !== 'undefined' ? window.innerWidth : 1440), menuOpen: false };
+  componentDidMount() {
+    this._onResize = () => this.setState({ vw: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+  }
+  componentWillUnmount() {
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+  }
+  renderVals() {
+    const vw = this.state.vw;
+    const isMobile = vw < 900;
+    const accent = this.props.accent || '#3E5540';
+    const current = (this.props.current || '') + '.html';
+    const navRaw = [
+      { label: 'Kauzy', href: 'kauzy.html' },
+      { label: 'Akce', href: 'akce.html' },
+      { label: 'Zahrádky', href: 'zahradky.html' },
+      { label: 'O spolku', href: 'o-spolku.html' },
+      { label: 'Kontakt', href: 'kontakt.html' },
+    ].map(n => ({ ...n, current: n.href === current }));
+    const nav = navRaw.map(n => ({ ...n, color: n.current ? '#181510' : '#3A342A', weight: n.current ? 700 : 500 }));
+    return {
+      isMobile,
+      accent,
+      nav,
+      showDesktopNav: !isMobile,
+      mobileMenuOpen: isMobile && this.state.menuOpen,
+      toggleMenu: () => this.setState(s => ({ menuOpen: !s.menuOpen })),
+      closeMenu: () => this.setState({ menuOpen: false }),
+    };
+  }
+}
+</script>
