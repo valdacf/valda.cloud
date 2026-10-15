@@ -7,7 +7,7 @@
   <title>Neuronová laboratoř — valda.cloud</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23121d2a'/%3E%3Ctext x='8' y='29' font-size='28' fill='%238ae9c0'%3E⑦%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="/assets/css/fonts.css?v=49b418440e2f">
-  <link rel="stylesheet" href="/games/neural-ocr/style.css?v=1d9dce26779c">
+  <link rel="stylesheet" href="/games/neural-ocr/style.css?v=92e42d198a89">
 </head>
 <body>
   <div class="shell">
@@ -23,6 +23,10 @@
       <span id="status" role="status">Nenatrénováno</span>
     </section>
 
+    <section class="precision-bar" aria-label="Přesnost rozpoznávání">
+      <label for="precision">Přesnost vah <select id="precision"><option value="fp64">FP64 — plná přesnost</option><option value="fp8">FP8 — simulovaná</option></select></label>
+      <div><p id="precision-note">FP64 · původní váhy a biasy.</p><p>Učení a jeho statistiky vždy běží ve FP64. Přepínač mění rozpoznávání i mapy, naučené hodnoty zachová.</p></div>
+    </section>
     <main>
       <section class="panel network-panel" aria-labelledby="network-title">
         <div class="panel-heading"><div><p class="eyebrow">01 / UVNITŘ SÍTĚ</p><h2 id="network-title">Od pixelu k odpovědi</h2></div><span class="badge" id="input-name">Vzor: číslice 0</span></div>
@@ -32,7 +36,17 @@
         <p class="network-help">Klikni na kuličku: lupa ukáže jejích 256 vstupních vah. Na mobilu posuň síť do stran.</p>
         <div class="legend"><span><i class="positive"></i> kladná váha</span><span><i class="negative"></i> záporná váha</span><span><i class="activation"></i> jas = aktivace</span></div>
         <p class="caption">Zobrazený je výběr spojů, počítá se všech 6 384 vah. Spoje už existují; učením se mění jejich síla.</p>
-        <div class="inspector"><canvas id="weights" width="128" height="128" role="img" aria-label="Mapa vstupních vah vybraného skrytého neuronu"></canvas><div><label for="neuron">Pod lupou: <select id="neuron" aria-label="Vybraný skrytý neuron"></select></label><p>Mapa u vybrané kuličky i tento detail ukazují stejné váhy. Každé políčko odpovídá jednomu vstupnímu pixelu. Zelená jeho vliv zesiluje, růžová ho tlumí. Neuron kombinuje celý obrázek.</p><span id="neuron-value" class="mono"></span></div></div>
+        <section class="weight-atlas" aria-labelledby="weights-title">
+          <div class="atlas-heading"><h3 id="weights-title">Celá síť v pixelech</h3><span class="badge">6 384 VAH + 34 BIASŮ</span></div>
+          <div class="weight-strip">
+            <div class="map-block input-map"><span>Vstup → neurony <b>256 × 24</b></span><div class="map-image"><canvas id="weight-map-input" width="256" height="24" tabindex="0" role="slider" aria-valuemin="1" aria-valuemax="6144" aria-valuenow="1" aria-label="Výběr z 6 144 vstupních vah; šipkami vybírej pixel a neuron" aria-describedby="map-help parameter-detail"></canvas><span id="weight-row" aria-hidden="true"></span></div></div>
+            <div class="map-block"><span>Neurony → číslice <b>24 × 10</b></span><canvas id="weight-map-output" width="24" height="10" tabindex="0" role="slider" aria-valuemin="1" aria-valuemax="240" aria-valuenow="1" aria-label="Výběr z 240 výstupních vah; šipkami vybírej spoj" aria-describedby="map-help parameter-detail"></canvas></div>
+            <div class="map-block"><span>Biasy <b>24 + 10</b></span><canvas id="weight-map-bias" width="34" height="1" tabindex="0" role="slider" aria-valuemin="1" aria-valuemax="34" aria-valuenow="1" aria-label="Výběr z 34 biasů; šipkami vybírej hodnotu" aria-describedby="map-help parameter-detail"></canvas></div>
+          </div>
+          <div class="atlas-legend"><span>záporné</span><i></i><span>kladné</span><span id="map-selection">Vybraný neuron: 1</span></div>
+          <p id="map-help" class="caption">Jeden pixel = jedna hodnota. Klikni na řádek a vyber neuron, najeď pro hodnotu. Funguje i dotyk a šipky. Oba režimy používají stejnou barevnou škálu; velmi blízké hodnoty mohou mít stejnou barvu.</p>
+          <p id="parameter-detail" class="parameter-detail"></p>
+        </section>
       </section>
 
       <section class="panel test-panel" aria-labelledby="test-title">
@@ -40,12 +54,13 @@
         <div class="drawing-wrap"><canvas id="draw" width="256" height="256" aria-label="Nakresli číslici myší nebo prstem" aria-describedby="drawing-help"></canvas><span id="draw-hint">Nakresli sem číslici<span>0 1 2 3 4 5 6 7 8 9</span></span></div>
         <div class="drawing-footer"><span id="drawing-help">Zkus číslici. Nebo klidně A.</span><button id="clear" type="button" class="text-button" aria-label="Vymazat kresbu">Vymazat ↺</button></div>
         <div class="result"><div><span class="eyebrow" id="result-source">TIP SÍTĚ · VZOR 0</span><strong id="prediction">—</strong></div><p id="prediction-note">Nejdřív síť nauč,<br>pak vyzkoušej vlastní tahy.</p></div>
+        <p id="precision-difference" class="caption"></p>
         <div id="scores" class="scores" aria-label="Skóre číslic 0 až 9"></div>
         <p class="warning">Síť zná jen číslice. I pro písmeno A vybere jednu z nich. Skóre porovnává deset možností — není zárukou správnosti.</p>
       </section>
 
       <section class="panel learning-panel" aria-labelledby="learning-title">
-        <div class="panel-heading"><div><p class="eyebrow">03 / UČENÍ V ČÍSLECH</p><h2 id="learning-title">Každá chyba něco změní</h2></div><span class="badge" id="sample-loss">Chyba vzoru: —</span></div>
+        <div class="panel-heading"><div><p class="eyebrow">03 / UČENÍ V ČÍSLECH · FP64</p><h2 id="learning-title">Každá chyba něco změní</h2></div><span class="badge" id="sample-loss">Chyba vzoru: —</span></div>
         <div class="metrics"><div><span>Učební kroky</span><b id="steps">0</b></div><div><span>Průchody sadou · limit 100</span><b id="epochs">0</b></div><div><span>Úspěšnost na 50 vzorech</span><b id="accuracy">—</b></div><div><span>Průměrná chyba</span><b id="loss">—</b></div></div>
         <canvas id="history" width="900" height="100" role="img" aria-label="Průběh průměrné chyby na trénovacích vzorech"></canvas>
         <p class="caption">Jeden krok = jeden obrázek a úprava vah podle chyby. Jeden průchod = všech 50 vzorů. Po 100 průchodech se učení samo zastaví. Nový trénink spustíš přes „Začít od nuly“. Nižší chyba je lepší.</p>
@@ -61,6 +76,6 @@
     <footer><span>Malá laboratoř strojového učení</span><span>Skutečné výpočty. Žádné odesílání kreseb.</span></footer>
     <noscript>Tato laboratoř potřebuje JavaScript pro učení sítě a kreslení.</noscript>
   </div>
-  <script type="module" src="/games/neural-ocr/app.js?v=39503d3a3ad4"></script>
+  <script type="module" src="/games/neural-ocr/app.js?v=da5a95fe0099"></script>
 </body>
 </html>

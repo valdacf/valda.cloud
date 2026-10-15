@@ -1,5 +1,8 @@
 import {Network, makeSamples, normalize} from './model.js';
-import {createNetworkView} from './view.js?v=a3e95d5b9628';
+import {createNetworkView} from './view.js?v=cadf9c1e6247';
+
+import {quantizeNetwork} from './precision.js?v=386f723277e3';
+import {createWeightMap} from './weight-map.js?v=0e64bb054b5f';
 
 const $ = id => document.getElementById(id);
 const samples = makeSamples();
@@ -8,9 +11,10 @@ let net = new Network(), steps = 0, running = false, timer = 0;
 let selected = 0, input = samples[0].pixels, target = 0, hasInput = true;
 let history = [], selectedNeuron = 0, lastSlowStep = 0;
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const drawNetwork = createNetworkView($('network'), $('neuron-controls'), h => {
-  selectedNeuron = h; $('neuron').value = h; render();
-});
+function selectNeuron(h) { selectedNeuron = h; render(); }
+const drawNetwork = createNetworkView($('network'), $('neuron-controls'), selectNeuron);
+const drawWeightMap = createWeightMap(selectNeuron);
+let precision = 'fp64', quantized = null, quantizedAt = -1;
 const draw = $('draw'), pen = draw.getContext('2d', {willReadFrequently: true});
 let pointer = null, lastPoint = null, drawFrame = 0;
 const sampleButtons = [], scoreElements = [];
@@ -47,27 +51,29 @@ for (let label = 0; label < 10; label++) {
   score.append(track, digit, value); $('scores').append(score);
   scoreElements.push({score, bar, value});
 }
-for (let h = 0; h < 24; h++) {
-  const option = document.createElement('option'); option.value = h; option.textContent = `Neuron ${h + 1}`;
-  $('neuron').append(option);
-}
-$('neuron').addEventListener('change', () => { selectedNeuron = Number($('neuron').value); render(); });
+$('precision').addEventListener('change', () => {
+  precision = $('precision').value;
+  render();
+});
 
 function chooseSample(index) {
   selected = index; input = samples[index].pixels; target = samples[index].label; hasInput = true;
   $('input-name').textContent = `Vzor: číslice ${target}`;
 }
 
-function renderNetwork(output) {
-  drawNetwork({net, input, output, selectedNeuron, hasInput});
-  pixelsToCanvas($('weights'), net.w1.subarray(selectedNeuron * 256, (selectedNeuron + 1) * 256), true);
-  $('neuron-value').textContent = `Aktivace: ${output.hidden[selectedNeuron].toFixed(3)} · bias: ${net.b1[selectedNeuron].toFixed(3)}`;
-}
-
 function render() {
-  const output = net.forward(input), probabilities = output.probabilities;
+  if (precision === 'fp8' && quantizedAt !== steps) {
+    quantized = quantizeNetwork(net); quantizedAt = steps;
+  }
+  const active = precision === 'fp8' ? quantized : net;
+  const output = active.forward(input), probabilities = output.probabilities;
   const best = probabilities.indexOf(Math.max(...probabilities));
-  renderNetwork(output);
+  drawNetwork({net: active, input, output, selectedNeuron, hasInput});
+  drawWeightMap({original: net, active, selectedNeuron, mode: precision});
+  $('precision-note').textContent = precision === 'fp8' ? 'FP8 E4M3 · zaokrouhlené váhy a biasy, bez škálování. Výpočty zůstávají ve FP64.' : 'FP64 · původní váhy a biasy, bez zaokrouhlení.';
+  const reference = precision === 'fp8' && hasInput ? net.forward(input).probabilities : probabilities;
+  const difference = Math.max(...probabilities.map((p,i) => Math.abs(p-reference[i]))) * 100;
+  $('precision-difference').textContent = !hasInput ? '' : precision === 'fp8' ? `FP8 · největší změna skóre proti FP64: ${difference.toFixed(3)} p. b.` : 'Rozpoznávání s plnou přesností FP64.';
   $('steps').textContent = steps;
   $('epochs').textContent = Math.floor(steps / 50);
   const finished = steps >= MAX_STEPS;
@@ -84,7 +90,7 @@ function render() {
     target === null ? `Nejsilnější skóre: ${Math.round(probabilities[best] * 100)} %. Zkus i jiný rukopis.` :
     `Správně je ${target}. ${best === target ? 'Tentokrát se trefila.' : 'Zatím se netrefila.'} Skóre tipu: ${Math.round(probabilities[best] * 100)} %.`;
   $('sample-loss').textContent = target === null || !hasInput ? 'Vlastní kresba · bez hodnocení' :
-    `Chyba vzoru: ${(-Math.log(Math.max(1e-15, probabilities[target]))).toFixed(3)}`;
+    `Chyba vzoru ${precision.toUpperCase()}: ${(-Math.log(Math.max(1e-15, probabilities[target]))).toFixed(3)}`;
   scoreElements.forEach(({score, bar, value}, i) => {
     score.classList.toggle('winner', hasInput && i === best);
     bar.style.height = `${hasInput ? probabilities[i] * 100 : 0}%`;
@@ -147,7 +153,7 @@ $('train').addEventListener('click', () => {
 });
 $('step').addEventListener('click', () => { flushDrawing(); pause(); learnOne(); render(); });
 $('reset').addEventListener('click', () => {
-  pause(); flushDrawing(); net = new Network(); steps = 0; history = []; metrics(); render();
+  pause(); flushDrawing(); net = new Network(); quantizedAt = -1; steps = 0; history = []; metrics(); render();
 });
 
 function flushDrawing() {

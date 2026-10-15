@@ -1,3 +1,5 @@
+import {weightColor} from './weight-map.js?v=0e64bb054b5f';
+
 const WIDTH = 900, HEIGHT = 570;
 const hiddenPoint = h => ({x: 380 + (h % 4) * 43, y: 155 + Math.floor(h / 4) * 39 - (h % 4) * 14});
 const inputPoint = i => ({x: 43 + (i % 16) * 11.5, y: 174 + Math.floor(i / 16) * 11.5 - (i % 16) * 3.68});
@@ -28,7 +30,8 @@ export function createNetworkView(canvas, controls, onSelect) {
   function pixel(x,y,size,value,signed=false) {
     const color=signed && value<0 ? [236,146,175] : [154,236,195];
     const intensity=signed ? Math.min(1,Math.abs(value)*1.4) : value;
-    const fill=`rgb(${color.map((c,i)=>Math.round([23,38,48][i]+(c-[23,38,48][i])*intensity)).join(',')})`;
+    const rgb=signed ? weightColor(value) : color.map((c,i)=>Math.round([23,38,48][i]+(c-[23,38,48][i])*intensity));
+    const fill=`rgb(${rgb.join(',')})`;
     polygon([{x,y},{x:x+size,y:y-size*.32},{x:x+size,y:y+size*.68},{x,y:y+size}],fill);
   }
   function sphere(x,y,r,value,selected=false) {
@@ -87,6 +90,7 @@ export function createNetworkView(canvas, controls, onSelect) {
     text(`POD LUPOU / NEURON ${selectedNeuron+1}`,291,454,'#d6f8e7',14);
     text('256 vstupních vah',291,479);
     text(`Aktivace ${output.hidden[selectedNeuron].toFixed(3)}`,291,502,'#9aecc3');
+    text(`Bias ${net.b1[selectedNeuron].toFixed(5)}`,291,524,'#9aecc3');
     text('Stejné pixely, jiná váha každého z nich.',291,551,'#9aaeb9',11);
   };
 }
