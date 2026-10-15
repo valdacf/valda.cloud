@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Nauč malou neuronovou síť číst číslice. Sleduj skutečné učení, prozkoumej váhy a vyzkoušej vlastní rukopis.">
+  <title>Neuronová laboratoř — valda.cloud</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23121d2a'/%3E%3Ctext x='8' y='29' font-size='28' fill='%238ae9c0'%3E⑦%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=49b418440e2f">
+  <link rel="stylesheet" href="/games/neural-ocr/style.css?v=b4995279bdc6">
+</head>
+<body>
+  <div class="shell">
+    <nav><a href="/">← valda.cloud</a><span>INTERAKTIVNÍ EXPERIMENT / 01</span><span class="local"><i></i> Všechno běží u tebe</span></nav>
+    <header>
+      <div><p class="eyebrow">MALÁ SÍŤ. VELKÉ AHA.</p><h1>Jak se stroj učí <em>číst.</em></h1><p class="intro">Padesát obrázků. Deset číslic. Žádné hotové znalosti.<br>Nauč neuronovou síť rozpoznávat rukopis a podívej se jí dovnitř.</p></div>
+      <div class="architecture"><b>256 <span>→</span> 24 <span>→</span> 10</b><span>pixely · skryté neurony · číslice</span></div>
+    </header>
+
+    <section class="toolbar" aria-label="Ovládání učení">
+      <div class="actions"><button id="train" class="primary" type="button">Nauč se</button><button id="step" type="button">Jeden krok</button><button id="reset" class="quiet" type="button">Začít od nuly</button></div>
+      <label class="speed">Tempo <select id="speed"><option value="slow">Pomalu · sleduj kroky</option><option value="normal" selected>Plynule</option><option value="fast">Rychle · nauč síť</option></select></label>
+      <span id="status" role="status">Nenatrénováno</span>
+    </section>
+
+    <main>
+      <section class="panel network-panel" aria-labelledby="network-title">
+        <div class="panel-heading"><div><p class="eyebrow">01 / UVNITŘ SÍTĚ</p><h2 id="network-title">Od pixelu k odpovědi</h2></div><span class="badge" id="input-name">Vzor: číslice 0</span></div>
+        <div class="graph-labels"><span>VSTUP <b>16 × 16</b></span><span>SKRYTÁ VRSTVA <b>24</b></span><span>VÝSTUP <b>0–9</b></span></div>
+        <canvas id="network" width="900" height="390" role="img" aria-label="Aktivace 256 vstupních pixelů, 24 skrytých neuronů a skóre deseti číslic"></canvas>
+        <div class="legend"><span><i class="positive"></i> kladná váha</span><span><i class="negative"></i> záporná váha</span><span><i class="activation"></i> jas = aktivace</span></div>
+        <p class="caption">Zobrazený je výběr spojů, počítá se všech 6 384 vah. Spoje už existují; učením se mění jejich síla.</p>
+        <div class="inspector"><canvas id="weights" width="128" height="128" role="img" aria-label="Mapa vstupních vah vybraného skrytého neuronu"></canvas><div><label for="neuron">Pod lupou: <select id="neuron" aria-label="Vybraný skrytý neuron"></select></label><p>Každé políčko je váha jednoho vstupního pixelu. Zelená jeho vliv zesiluje, růžová ho tlumí. Neuron kombinuje celý obrázek.</p><span id="neuron-value" class="mono"></span></div></div>
+      </section>
+
+      <section class="panel test-panel" aria-labelledby="test-title">
+        <div class="panel-heading"><div><p class="eyebrow">02 / ZKUS TO SÁM</p><h2 id="test-title">Co v tom vidí?</h2></div><span class="badge">MYŠ / DOTYK</span></div>
+        <div class="drawing-wrap"><canvas id="draw" width="256" height="256" aria-label="Nakresli číslici myší nebo prstem" aria-describedby="drawing-help"></canvas><span id="draw-hint">Nakresli sem číslici<span>0 1 2 3 4 5 6 7 8 9</span></span></div>
+        <div class="drawing-footer"><span id="drawing-help">Zkus číslici. Nebo klidně A.</span><button id="clear" type="button" class="text-button" aria-label="Vymazat kresbu">Vymazat ↺</button></div>
+        <div class="result"><div><span class="eyebrow" id="result-source">TIP SÍTĚ · VZOR 0</span><strong id="prediction">—</strong></div><p id="prediction-note">Nejdřív síť nauč,<br>pak vyzkoušej vlastní tahy.</p></div>
+        <div id="scores" class="scores" aria-label="Skóre číslic 0 až 9"></div>
+        <p class="warning">Síť zná jen číslice. I pro písmeno A vybere jednu z nich. Skóre porovnává deset možností — není zárukou správnosti.</p>
+      </section>
+
+      <section class="panel learning-panel" aria-labelledby="learning-title">
+        <div class="panel-heading"><div><p class="eyebrow">03 / UČENÍ V ČÍSLECH</p><h2 id="learning-title">Každá chyba něco změní</h2></div><span class="badge" id="sample-loss">Chyba vzoru: —</span></div>
+        <div class="metrics"><div><span>Učební kroky</span><b id="steps">0</b></div><div><span>Průchody sadou · limit 100</span><b id="epochs">0</b></div><div><span>Úspěšnost na 50 vzorech</span><b id="accuracy">—</b></div><div><span>Průměrná chyba</span><b id="loss">—</b></div></div>
+        <canvas id="history" width="900" height="100" role="img" aria-label="Průběh průměrné chyby na trénovacích vzorech"></canvas>
+        <p class="caption">Jeden krok = jeden obrázek a úprava vah podle chyby. Jeden průchod = všech 50 vzorů. Po 100 průchodech se učení samo zastaví. Nový trénink spustíš přes „Začít od nuly“. Nižší chyba je lepší.</p>
+      </section>
+
+      <section class="panel samples-panel" aria-labelledby="samples-title">
+        <div class="panel-heading"><div><p class="eyebrow">04 / UČEBNICE</p><h2 id="samples-title">Deset číslic, pět podob</h2></div><span class="badge">50 VZORŮ</span></div>
+        <p class="sample-intro">Klikni na vzor a prohlédni si jeho cestu sítí. Výběr i kreslení učení pozastaví.</p>
+        <div id="samples" class="samples"></div>
+        <p class="caption">Vzory jsou vytvořené z tahů s různým sklonem, tvarem a tloušťkou. Výsledek na nich není testem neznámého rukopisu.</p>
+      </section>
+    </main>
+    <footer><span>Malá laboratoř strojového učení</span><span>Skutečné výpočty. Žádné odesílání kreseb.</span></footer>
+    <noscript>Tato laboratoř potřebuje JavaScript pro učení sítě a kreslení.</noscript>
+  </div>
+  <script type="module" src="/games/neural-ocr/app.js"></script>
+</body>
+</html>

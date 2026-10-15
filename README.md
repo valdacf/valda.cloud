@@ -8,6 +8,7 @@ Sbírka her, knih a drobných webových experimentů.
 
 | | Hra | Popis |
 |---|---|---|
+| 🧠 | **[Neuronová laboratoř](web/games/neural-ocr.html)** | Výuková neuronová síť pro číslice 0–9. Skutečné učení, vizualizace vah a kreslení myší i prstem. |
 | 🎯 | **[Tank Duel 3D](web/games/tank-duel-3d.html)** | Texturovaný tankový souboj v 3D městě na vlastním WebGL enginu. |
 | 👾 | **[3D Tank Duel — ZX Spectrum](web/games/3d-tank-duel-zx-spectrum.html)** | Vektorová, drátěná pocta osmibitové klasice ze ZX Spectra. |
 | ⚙️ | **[Bobby Bearing](web/games/bobby-bearing.html)** | Izometrický hlavolam — kutálej kuličku po nakloněných plošinách. Pocta The Edge z roku 1986. |
@@ -38,12 +39,31 @@ Přehled všech knih je na [/book/](web/book/).
 ```
 web/
 ├── index.html        rozcestník
-├── games/            hry (každá je jeden HTML soubor)
+├── games/            hry a experimenty (HTML, případně lokální JS/CSS)
 ├── book/             knihy ke stažení
 └── assets/           sdílené CSS a fonty
 ```
 
 CSS se odkazuje s `?v=<prvních 12 znaků sha256>` kvůli cache — po změně CSS hash přepočítej.
+
+## Neuronová laboratoř
+
+Podrobný popis ovládání a modelu: [průvodce laboratoří](docs/guides/neural-ocr.md).
+
+Síť **256 → 24 → 10** zpracovává obrázky **16 × 16 pixelů** a učí se přímo v prohlížeči.
+Učební sada obsahuje **pět variant každé číslice 0–9**, celkem 50 vzorů.
+Graf zobrazuje skutečné aktivace a vybrané spoje; u vybraného neuronu si můžeš prohlédnout mapu všech jeho vstupních vah.
+Tlačítko **Nauč se** spustí učení, **Jeden krok** zpracuje jeden obrázek.
+Po 100 průchodech (5 000 krocích) se učení samo zastaví; testování zůstane dostupné.
+Výběr vzoru nebo kreslení trénink pozastaví. **Začít od nuly** resetuje váhy a statistiky, **Vymazat** jen kresbu.
+Úspěšnost se měří na trénovacích vzorech; nepředstavuje přesnost na neznámém rukopisu.
+Síť porovnává pouze číslice a nerozpozná spolehlivě, že vstup je písmeno.
+Kresby ani model se neodesílají a po obnovení stránky se stav ztratí.
+
+Lokální spuštění: `python3 -m http.server 8765 --directory web`, potom otevři [náhled laboratoře](http://localhost:8765/games/neural-ocr.html).
+Numerické testy bez závislostí: `node --test tests/*.test.mjs` (Node.js 22.18+).
+Testy prohlížeče vyžadují Playwright a Chrome: `node tests/neural-ocr.browser.cjs` při běžícím serveru na portu 8765.
+Pokud Playwright není v lokálním `node_modules`, nastav `PLAYWRIGHT_PATH` na jeho adresář.
 
 ## Licence
 
