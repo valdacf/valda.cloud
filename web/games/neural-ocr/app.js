@@ -1,4 +1,5 @@
 import {Network, makeSamples, normalize} from './model.js';
+import {createNetworkView} from './view.js?v=a3e95d5b9628';
 
 const $ = id => document.getElementById(id);
 const samples = makeSamples();
@@ -7,7 +8,9 @@ let net = new Network(), steps = 0, running = false, timer = 0;
 let selected = 0, input = samples[0].pixels, target = 0, hasInput = true;
 let history = [], selectedNeuron = 0, lastSlowStep = 0;
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const graph = $('network').getContext('2d');
+const drawNetwork = createNetworkView($('network'), $('neuron-controls'), h => {
+  selectedNeuron = h; $('neuron').value = h; render();
+});
 const draw = $('draw'), pen = draw.getContext('2d', {willReadFrequently: true});
 let pointer = null, lastPoint = null, drawFrame = 0;
 const sampleButtons = [], scoreElements = [];
@@ -55,50 +58,8 @@ function chooseSample(index) {
   $('input-name').textContent = `Vzor: číslice ${target}`;
 }
 
-function line(ax, ay, bx, by, weight, activity, emphasize = false) {
-  const alpha = Math.min(.75, .04 + Math.abs(weight) * .18 + activity * .1);
-  graph.strokeStyle = weight >= 0 ? `rgba(154,236,195,${alpha})` : `rgba(236,146,175,${alpha})`;
-  graph.lineWidth = emphasize ? 1 + Math.min(2, Math.abs(weight)) : .45 + Math.min(1.5, Math.abs(weight) * .7);
-  graph.beginPath(); graph.moveTo(ax, ay); graph.lineTo(bx, by); graph.stroke();
-}
-
 function renderNetwork(output) {
-  graph.clearRect(0, 0, 900, 390);
-  const hiddenPoint = h => ({x: 450 + (h % 2) * 65, y: 28 + Math.floor(h / 2) * 30});
-  const inputPoint = i => ({x: 20 + (i % 16) * 13, y: 88 + Math.floor(i / 16) * 13});
-  for (let h = 0; h < 24; h++) {
-    const end = hiddenPoint(h);
-    for (let k = 0; k < 5; k++) {
-      const i = (h * 31 + k * 53) % 256, start = inputPoint(i);
-      line(start.x + 6, start.y + 6, end.x, end.y, net.w1[h * 256 + i], input[i], h === selectedNeuron);
-    }
-    for (let o = 0; o < 10; o++) {
-      if (h !== selectedNeuron && h % 3 !== 0) continue;
-      line(end.x, end.y, 810, 33 + o * 36, net.w2[o * 24 + h], output.hidden[h], h === selectedNeuron);
-    }
-  }
-  for (let i = 0; i < 256; i++) {
-    const p = inputPoint(i), v = input[i];
-    graph.fillStyle = `rgb(${28 + v * 126},${43 + v * 193},${53 + v * 142})`;
-    graph.fillRect(p.x, p.y, 11, 11);
-  }
-  for (let h = 0; h < 24; h++) {
-    const p = hiddenPoint(h), v = output.hidden[h];
-    graph.beginPath(); graph.arc(p.x, p.y, 10, 0, Math.PI * 2);
-    graph.fillStyle = `rgb(${26 + v * 128},${49 + v * 187},${49 + v * 146})`; graph.fill();
-    graph.strokeStyle = h === selectedNeuron ? '#f2f8ef' : '#597d73';
-    graph.lineWidth = h === selectedNeuron ? 2 : 1; graph.stroke();
-  }
-  graph.font = '14px monospace'; graph.textAlign = 'center'; graph.textBaseline = 'middle';
-  for (let o = 0; o < 10; o++) {
-    const p = hasInput ? output.probabilities[o] : 0, y = 33 + o * 36;
-    graph.beginPath(); graph.arc(810, y, 14, 0, Math.PI * 2);
-    graph.fillStyle = `rgb(${25 + p * 129},${45 + p * 191},${48 + p * 147})`; graph.fill();
-    graph.strokeStyle = '#55766b'; graph.lineWidth = 1; graph.stroke();
-    graph.fillStyle = p > .5 ? '#123629' : '#d2e4dd'; graph.fillText(o, 810, y);
-    graph.fillStyle = '#a6babf'; graph.textAlign = 'left';
-    graph.fillText(hasInput ? `${Math.round(p * 100)}%` : '—', 838, y); graph.textAlign = 'center';
-  }
+  drawNetwork({net, input, output, selectedNeuron, hasInput});
   pixelsToCanvas($('weights'), net.w1.subarray(selectedNeuron * 256, (selectedNeuron + 1) * 256), true);
   $('neuron-value').textContent = `Aktivace: ${output.hidden[selectedNeuron].toFixed(3)} · bias: ${net.b1[selectedNeuron].toFixed(3)}`;
 }

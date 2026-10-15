@@ -9,7 +9,8 @@ Open `/games/neural-ocr.html` through an HTTP server. ES modules require HTTP in
 3. Select a sample to inspect its current prediction. Sample selection pauses training.
 4. Draw with a mouse or finger to test another shape. Drawing pauses training and preserves learned weights.
 5. Select **Vymazat** to clear the drawing. Select **Začít od nuly** to reset the network and statistics.
-6. Select a hidden neuron to inspect all its input weights.
+6. Select a sphere in the hidden layer to inspect all its input weights. You can also use the neuron dropdown.
+7. On narrow screens, scroll the network horizontally. Keyboard users can focus each neuron button and press Enter.
 
 Training stops automatically after 100 passes (5,000 examples). Drawing and sample inspection remain available.
 Select **Začít od nuly** to train again.
@@ -24,6 +25,9 @@ Gradient descent updates both layers and their biases after each example. The le
 The deterministic dataset contains five stroke variants for each digit. Both samples and drawings use the same aspect-preserving normalization.
 The input fits into a centered 12 × 12 region inside a 16 × 16 raster.
 
+The fixed isometric view separates the input, hidden, and output layers into angled plates.
+The selected sphere connects to a map with the same 256 weights as the flat inspector below.
+Spatial positions illustrate the layers; they do not add dimensions to the model.
 Connection color shows weight sign. Thickness shows magnitude. Neuron brightness shows activation.
 The graph draws selected connections from the 6,384 weights. The selected neuron's map shows all 256 input weights.
 Displayed prediction and sample loss come from the current model after any update.
@@ -38,6 +42,7 @@ A blank drawing produces no prediction. An untrained network explicitly labels i
 Run `python3 -m http.server 8765 --directory web` from the repository root.
 Run `node --test tests/*.test.mjs` with Node.js 22.18 or newer.
 Run `node tests/neural-ocr.browser.cjs` with Playwright and Chrome installed while the server runs.
+Run `node tests/neural-ocr-view.browser.cjs` to check direct selection, dropdown synchronization, keyboard input, and mobile layout.
 Run `node tests/neural-ocr-pause.browser.cjs` to check mouse, keyboard, and touch pause behavior in Chromium and WebKit.
 Install the Playwright WebKit browser for that check. Use `OCR_BASE_URL` to test a deployed site.
 Set `PLAYWRIGHT_PATH` to the Playwright package directory if Node cannot resolve it locally.

@@ -7,7 +7,7 @@
   <title>Neuronová laboratoř — valda.cloud</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23121d2a'/%3E%3Ctext x='8' y='29' font-size='28' fill='%238ae9c0'%3E⑦%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="/assets/css/fonts.css?v=49b418440e2f">
-  <link rel="stylesheet" href="/games/neural-ocr/style.css?v=b4995279bdc6">
+  <link rel="stylesheet" href="/games/neural-ocr/style.css?v=1d9dce26779c">
 </head>
 <body>
   <div class="shell">
@@ -26,11 +26,13 @@
     <main>
       <section class="panel network-panel" aria-labelledby="network-title">
         <div class="panel-heading"><div><p class="eyebrow">01 / UVNITŘ SÍTĚ</p><h2 id="network-title">Od pixelu k odpovědi</h2></div><span class="badge" id="input-name">Vzor: číslice 0</span></div>
-        <div class="graph-labels"><span>VSTUP <b>16 × 16</b></span><span>SKRYTÁ VRSTVA <b>24</b></span><span>VÝSTUP <b>0–9</b></span></div>
-        <canvas id="network" width="900" height="390" role="img" aria-label="Aktivace 256 vstupních pixelů, 24 skrytých neuronů a skóre deseti číslic"></canvas>
+        <div class="network-scroll" tabindex="0" role="region" aria-label="Izometrická síť; na úzké obrazovce posuň do stran">
+          <div class="network-scene"><canvas id="network" width="900" height="570" role="img" aria-label="Izometrické vrstvy sítě a mapa vah propojená s vybraným neuronem"></canvas><div id="neuron-controls" role="group" aria-label="Vyber neuron k prozkoumání"></div></div>
+        </div>
+        <p class="network-help">Klikni na kuličku: lupa ukáže jejích 256 vstupních vah. Na mobilu posuň síť do stran.</p>
         <div class="legend"><span><i class="positive"></i> kladná váha</span><span><i class="negative"></i> záporná váha</span><span><i class="activation"></i> jas = aktivace</span></div>
         <p class="caption">Zobrazený je výběr spojů, počítá se všech 6 384 vah. Spoje už existují; učením se mění jejich síla.</p>
-        <div class="inspector"><canvas id="weights" width="128" height="128" role="img" aria-label="Mapa vstupních vah vybraného skrytého neuronu"></canvas><div><label for="neuron">Pod lupou: <select id="neuron" aria-label="Vybraný skrytý neuron"></select></label><p>Každé políčko je váha jednoho vstupního pixelu. Zelená jeho vliv zesiluje, růžová ho tlumí. Neuron kombinuje celý obrázek.</p><span id="neuron-value" class="mono"></span></div></div>
+        <div class="inspector"><canvas id="weights" width="128" height="128" role="img" aria-label="Mapa vstupních vah vybraného skrytého neuronu"></canvas><div><label for="neuron">Pod lupou: <select id="neuron" aria-label="Vybraný skrytý neuron"></select></label><p>Mapa u vybrané kuličky i tento detail ukazují stejné váhy. Každé políčko odpovídá jednomu vstupnímu pixelu. Zelená jeho vliv zesiluje, růžová ho tlumí. Neuron kombinuje celý obrázek.</p><span id="neuron-value" class="mono"></span></div></div>
       </section>
 
       <section class="panel test-panel" aria-labelledby="test-title">
@@ -59,6 +61,6 @@
     <footer><span>Malá laboratoř strojového učení</span><span>Skutečné výpočty. Žádné odesílání kreseb.</span></footer>
     <noscript>Tato laboratoř potřebuje JavaScript pro učení sítě a kreslení.</noscript>
   </div>
-  <script type="module" src="/games/neural-ocr/app.js?v=33b95539be7a"></script>
+  <script type="module" src="/games/neural-ocr/app.js?v=39503d3a3ad4"></script>
 </body>
 </html>
