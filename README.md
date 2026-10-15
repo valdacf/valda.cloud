@@ -63,6 +63,7 @@ Kresby ani model se neodesílají a po obnovení stránky se stav ztratí.
 Lokální spuštění: `python3 -m http.server 8765 --directory web`, potom otevři [náhled laboratoře](http://localhost:8765/games/neural-ocr.html).
 Numerické testy bez závislostí: `node --test tests/*.test.mjs` (Node.js 22.18+).
 Testy prohlížeče vyžadují Playwright a Chrome: `node tests/neural-ocr.browser.cjs` při běžícím serveru na portu 8765.
+Regresní test pauzy v Chromu a WebKitu (engine Safari): `node tests/neural-ocr-pause.browser.cjs`. Vyžaduje také WebKit z Playwright (`npx playwright install webkit`).
 Pokud Playwright není v lokálním `node_modules`, nastav `PLAYWRIGHT_PATH` na jeho adresář.
 
 ## Licence

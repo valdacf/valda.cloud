@@ -38,6 +38,8 @@ A blank drawing produces no prediction. An untrained network explicitly labels i
 Run `python3 -m http.server 8765 --directory web` from the repository root.
 Run `node --test tests/*.test.mjs` with Node.js 22.18 or newer.
 Run `node tests/neural-ocr.browser.cjs` with Playwright and Chrome installed while the server runs.
+Run `node tests/neural-ocr-pause.browser.cjs` to check mouse, keyboard, and touch pause behavior in Chromium and WebKit.
+Install the Playwright WebKit browser for that check. Use `OCR_BASE_URL` to test a deployed site.
 Set `PLAYWRIGHT_PATH` to the Playwright package directory if Node cannot resolve it locally.
 Browser checks save desktop and mobile screenshots under `/tmp/`.
 

@@ -111,7 +111,9 @@ function render() {
   $('epochs').textContent = Math.floor(steps / 50);
   const finished = steps >= MAX_STEPS;
   $('status').textContent = finished ? 'Dokončeno · 100 průchodů' : running ? 'Síť se učí…' : steps ? 'Pozastaveno' : 'Nenatrénováno';
-  $('train').textContent = finished ? 'Naučeno' : running ? 'Pozastavit' : 'Nauč se';
+  const trainLabel = finished ? 'Naučeno' : running ? 'Pozastavit' : 'Nauč se';
+  // WebKit can drop a click if its text node changes between pointer down and up.
+  if ($('train').textContent !== trainLabel) $('train').textContent = trainLabel;
   $('train').disabled = finished;
   $('step').disabled = running || finished;
   $('result-source').textContent = target === null ? 'TIP SÍTĚ · TVOJE KRESBA' : `TIP SÍTĚ · VZOR ${target}`;
