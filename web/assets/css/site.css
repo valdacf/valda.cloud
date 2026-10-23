@@ -59,3 +59,11 @@ footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--li
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+.site-nav .nav-contact { color: var(--accent); font-weight: 650; }
+@media (max-width: 800px) {
+  .site-nav, .site-nav > div { flex-wrap: wrap; }
+}
+@media (max-width: 600px) {
+  .site-nav > div { column-gap: 1.2rem; row-gap: .8rem; font-size: .8rem; }
+}

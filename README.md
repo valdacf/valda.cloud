@@ -1,8 +1,19 @@
 # valda.cloud
 
-Sbírka her, knih a drobných webových experimentů.
+Osobní web Valdemara Závadského: AI, software, cloud a konkrétní projektové zkušenosti. Kniha, hry a experimenty doplňují profesní část.
 
 🌐 Živě na **[valda.cloud](https://valda.cloud)**
+
+## Osobní web
+
+Úvod představuje oblasti práce, AI//BRO, vybrané realizace, profesní příběh a kontakt.
+[Projekty](web/projekty/) obsahují sedm případových studií. [Katalog her](web/games/) zachovává odkazy na všechny hry.
+
+Vzhled používá původní barvy a lokální fonty Sora a Inter. Nové stránky rozšiřuje `web/assets/css/portfolio.css`; portrét je v `web/assets/images/`.
+
+Albert má vlastní sekci na úvodu a [případovou studii s patentem](web/projekty/albert/).
+
+Sekce Open source představuje [Reviewer](https://github.com/cloudfieldcz/reviewer) a [Shieldoo Gate](https://github.com/cloudfieldcz/shieldoo-gate), včetně odkazů na veřejný kód.
 
 ## Hry
 
@@ -38,11 +49,21 @@ Přehled všech knih je na [/book/](web/book/).
 
 ```
 web/
-├── index.html        rozcestník
+├── index.html        osobní homepage
+├── projekty/         přehled a případové studie
 ├── games/            hry a experimenty (HTML, případně lokální JS/CSS)
 ├── book/             knihy ke stažení
 └── assets/           sdílené CSS a fonty
 ```
+
+### Sdílená navigace
+
+Menu všech prezentačních stránek upravuj pouze v `templates/navigation.html`.
+Z kořene repozitáře spusť `node scripts/sync-navigation.mjs` a ulož také změněné HTML soubory.
+Skript aktualizuje prvky `nav.site-nav`; samostatné herní ovládání a ostatní navigace zachová.
+Před nasazením spusť `node scripts/sync-navigation.mjs --check` nebo `node --test tests/*.test.mjs`.
+Kontrola skončí chybou, pokud se menu některé stránky liší od šablony.
+Nahrávej jako dosud složku `web/`; návštěvník nepotřebuje JavaScript pro zobrazení menu.
 
 CSS se odkazuje s `?v=<prvních 12 znaků sha256>` kvůli cache — po změně CSS hash přepočítej.
 

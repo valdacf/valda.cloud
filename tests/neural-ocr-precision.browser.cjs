@@ -12,6 +12,19 @@ const {chromium,webkit} = require(process.env.PLAYWRIGHT_PATH || 'playwright');
    const original=await page.locator('#scores').innerText();
    const image=()=>page.locator('#weight-map-input').evaluate(c=>c.toDataURL());
    const originalMap=await image();
+   const maps=()=>page.locator('.map-block canvas').evaluateAll(cs=>cs.map(c=>c.toDataURL()));
+   const originalMaps=await maps();
+   const assertSelection=async neuron=>{
+    for(const [id,count] of [['weight-column',24],['weight-bias-selection',34]]) {
+     const marker=page.locator('#'+id);
+     assert.equal(await marker.count(),1,`${id} must mark the selected neuron`);
+     const box=await marker.boundingBox();
+     const parent=await marker.locator('..').boundingBox();
+     assert.ok(Math.abs(box.x-parent.x-parent.width*neuron/count)<1,`${id} must follow neuron ${neuron+1}`);
+     assert.ok(box.width>0 && box.height>0,`${id} must be visible`);
+    }
+   };
+   await assertSelection(0);
    await page.locator('#precision').selectOption('fp8');
    assert.match(await page.locator('#precision-note').textContent(),/FP8/);
    assert.notEqual(await image(),originalMap);
@@ -26,12 +39,15 @@ const {chromium,webkit} = require(process.env.PLAYWRIGHT_PATH || 'playwright');
    await page.mouse.click(box.x+box.width*.4,box.y+box.height*(17.5/24));
    assert.equal(await page.getByRole('button',{name:'Prozkoumat neuron 18',exact:true}).getAttribute('aria-pressed'),'true');
    assert.match(await page.locator('#parameter-detail').textContent(),/Neuron 18/);
+   await assertSelection(17);
    await map.focus(); await page.keyboard.press('ArrowDown');
    assert.equal(await page.getByRole('button',{name:'Prozkoumat neuron 19',exact:true}).getAttribute('aria-pressed'),'true');
+   await assertSelection(18);
    await page.locator('#precision').selectOption('fp8');
    const beforeTrain=await image();
    await page.locator('#step').click();
    assert.notEqual(await image(),beforeTrain);
+   (await maps()).forEach((value,i)=>assert.notEqual(value,originalMaps[i],`map ${i} must redraw after training`));
    await page.locator('#train').click(); await page.waitForTimeout(200);
    await page.locator('#precision').selectOption('fp64');
    assert.equal(await page.locator('#train').textContent(),'Pozastavit');
