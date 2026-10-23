@@ -1,6 +1,85 @@
-<!DOCTYPE html>
-<html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Photorobot — Od zařízení po aplikaci | Valdemar Závadský</title><meta name="description" content="Software fotografických strojů: real-time Linux, řízení zařízení, aplikace a cloudový ekosystém.">
-<link rel="canonical" href="https://valda.cloud/projekty/photorobot/"><meta property="og:title" content="Photorobot — Od zařízení po aplikaci | Valdemar Závadský"><meta property="og:description" content="Software fotografických strojů: real-time Linux, řízení zařízení, aplikace a cloudový ekosystém."><meta property="og:type" content="website"><meta property="og:url" content="https://valda.cloud/projekty/photorobot/"><meta property="og:image" content="https://valda.cloud/assets/images/valdemar-zavadsky.png"><meta property="og:image:alt" content="Valdemar Závadský">
-<link rel="stylesheet" href="/assets/css/fonts.css?v=49b418440e2f"><link rel="stylesheet" href="/assets/css/site.css?v=d4d45740de76"><link rel="stylesheet" href="/assets/css/home.css?v=00f16b59c2ad"><link rel="stylesheet" href="/assets/css/portfolio.css?v=ee38c74f86a2">
-</head><body class="portfolio"><a class="skip-link" href="#content">Přeskočit na obsah</a><div class="wrap"><nav class="site-nav" aria-label="Hlavní navigace"><a class="wordmark" href="/">valda<span>.</span>cloud</a><div><a href="/#co-delam">Co dělám</a><a href="/projekty/">Projekty</a><a href="/book/za-dva-dny-to-nahodime/">Kniha</a><a class="nav-contact" href="/#kontakt">Kontakt <span aria-hidden="true">↗</span></a></div></nav><main id="content"><nav class="crumbs" aria-label="Drobečková navigace"><a href="/">valda.cloud</a><span aria-hidden="true">/</span><a href="/projekty/">projekty</a><span aria-hidden="true">/</span><span aria-current="page">Photorobot</span></nav><header class="detail-header"><p class="eyebrow">EMBEDDED · LINUX · STROJE</p><h1>Photorobot<span class="dot">.</span></h1><p class="detail-subtitle">Od zařízení po aplikaci</p><p class="role-label">Moje role: architektura a vedení vývoje.</p></header><article class="project-prose"><p><strong>Kontext:</strong> Architektura a technické vedení softwaru fotografických strojů Photorobot.</p><p>U stroje musí sedět několik věcí najednou: řízení zařízení, komunikace, aplikace pro obsluhu a případně cloudové služby. Právě tuhle kombinaci jsem řešil u Photorobotu.</p><p>Embedded část využívala Linux s real-time rozšířením Xenomai, platformy jako BeagleBone a vývoj v C/C++. Na ni navazovaly aplikace a cloudový ekosystém v Azure.</p><p><strong>Moje role:</strong></p><ul><li>Architektura celého řešení a technická strategie.</li><li>Vedení softwarového vývoje.</li><li>HW design zařízení a návaznost na software.</li><li>Návrh aplikačních a cloudových částí ekosystému.</li></ul><p>Je to zkušenost, kterou používám u zadání, kde software komunikuje s fyzickým světem. Chyba se tam může projevit v zařízení, v komunikaci i v aplikaci, takže je užitečné rozumět celé cestě.</p><p><strong>Technologie:</strong> embedded Linux, Xenomai, ARM, C/C++, Qt, Azure, .NET.</p></article><section class="detail-contact"><h2>Řešíte něco podobného?</h2><p>Napište mi, co potřebujete propojit, postavit nebo technicky projít.</p><a class="btn" href="mailto:valda@valda.cloud">Napsat Valdovi ↗</a></section><nav class="project-pagination" aria-label="Další projekty"><a href="/projekty/">← Všechny projekty</a><a href="/projekty/platebni-systemy/">Další: Platební systémy →</a></nav></main><footer class="portfolio-footer"><span>© 2026 Valdemar Závadský · valda.cloud</span><div><a href="mailto:valda@valda.cloud">Napište mi</a><a href="https://www.linkedin.com/in/valdemarzavadsky/">LinkedIn ↗</a><a href="https://github.com/valdacf">GitHub ↗</a><a href="/games/">Pro radost</a><a href="https://github.com/valdacf/valda.cloud">Zdrojový kód webu ↗</a></div></footer></div></body></html>
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Photorobot — Od zařízení po aplikaci | Valdemar Závadský</title>
+    <meta
+      name="description"
+      content="Software fotografických strojů: real-time Linux, řízení zařízení, aplikace a cloudový ekosystém."
+    />
+    <link rel="canonical" href="https://valda.cloud/projekty/photorobot/" />
+    <meta property="og:title" content="Photorobot — Od zařízení po aplikaci | Valdemar Závadský" />
+    <meta
+      property="og:description"
+      content="Software fotografických strojů: real-time Linux, řízení zařízení, aplikace a cloudový ekosystém."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://valda.cloud/projekty/photorobot/" />
+    <meta property="og:image" content="https://valda.cloud/assets/images/valdemar-zavadsky.png" />
+    <meta property="og:image:alt" content="Valdemar Závadský" />
+    <link rel="stylesheet" href="/assets/css/fonts.css?v=49b418440e2f" />
+    <link rel="stylesheet" href="/assets/css/site.css?v=d4d45740de76" />
+    <link rel="stylesheet" href="/assets/css/home.css?v=00f16b59c2ad" />
+    <link rel="stylesheet" href="/assets/css/portfolio.css?v=ee38c74f86a2" />
+  </head>
+  <body class="portfolio">
+    <a class="skip-link" href="#content">Přeskočit na obsah</a>
+    <div class="wrap">
+      <!-- prettier-ignore -->
+      <nav class="site-nav" aria-label="Hlavní navigace"><a class="wordmark" href="/">valda<span>.</span>cloud</a><div><a href="/#co-delam">Co dělám</a><a href="/projekty/">Projekty</a><a href="/book/za-dva-dny-to-nahodime/">Kniha</a><a class="nav-contact" href="/#kontakt">Kontakt <span aria-hidden="true">↗</span></a></div></nav>
+      <main id="content">
+        <nav class="crumbs" aria-label="Drobečková navigace">
+          <a href="/">valda.cloud</a><span aria-hidden="true">/</span><a href="/projekty/">projekty</a
+          ><span aria-hidden="true">/</span><span aria-current="page">Photorobot</span>
+        </nav>
+        <header class="detail-header">
+          <p class="eyebrow">EMBEDDED · LINUX · STROJE</p>
+          <h1>Photorobot<span class="dot">.</span></h1>
+          <p class="detail-subtitle">Od zařízení po aplikaci</p>
+          <p class="role-label">Moje role: architektura a vedení vývoje.</p>
+        </header>
+        <article class="project-prose">
+          <p><strong>Kontext:</strong> Architektura a technické vedení softwaru fotografických strojů Photorobot.</p>
+          <p>
+            U stroje musí sedět několik věcí najednou: řízení zařízení, komunikace, aplikace pro obsluhu a případně
+            cloudové služby. Právě tuhle kombinaci jsem řešil u Photorobotu.
+          </p>
+          <p>
+            Embedded část využívala Linux s real-time rozšířením Xenomai, platformy jako BeagleBone a vývoj v C/C++. Na
+            ni navazovaly aplikace a cloudový ekosystém v Azure.
+          </p>
+          <p><strong>Moje role:</strong></p>
+          <ul>
+            <li>Architektura celého řešení a technická strategie.</li>
+            <li>Vedení softwarového vývoje.</li>
+            <li>HW design zařízení a návaznost na software.</li>
+            <li>Návrh aplikačních a cloudových částí ekosystému.</li>
+          </ul>
+          <p>
+            Je to zkušenost, kterou používám u zadání, kde software komunikuje s fyzickým světem. Chyba se tam může
+            projevit v zařízení, v komunikaci i v aplikaci, takže je užitečné rozumět celé cestě.
+          </p>
+          <p><strong>Technologie:</strong> embedded Linux, Xenomai, ARM, C/C++, Qt, Azure, .NET.</p>
+        </article>
+        <section class="detail-contact">
+          <h2>Řešíte něco podobného?</h2>
+          <p>Napište mi, co potřebujete propojit, postavit nebo technicky projít.</p>
+          <a class="btn" href="mailto:valda@valda.cloud">Napsat Valdovi ↗</a>
+        </section>
+        <nav class="project-pagination" aria-label="Další projekty">
+          <a href="/projekty/">← Všechny projekty</a><a href="/projekty/platebni-systemy/">Další: Platební systémy →</a>
+        </nav>
+      </main>
+      <footer class="portfolio-footer">
+        <span>© 2026 Valdemar Závadský · valda.cloud</span>
+        <div>
+          <a href="mailto:valda@valda.cloud">Napište mi</a
+          ><a href="https://www.linkedin.com/in/valdemarzavadsky/">LinkedIn ↗</a
+          ><a href="https://github.com/valdacf">GitHub ↗</a><a href="/games/">Pro radost</a
+          ><a href="https://github.com/valdacf/valda.cloud">Zdrojový kód webu ↗</a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

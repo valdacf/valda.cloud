@@ -1,6 +1,138 @@
-<!DOCTYPE html>
-<html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Albert — platební tablet a bezpečné zadávání PINu | Valdemar Závadský</title><meta name="description" content="Albert pro Commonwealth Bank of Australia. Vedení vývoje softwarové platformy a spoluautorství patentu Trusted terminal platform.">
-<link rel="canonical" href="https://valda.cloud/projekty/albert/"><meta property="og:title" content="Albert — platební tablet a bezpečné zadávání PINu | Valdemar Závadský"><meta property="og:description" content="Albert pro Commonwealth Bank of Australia. Vedení vývoje softwarové platformy a spoluautorství patentu Trusted terminal platform."><meta property="og:type" content="website"><meta property="og:url" content="https://valda.cloud/projekty/albert/"><meta property="og:image" content="https://valda.cloud/assets/images/valdemar-zavadsky.png"><meta property="og:image:alt" content="Valdemar Závadský">
-<link rel="stylesheet" href="/assets/css/fonts.css?v=49b418440e2f"><link rel="stylesheet" href="/assets/css/site.css?v=d4d45740de76"><link rel="stylesheet" href="/assets/css/home.css?v=00f16b59c2ad"><link rel="stylesheet" href="/assets/css/portfolio.css?v=ee38c74f86a2">
-</head><body class="portfolio"><a class="skip-link" href="#content">Přeskočit na obsah</a><div class="wrap"><nav class="site-nav" aria-label="Hlavní navigace"><a class="wordmark" href="/">valda<span>.</span>cloud</a><div><a href="/#co-delam">Co dělám</a><a href="/projekty/">Projekty</a><a href="/book/za-dva-dny-to-nahodime/">Kniha</a><a class="nav-contact" href="/#kontakt">Kontakt <span aria-hidden="true">↗</span></a></div></nav><main id="content"><nav class="crumbs" aria-label="Drobečková navigace"><a href="/">valda.cloud</a><span aria-hidden="true">/</span><a href="/projekty/">projekty</a><span aria-hidden="true">/</span><span aria-current="page">Albert</span></nav><header class="detail-header"><p class="eyebrow">Wincor Nixdorf · 2012–2015</p><h1>Albert<span class="dot">.</span></h1><p class="detail-subtitle">Platební tablet od Androidu po bezpečné zadávání PINu</p><p class="role-label">Moje role: vedení vývoje SW platformy, architektura a konzultace softwarové bezpečnosti.</p></header><article class="project-prose"><p class="detail-context">Commonwealth Bank of Australia · Wincor Nixdorf · softwarová platforma platebního zařízení</p><p>Albert spojoval platební terminál s tabletem, na kterém mohly běžet další aplikace pro obchodníky. Commonwealth Bank ho uvedla na trh 31. března 2015. Zařízení vzniklo ve spolupráci banky, Wincor Nixdorf a IDEO. <a href="https://www.commbank.com.au/about-us/news/media-releases/2015/commonwealth-bank-set-to-disrupt-the-payments-space.html">Původní oznámení Commonwealth Bank ↗</a></p><h2>Co jsem měl na starosti</h2><p>Ve Wincor Nixdorf jsem vedl vývojový proud softwarové platformy: architekturu a tým, který připravoval systém pro platební zařízení. V bezpečnostním proudu jsem působil jako konzultant softwarové bezpečnosti. Byl jsem také členem řídícího výboru a rady pro vývoj produktů.</p><ul><li>Přizpůsobení Androidu, linuxového jádra, Dalviku a systémových utilit požadavkům platebního prostředí.</li><li>Ovladače čteček karet, tiskárny a bezpečnostního modulu.</li><li>Platební SDK pro přístup k EMV, NFC, čtečkám a bezpečnostním funkcím.</li><li>Příprava platformového softwaru pro certifikaci PCI PTS.</li></ul><p>Tohle byl rozsah práce našeho platformového týmu. Hardware, aplikace, bezpečnost a certifikace měly vlastní týmy. Na vývoji se podíleli také externí dodavatelé.</p><h2>Proč nestačil běžný Android</h2><p>Tablet měl obsluhovat aplikace obchodníka a současně bezpečně přijímat karetní platby. Museli jsme řešit úpravy systému, kontrolu spouštěného softwaru i komunikaci s hardwarem. Zvlášť důležité bylo zadávání PINu na dotykovém displeji.</p><section id="patent"><h2>Patent: Trusted terminal platform</h2><p>Na patentu jsem uvedený jako vynálezce společně s Michaelem Noltem. Přihlášku podala společnost Wincor Nixdorf International GmbH.</p><p>Mezi dotykovou vrstvou displeje a hlavním procesorem je bezpečnostní modul. Při běžném ovládání předává dotykové souřadnice systému. Při zadávání PINu je systému nepředává: vstup zpracuje sám a PIN zašifruje. Android tak pro zadání PINu nepotřebuje dostat jeho jednotlivé číslice.</p><p>Patentová rodina má prioritu 5. března 2013. V knize uvádím evropský patent <strong>EP 2 775 421 B1</strong> a americký <strong>US 11,088,840 B2</strong>.</p><p><a class="text-link" href="https://patents.google.com/patent/EP2775421B1/en">Patent, vynálezci a související dokumenty ↗</a></p></section><h2>Albert v knize</h2><p>V knize <em>Za dva dny to nahodíme</em> se k tomuhle projektu vracím přes odhady a předpoklady, které nevyšly. Počítali jsme s hotovým operačním systémem. Nakonec bylo potřeba podstatnou část řešení přestavět. A zadávání PINu, které původně vypadalo jako hotová součást, skončilo vlastním návrhem a patentem.</p><p>Návrh vznikal u nás, na implementaci bezpečnostních úprav jsme spolupracovali se specializovaným dodavatelem. Právě rozdělení odpovědnosti a ověřování předpokladů je pro mě na tom příběhu důležité.</p><p><a href="/book/za-dva-dny-to-nahodime/">O knize a stažení zdarma →</a></p><h2>Technický přehled</h2><p>Android, Linux, Dalvik, C/C++, ovladače zařízení, EMV a NFC, platební SDK, bezpečnostní modul a PCI PTS.</p></article><section class="detail-contact"><h2>Řešíte něco podobného?</h2><p>Napište mi, co potřebujete propojit, postavit nebo technicky projít.</p><a class="btn" href="mailto:valda@valda.cloud">Napsat Valdovi ↗</a></section><nav class="project-pagination" aria-label="Další projekty"><a href="/projekty/">← Všechny projekty</a><a href="/projekty/platebni-systemy/">Další: Platební systémy →</a></nav></main><footer class="portfolio-footer"><span>© 2026 Valdemar Závadský · valda.cloud</span><div><a href="mailto:valda@valda.cloud">Napište mi</a><a href="https://www.linkedin.com/in/valdemarzavadsky/">LinkedIn ↗</a><a href="https://github.com/valdacf">GitHub ↗</a><a href="/games/">Pro radost</a><a href="https://github.com/valdacf/valda.cloud">Zdrojový kód webu ↗</a></div></footer></div></body></html>
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Albert — platební tablet a bezpečné zadávání PINu | Valdemar Závadský</title>
+    <meta
+      name="description"
+      content="Albert pro Commonwealth Bank of Australia. Vedení vývoje softwarové platformy a spoluautorství patentu Trusted terminal platform."
+    />
+    <link rel="canonical" href="https://valda.cloud/projekty/albert/" />
+    <meta property="og:title" content="Albert — platební tablet a bezpečné zadávání PINu | Valdemar Závadský" />
+    <meta
+      property="og:description"
+      content="Albert pro Commonwealth Bank of Australia. Vedení vývoje softwarové platformy a spoluautorství patentu Trusted terminal platform."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://valda.cloud/projekty/albert/" />
+    <meta property="og:image" content="https://valda.cloud/assets/images/valdemar-zavadsky.png" />
+    <meta property="og:image:alt" content="Valdemar Závadský" />
+    <link rel="stylesheet" href="/assets/css/fonts.css?v=49b418440e2f" />
+    <link rel="stylesheet" href="/assets/css/site.css?v=d4d45740de76" />
+    <link rel="stylesheet" href="/assets/css/home.css?v=00f16b59c2ad" />
+    <link rel="stylesheet" href="/assets/css/portfolio.css?v=ee38c74f86a2" />
+  </head>
+  <body class="portfolio">
+    <a class="skip-link" href="#content">Přeskočit na obsah</a>
+    <div class="wrap">
+      <!-- prettier-ignore -->
+      <nav class="site-nav" aria-label="Hlavní navigace"><a class="wordmark" href="/">valda<span>.</span>cloud</a><div><a href="/#co-delam">Co dělám</a><a href="/projekty/">Projekty</a><a href="/book/za-dva-dny-to-nahodime/">Kniha</a><a class="nav-contact" href="/#kontakt">Kontakt <span aria-hidden="true">↗</span></a></div></nav>
+      <main id="content">
+        <nav class="crumbs" aria-label="Drobečková navigace">
+          <a href="/">valda.cloud</a><span aria-hidden="true">/</span><a href="/projekty/">projekty</a
+          ><span aria-hidden="true">/</span><span aria-current="page">Albert</span>
+        </nav>
+        <header class="detail-header">
+          <p class="eyebrow">Wincor Nixdorf · 2012–2015</p>
+          <h1>Albert<span class="dot">.</span></h1>
+          <p class="detail-subtitle">Platební tablet od Androidu po bezpečné zadávání PINu</p>
+          <p class="role-label">
+            Moje role: vedení vývoje SW platformy, architektura a konzultace softwarové bezpečnosti.
+          </p>
+        </header>
+        <article class="project-prose">
+          <p class="detail-context">
+            Commonwealth Bank of Australia · Wincor Nixdorf · softwarová platforma platebního zařízení
+          </p>
+          <p>
+            Albert spojoval platební terminál s tabletem, na kterém mohly běžet další aplikace pro obchodníky.
+            Commonwealth Bank ho uvedla na trh 31. března 2015. Zařízení vzniklo ve spolupráci banky, Wincor Nixdorf a
+            IDEO.
+            <a
+              href="https://www.commbank.com.au/about-us/news/media-releases/2015/commonwealth-bank-set-to-disrupt-the-payments-space.html"
+              >Původní oznámení Commonwealth Bank ↗</a
+            >
+          </p>
+          <h2>Co jsem měl na starosti</h2>
+          <p>
+            Ve Wincor Nixdorf jsem vedl vývojový proud softwarové platformy: architekturu a tým, který připravoval
+            systém pro platební zařízení. V bezpečnostním proudu jsem působil jako konzultant softwarové bezpečnosti.
+            Byl jsem také členem řídícího výboru a rady pro vývoj produktů.
+          </p>
+          <ul>
+            <li>
+              Přizpůsobení Androidu, linuxového jádra, Dalviku a systémových utilit požadavkům platebního prostředí.
+            </li>
+            <li>Ovladače čteček karet, tiskárny a bezpečnostního modulu.</li>
+            <li>Platební SDK pro přístup k EMV, NFC, čtečkám a bezpečnostním funkcím.</li>
+            <li>Příprava platformového softwaru pro certifikaci PCI PTS.</li>
+          </ul>
+          <p>
+            Tohle byl rozsah práce našeho platformového týmu. Hardware, aplikace, bezpečnost a certifikace měly vlastní
+            týmy. Na vývoji se podíleli také externí dodavatelé.
+          </p>
+          <h2>Proč nestačil běžný Android</h2>
+          <p>
+            Tablet měl obsluhovat aplikace obchodníka a současně bezpečně přijímat karetní platby. Museli jsme řešit
+            úpravy systému, kontrolu spouštěného softwaru i komunikaci s hardwarem. Zvlášť důležité bylo zadávání PINu
+            na dotykovém displeji.
+          </p>
+          <section id="patent">
+            <h2>Patent: Trusted terminal platform</h2>
+            <p>
+              Na patentu jsem uvedený jako vynálezce společně s Michaelem Noltem. Přihlášku podala společnost Wincor
+              Nixdorf International GmbH.
+            </p>
+            <p>
+              Mezi dotykovou vrstvou displeje a hlavním procesorem je bezpečnostní modul. Při běžném ovládání předává
+              dotykové souřadnice systému. Při zadávání PINu je systému nepředává: vstup zpracuje sám a PIN zašifruje.
+              Android tak pro zadání PINu nepotřebuje dostat jeho jednotlivé číslice.
+            </p>
+            <p>
+              Patentová rodina má prioritu 5. března 2013. V knize uvádím evropský patent
+              <strong>EP 2 775 421 B1</strong> a americký <strong>US 11,088,840 B2</strong>.
+            </p>
+            <p>
+              <a class="text-link" href="https://patents.google.com/patent/EP2775421B1/en"
+                >Patent, vynálezci a související dokumenty ↗</a
+              >
+            </p>
+          </section>
+          <h2>Albert v knize</h2>
+          <p>
+            V knize <em>Za dva dny to nahodíme</em> se k tomuhle projektu vracím přes odhady a předpoklady, které
+            nevyšly. Počítali jsme s hotovým operačním systémem. Nakonec bylo potřeba podstatnou část řešení přestavět.
+            A zadávání PINu, které původně vypadalo jako hotová součást, skončilo vlastním návrhem a patentem.
+          </p>
+          <p>
+            Návrh vznikal u nás, na implementaci bezpečnostních úprav jsme spolupracovali se specializovaným
+            dodavatelem. Právě rozdělení odpovědnosti a ověřování předpokladů je pro mě na tom příběhu důležité.
+          </p>
+          <p><a href="/book/za-dva-dny-to-nahodime/">O knize a stažení zdarma →</a></p>
+          <h2>Technický přehled</h2>
+          <p>
+            Android, Linux, Dalvik, C/C++, ovladače zařízení, EMV a NFC, platební SDK, bezpečnostní modul a PCI PTS.
+          </p>
+        </article>
+        <section class="detail-contact">
+          <h2>Řešíte něco podobného?</h2>
+          <p>Napište mi, co potřebujete propojit, postavit nebo technicky projít.</p>
+          <a class="btn" href="mailto:valda@valda.cloud">Napsat Valdovi ↗</a>
+        </section>
+        <nav class="project-pagination" aria-label="Další projekty">
+          <a href="/projekty/">← Všechny projekty</a><a href="/projekty/platebni-systemy/">Další: Platební systémy →</a>
+        </nav>
+      </main>
+      <footer class="portfolio-footer">
+        <span>© 2026 Valdemar Závadský · valda.cloud</span>
+        <div>
+          <a href="mailto:valda@valda.cloud">Napište mi</a
+          ><a href="https://www.linkedin.com/in/valdemarzavadsky/">LinkedIn ↗</a
+          ><a href="https://github.com/valdacf">GitHub ↗</a><a href="/games/">Pro radost</a
+          ><a href="https://github.com/valdacf/valda.cloud">Zdrojový kód webu ↗</a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

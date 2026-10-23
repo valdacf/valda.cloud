@@ -1,6 +1,160 @@
-<!DOCTYPE html>
-<html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI//BRO — Od dokumentů k hotovému výstupu | Valdemar Závadský</title><meta name="description" content="Platforma pro firemní znalosti, agenty a automatizace. Navrhl jsem ji a naprogramoval od backendu a rozhraní po integrace a nasazení.">
-<link rel="canonical" href="https://valda.cloud/projekty/aibro/"><meta property="og:title" content="AI//BRO — Od dokumentů k hotovému výstupu | Valdemar Závadský"><meta property="og:description" content="Platforma pro firemní znalosti, agenty a automatizace. Navrhl jsem ji a naprogramoval od backendu a rozhraní po integrace a nasazení."><meta property="og:type" content="website"><meta property="og:url" content="https://valda.cloud/projekty/aibro/"><meta property="og:image" content="https://valda.cloud/assets/images/valdemar-zavadsky.png"><meta property="og:image:alt" content="Valdemar Závadský">
-<link rel="stylesheet" href="/assets/css/fonts.css?v=49b418440e2f"><link rel="stylesheet" href="/assets/css/site.css?v=d4d45740de76"><link rel="stylesheet" href="/assets/css/home.css?v=00f16b59c2ad"><link rel="stylesheet" href="/assets/css/portfolio.css?v=ee38c74f86a2">
-</head><body class="portfolio"><a class="skip-link" href="#content">Přeskočit na obsah</a><div class="wrap"><nav class="site-nav" aria-label="Hlavní navigace"><a class="wordmark" href="/">valda<span>.</span>cloud</a><div><a href="/#co-delam">Co dělám</a><a href="/projekty/">Projekty</a><a href="/book/za-dva-dny-to-nahodime/">Kniha</a><a class="nav-contact" href="/#kontakt">Kontakt <span aria-hidden="true">↗</span></a></div></nav><main id="content"><nav class="crumbs" aria-label="Drobečková navigace"><a href="/">valda.cloud</a><span aria-hidden="true">/</span><a href="/projekty/">projekty</a><span aria-hidden="true">/</span><span aria-current="page">AI//BRO</span></nav><header class="detail-header"><p class="eyebrow">AI · AGENTI · INTEGRACE</p><h1>AI//BRO<span class="dot">.</span></h1><p class="detail-subtitle">Od dokumentů k hotovému výstupu</p><p class="role-label">Moje role: návrh a vývoj celé platformy.</p></header><article class="project-prose"><p class="detail-context">AI//BRO · CLOUDFIELD · návrh a vývoj platformy</p><p class="lead">AI//BRO jsem navrhl a naprogramoval jako platformu pro práci s dokumenty, firemními daty a agenty. Od připojení zdrojů přes vyhledávání a uživatelské rozhraní až po oprávnění a provoz v Kubernetes.</p><h2>Co aplikace dělá</h2><p>Člověk do ní nahraje podklady nebo připojí firemní zdroj. Může se ptát, hledat souvislosti a vracet se přes citace k dokumentům, ze kterých odpověď vznikla.</p><p>Když zadání vyžaduje víc kroků, převezme ho agent. Projde podklady, může si zpracovat data v odděleném prostředí a připravit výstup v podobě dokumentu nebo tabulky. Průběh práce je vidět a výsledek se dá dohledat i po návratu do aplikace.</p><h2>Co si pod tím představit</h2><p><strong>Z dokladů přehled v Excelu.</strong> Nahrajete sadu faktur a zadáte sloupce, které potřebujete. Agent připraví tabulku, součty a seznam míst, kde údaj chyběl. Výstup stáhnete a zkontrolujete. Stejný postup se dá uložit pro opakované použití.</p><p><strong>Z firemních dokumentů odpověď se zdrojem.</strong> Třeba potřebujete najít podmínky v dokumentaci nebo interní směrnici. Aplikace odpoví nad podklady a přes citaci otevře použitou pasáž. Zdroj si tak můžete projít sami.</p><p><strong>Z podkladů dokument podle firemního postupu.</strong> Agent může připravit report do Wordu podle zadané struktury a šablony. Když mu chybí rozhodnutí, zeptá se a počká na odpověď.</p><p><strong>Z pošty a Teams přehled toho, co je potřeba řešit.</strong> Po připojení vlastního Microsoft 365 účtu lze hledat ve vlastní poště, chatech a souborech nebo nastavit pravidelný souhrn s odkazy na původní zprávy. Konkrétní přístupy se nastavují podle uživatele a instalace.</p><p>Výsledek závisí i na podkladech a použitém modelu; u tabulek kontroluju čísla a u odpovědí zdroje.</p><h2>Co jsem na tom dělal</h2><ul><li>Návrh architektury, datového modelu a rozhraní.</li><li>Backend v Pythonu a frontend v Reactu a TypeScriptu.</li><li>Práci s modely, vyhledávání v dokumentech a agentní workflow.</li><li>Integrace firemních zdrojů a nástrojů.</li><li>Sandbox pro spouštění vygenerovaného kódu.</li><li>Testy, dokumentaci, sestavení aplikace a nasazení do Kubernetes.</li></ul><p>K vývoji používám Claude Code a Codex. Práci rozděluju na menší úkoly, průběžně kontroluju změny a ověřuju je testy. U větších zásahů řeším samostatně bezpečnost, výkon a to, jestli změna pořád odpovídá zadání. Agenty je potřeba držet v rozsahu úkolu, jinak snadno začnou stavět něco většího, než je potřeba.</p><h2>Kde je technická práce</h2><p><strong>Dokumenty a zdroje.</strong> Zpracování různých formátů, OCR, vyhledávání a citace. Připojení například na SharePoint, OneDrive, Confluence nebo síťová úložiště. Důležitá je i historie synchronizací a možnost zjistit, proč systém použil konkrétní podklad.</p><p><strong>Oprávnění a nástroje.</strong> Znalostní báze, konektory a nástroje mají vlastní přístupová pravidla. Při přidání nové schopnosti řeším, kdo ji může použít a k jakým datům se přes ni dostane.</p><p><strong>Spouštění kódu.</strong> Kód vytvořený agentem běží v odděleném sandboxu s omezenými prostředky. To je samostatná část návrhu i testování. Pouhé připojení modelu k Pythonu by tenhle problém nevyřešilo.</p><p><strong>Provoz.</strong> Automatizace potřebují historii běhů, záznam chyb a způsob, jak zjistit, co se zastavilo. Stejně tak chci vidět spotřebu modelů a chování celé aplikace po nasazení.</p><h2>Co je za jednotlivými úlohami</h2><p>Stejný postup lze používat opakovaně: správce připraví definici agenta, připojí znalosti, nástroje a šablony a určí, kdo je smí použít. Definice mají verze, takže změnu nejdřív ověříte a teprve potom ji pošlete do dalších témat.</p><p>Automatizace se můžou spouštět podle času, zprávy, webhooku nebo nového souboru. Několik kroků lze propojit do pipeline, která podle výsledku pokračuje příslušnou větví. U běhu je vidět průběh a výstupy jednotlivých kroků.</p><p>Tohle je pro mě důležitá část firemní AI: jak jednou připravený postup používat opakovaně, jak ho změnit a jak zjistit, kde se práce zastavila.</p><h2>Technický přehled</h2><p>AI//BRO podporuje také nasazení a provoz v Kubernetes.</p><p>Python, FastAPI, React, TypeScript, PostgreSQL / pgvector, GraphQL, LangGraph, Docker, Helm a Kubernetes / AKS.</p><p>Model se volí podle úlohy a prostředí. Vlastní instalace aplikace může používat cloudové i lokální modely. Při použití cloudového modelu se mu podklady odesílají; to patří k rozhodnutí o konkrétním nasazení.</p><p class="product-credit">Více o produktu na webu <a href="https://aibro.thebros.ai/">AI//BRO · CLOUDFIELD ↗</a>.</p></article><section class="detail-contact"><h2>Řešíte něco podobného?</h2><p>Napište mi, co potřebujete propojit, postavit nebo technicky projít.</p><a class="btn" href="mailto:valda@valda.cloud">Napsat Valdovi ↗</a></section><nav class="project-pagination" aria-label="Další projekty"><a href="/projekty/">← Všechny projekty</a><a href="/projekty/aida/">Další: AIDA →</a></nav></main><footer class="portfolio-footer"><span>© 2026 Valdemar Závadský · valda.cloud</span><div><a href="mailto:valda@valda.cloud">Napište mi</a><a href="https://www.linkedin.com/in/valdemarzavadsky/">LinkedIn ↗</a><a href="https://github.com/valdacf">GitHub ↗</a><a href="/games/">Pro radost</a><a href="https://github.com/valdacf/valda.cloud">Zdrojový kód webu ↗</a></div></footer></div></body></html>
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI//BRO — Od dokumentů k hotovému výstupu | Valdemar Závadský</title>
+    <meta
+      name="description"
+      content="Platforma pro firemní znalosti, agenty a automatizace. Navrhl jsem ji a naprogramoval od backendu a rozhraní po integrace a nasazení."
+    />
+    <link rel="canonical" href="https://valda.cloud/projekty/aibro/" />
+    <meta property="og:title" content="AI//BRO — Od dokumentů k hotovému výstupu | Valdemar Závadský" />
+    <meta
+      property="og:description"
+      content="Platforma pro firemní znalosti, agenty a automatizace. Navrhl jsem ji a naprogramoval od backendu a rozhraní po integrace a nasazení."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://valda.cloud/projekty/aibro/" />
+    <meta property="og:image" content="https://valda.cloud/assets/images/valdemar-zavadsky.png" />
+    <meta property="og:image:alt" content="Valdemar Závadský" />
+    <link rel="stylesheet" href="/assets/css/fonts.css?v=49b418440e2f" />
+    <link rel="stylesheet" href="/assets/css/site.css?v=d4d45740de76" />
+    <link rel="stylesheet" href="/assets/css/home.css?v=00f16b59c2ad" />
+    <link rel="stylesheet" href="/assets/css/portfolio.css?v=ee38c74f86a2" />
+  </head>
+  <body class="portfolio">
+    <a class="skip-link" href="#content">Přeskočit na obsah</a>
+    <div class="wrap">
+      <!-- prettier-ignore -->
+      <nav class="site-nav" aria-label="Hlavní navigace"><a class="wordmark" href="/">valda<span>.</span>cloud</a><div><a href="/#co-delam">Co dělám</a><a href="/projekty/">Projekty</a><a href="/book/za-dva-dny-to-nahodime/">Kniha</a><a class="nav-contact" href="/#kontakt">Kontakt <span aria-hidden="true">↗</span></a></div></nav>
+      <main id="content">
+        <nav class="crumbs" aria-label="Drobečková navigace">
+          <a href="/">valda.cloud</a><span aria-hidden="true">/</span><a href="/projekty/">projekty</a
+          ><span aria-hidden="true">/</span><span aria-current="page">AI//BRO</span>
+        </nav>
+        <header class="detail-header">
+          <p class="eyebrow">AI · AGENTI · INTEGRACE</p>
+          <h1>AI//BRO<span class="dot">.</span></h1>
+          <p class="detail-subtitle">Od dokumentů k hotovému výstupu</p>
+          <p class="role-label">Moje role: návrh a vývoj celé platformy.</p>
+        </header>
+        <article class="project-prose">
+          <p class="detail-context">AI//BRO · CLOUDFIELD · návrh a vývoj platformy</p>
+          <p class="lead">
+            AI//BRO jsem navrhl a naprogramoval jako platformu pro práci s dokumenty, firemními daty a agenty. Od
+            připojení zdrojů přes vyhledávání a uživatelské rozhraní až po oprávnění a provoz v Kubernetes.
+          </p>
+          <h2>Co aplikace dělá</h2>
+          <p>
+            Člověk do ní nahraje podklady nebo připojí firemní zdroj. Může se ptát, hledat souvislosti a vracet se přes
+            citace k dokumentům, ze kterých odpověď vznikla.
+          </p>
+          <p>
+            Když zadání vyžaduje víc kroků, převezme ho agent. Projde podklady, může si zpracovat data v odděleném
+            prostředí a připravit výstup v podobě dokumentu nebo tabulky. Průběh práce je vidět a výsledek se dá
+            dohledat i po návratu do aplikace.
+          </p>
+          <h2>Co si pod tím představit</h2>
+          <p>
+            <strong>Z dokladů přehled v Excelu.</strong> Nahrajete sadu faktur a zadáte sloupce, které potřebujete.
+            Agent připraví tabulku, součty a seznam míst, kde údaj chyběl. Výstup stáhnete a zkontrolujete. Stejný
+            postup se dá uložit pro opakované použití.
+          </p>
+          <p>
+            <strong>Z firemních dokumentů odpověď se zdrojem.</strong> Třeba potřebujete najít podmínky v dokumentaci
+            nebo interní směrnici. Aplikace odpoví nad podklady a přes citaci otevře použitou pasáž. Zdroj si tak můžete
+            projít sami.
+          </p>
+          <p>
+            <strong>Z podkladů dokument podle firemního postupu.</strong> Agent může připravit report do Wordu podle
+            zadané struktury a šablony. Když mu chybí rozhodnutí, zeptá se a počká na odpověď.
+          </p>
+          <p>
+            <strong>Z pošty a Teams přehled toho, co je potřeba řešit.</strong> Po připojení vlastního Microsoft 365
+            účtu lze hledat ve vlastní poště, chatech a souborech nebo nastavit pravidelný souhrn s odkazy na původní
+            zprávy. Konkrétní přístupy se nastavují podle uživatele a instalace.
+          </p>
+          <p>Výsledek závisí i na podkladech a použitém modelu; u tabulek kontroluju čísla a u odpovědí zdroje.</p>
+          <h2>Co jsem na tom dělal</h2>
+          <ul>
+            <li>Návrh architektury, datového modelu a rozhraní.</li>
+            <li>Backend v Pythonu a frontend v Reactu a TypeScriptu.</li>
+            <li>Práci s modely, vyhledávání v dokumentech a agentní workflow.</li>
+            <li>Integrace firemních zdrojů a nástrojů.</li>
+            <li>Sandbox pro spouštění vygenerovaného kódu.</li>
+            <li>Testy, dokumentaci, sestavení aplikace a nasazení do Kubernetes.</li>
+          </ul>
+          <p>
+            K vývoji používám Claude Code a Codex. Práci rozděluju na menší úkoly, průběžně kontroluju změny a ověřuju
+            je testy. U větších zásahů řeším samostatně bezpečnost, výkon a to, jestli změna pořád odpovídá zadání.
+            Agenty je potřeba držet v rozsahu úkolu, jinak snadno začnou stavět něco většího, než je potřeba.
+          </p>
+          <h2>Kde je technická práce</h2>
+          <p>
+            <strong>Dokumenty a zdroje.</strong> Zpracování různých formátů, OCR, vyhledávání a citace. Připojení
+            například na SharePoint, OneDrive, Confluence nebo síťová úložiště. Důležitá je i historie synchronizací a
+            možnost zjistit, proč systém použil konkrétní podklad.
+          </p>
+          <p>
+            <strong>Oprávnění a nástroje.</strong> Znalostní báze, konektory a nástroje mají vlastní přístupová
+            pravidla. Při přidání nové schopnosti řeším, kdo ji může použít a k jakým datům se přes ni dostane.
+          </p>
+          <p>
+            <strong>Spouštění kódu.</strong> Kód vytvořený agentem běží v odděleném sandboxu s omezenými prostředky. To
+            je samostatná část návrhu i testování. Pouhé připojení modelu k Pythonu by tenhle problém nevyřešilo.
+          </p>
+          <p>
+            <strong>Provoz.</strong> Automatizace potřebují historii běhů, záznam chyb a způsob, jak zjistit, co se
+            zastavilo. Stejně tak chci vidět spotřebu modelů a chování celé aplikace po nasazení.
+          </p>
+          <h2>Co je za jednotlivými úlohami</h2>
+          <p>
+            Stejný postup lze používat opakovaně: správce připraví definici agenta, připojí znalosti, nástroje a šablony
+            a určí, kdo je smí použít. Definice mají verze, takže změnu nejdřív ověříte a teprve potom ji pošlete do
+            dalších témat.
+          </p>
+          <p>
+            Automatizace se můžou spouštět podle času, zprávy, webhooku nebo nového souboru. Několik kroků lze propojit
+            do pipeline, která podle výsledku pokračuje příslušnou větví. U běhu je vidět průběh a výstupy jednotlivých
+            kroků.
+          </p>
+          <p>
+            Tohle je pro mě důležitá část firemní AI: jak jednou připravený postup používat opakovaně, jak ho změnit a
+            jak zjistit, kde se práce zastavila.
+          </p>
+          <h2>Technický přehled</h2>
+          <p>AI//BRO podporuje také nasazení a provoz v Kubernetes.</p>
+          <p>
+            Python, FastAPI, React, TypeScript, PostgreSQL / pgvector, GraphQL, LangGraph, Docker, Helm a Kubernetes /
+            AKS.
+          </p>
+          <p>
+            Model se volí podle úlohy a prostředí. Vlastní instalace aplikace může používat cloudové i lokální modely.
+            Při použití cloudového modelu se mu podklady odesílají; to patří k rozhodnutí o konkrétním nasazení.
+          </p>
+          <p class="product-credit">
+            Více o produktu na webu <a href="https://aibro.thebros.ai/">AI//BRO · CLOUDFIELD ↗</a>.
+          </p>
+        </article>
+        <section class="detail-contact">
+          <h2>Řešíte něco podobného?</h2>
+          <p>Napište mi, co potřebujete propojit, postavit nebo technicky projít.</p>
+          <a class="btn" href="mailto:valda@valda.cloud">Napsat Valdovi ↗</a>
+        </section>
+        <nav class="project-pagination" aria-label="Další projekty">
+          <a href="/projekty/">← Všechny projekty</a><a href="/projekty/aida/">Další: AIDA →</a>
+        </nav>
+      </main>
+      <footer class="portfolio-footer">
+        <span>© 2026 Valdemar Závadský · valda.cloud</span>
+        <div>
+          <a href="mailto:valda@valda.cloud">Napište mi</a
+          ><a href="https://www.linkedin.com/in/valdemarzavadsky/">LinkedIn ↗</a
+          ><a href="https://github.com/valdacf">GitHub ↗</a><a href="/games/">Pro radost</a
+          ><a href="https://github.com/valdacf/valda.cloud">Zdrojový kód webu ↗</a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
