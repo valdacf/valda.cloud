@@ -9,7 +9,7 @@ Osobní web Valdemara Závadského: AI, software, cloud a konkrétní projektov�
 Úvod představuje oblasti práce, AI//BRO, vybrané realizace, profesní příběh a kontakt.
 [Projekty](web/projekty/) obsahují sedm případových studií. [Katalog her](web/games/) zachovává odkazy na všechny hry.
 
-Vzhled používá původní barvy a lokální fonty Sora a Inter. Nové stránky rozšiřuje `web/assets/css/portfolio.css`; portrét je v `web/assets/images/`.
+Vzhled používá indigo akcent (`#4f46e5`), světlé podklady a lokální fonty Sora a Inter. Nové stránky rozšiřuje `web/assets/css/portfolio.css`; portrét je v `web/assets/images/`.
 
 Albert má vlastní sekci na úvodu a [případovou studii s patentem](web/projekty/albert/).
 

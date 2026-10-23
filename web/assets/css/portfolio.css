@@ -26,13 +26,13 @@
 .service p { color: var(--muted); font-size: .94rem; }
 .service a { display: inline-block; margin-top: 1rem; font-size: .85rem; color: var(--accent); }
 #projekty { border-top: 1px solid var(--line); }
-.featured-project { background: var(--accent-soft); border: 1px solid #c9e8dc; padding: clamp(1.5rem, 4vw, 3rem); display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem; border-radius: 6px; }
+.featured-project { background: var(--accent-soft); border: 1px solid #c7d2fe; padding: clamp(1.5rem, 4vw, 3rem); display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem; border-radius: 6px; }
 .featured-project h3 { font-size: clamp(2.5rem, 5vw, 4rem); letter-spacing: -.06em; margin: .7rem 0; }
 .featured-project h3 span { color: var(--accent); }
 .feature-subtitle { font: 600 1.1rem/1.5 var(--font-heading); margin-bottom: 1rem; }
 .featured-project .btn { margin-top: 1.5rem; }
 .feature-scenarios { display: grid; align-content: center; gap: 1.2rem; }
-.feature-scenarios > div { border-top: 1px solid #bddbcc; padding-top: .8rem; }
+.feature-scenarios > div { border-top: 1px solid #c7d2fe; padding-top: .8rem; }
 .feature-scenarios h4 { margin: .25rem 0; font-family: var(--font-heading); }
 .feature-scenarios p { font-size: .87rem; color: var(--muted); }
 .project-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-top: 2rem; }
