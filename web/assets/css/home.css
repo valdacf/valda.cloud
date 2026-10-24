@@ -8,9 +8,6 @@
 .card:hover .name { color: var(--accent2); }
 .card .icon { width: 54px; height: 54px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; border-radius: 50%; margin-bottom: .35rem; }
 .card .icon svg { width: 29px; height: 29px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.icon.retro, .icon.sedma { background: #eef2ff; color: #4f46e5; }
-.icon.ball, .icon.zaxxon, .icon.wolf { background: #eef2f7; color: #52617a; }
-.icon.hate, .icon.zolik { background: #eef2ff; color: #4f46e5; }
 .card .cover { width: 54px; height: auto; border-radius: 3px; box-shadow: 3px 5px 10px #0e172626; margin-bottom: .35rem; }
 .icon.muted { background: var(--bg2); color: var(--muted); }
 .card .name { font: 650 1.35rem/1.18 var(--font-heading); letter-spacing: -.02em; transition: color .15s; }

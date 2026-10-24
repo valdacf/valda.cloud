@@ -27,7 +27,7 @@ svg { flex: none; }
 .site-nav { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.4rem 0; border-bottom: 1px solid var(--line); margin-bottom: 2.6rem; }
 .site-nav a { text-decoration: none; }
 .site-nav .wordmark { font: 700 1.7rem/1.2 var(--font-heading); letter-spacing: -.045em; }
-.wordmark span { color: var(--accent-bright); }
+.wordmark span { color: var(--accent); }
 .site-nav > div { display: flex; gap: clamp(1rem, 3vw, 2rem); font-size: .875rem; }
 h1 { font: 700 clamp(2.5rem, 5.5vw, 4.5rem)/1.06 var(--font-heading); letter-spacing: -.04em; }
 h2 { font: 700 clamp(1.7rem, 3vw, 2.2rem)/1.2 var(--font-heading); letter-spacing: -.025em; margin-bottom: 1.2rem; }
