@@ -11,7 +11,7 @@ Osobní web Valdemara Závadského: AI, software, cloud a konkrétní projektov�
 
 Vzhled používá indigo akcent (`#4f46e5`), světlé podklady a lokální fonty Sora a Inter. Nové stránky rozšiřuje `web/assets/css/portfolio.css`; portrét je v `web/assets/images/`.
 
-Favicon je průhledné bílé V s černým obrysem a indigovým detailem. Zdroj je `web/favicon.svg`; `web/favicon.ico` obsahuje velikosti 16, 32 a 48 px. Obě varianty fungují na světlém i tmavém podkladu. Odkazy v HTML používají hash SVG pro obnovení cache. Hry s vlastní ikonou ji zachovávají.
+Favicon je průhledné bílé V s černým obrysem a indigovým detailem. Zdroj je `web/favicon.svg`; `web/favicon.ico` obsahuje velikosti 16, 32 a 48 px. PNG varianta `web/favicon-32.png` je v HTML uvedená jako poslední pro spolehlivé načtení v Safari. Varianty fungují na světlém i tmavém podkladu. Odkazy v HTML používají hash SVG pro obnovení cache. Hry s vlastní ikonou ji zachovávají.
 
 Albert má vlastní sekci na úvodu a [případovou studii s patentem](web/projekty/albert/).
 
