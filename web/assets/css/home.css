@@ -15,7 +15,7 @@
 .card .arrow { margin-top: auto; padding-top: .5rem; color: var(--accent); font-size: .875rem; font-weight: 600; }
 .card.soon { grid-column: 1 / -1; padding-left: 1.2rem; border-left: 2px solid var(--line); border-top: 0; }
 .card.soon .icon { display: none; }
-.badge { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.badge { font: 400 .72rem/1.5 var(--font-mono); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .source { display: inline-flex; align-items: center; gap: .65rem; margin-top: 2rem; color: var(--muted); font-size: .875rem; text-decoration: none; }
 .source svg { fill: currentColor; }
 @media (max-width: 800px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
